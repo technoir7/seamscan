@@ -1,76 +1,68 @@
 # ClogBot
 
-**Deterministic, offline hardening for vibe-coded repositories.**
+**Deterministic, epistemically adversarial hardener for vibe-coded repositories.**
 
-ClogBot is a CLI tool that detects and ranks vulnerabilities introduced by AI-assisted ("vibe-coded") development. It executes truth-generating checks on Python, JavaScript, and TypeScript projects to identify unproven code, supply-chain risks, and security failures before they reach production.
+ClogBot detects and blocks patterned failure modes ("AI slop") and security vulnerabilities introduced by AI-assisted development. It produces evidence, not reassurance.
 
-Vibe coding—the development of software through LLM assistance without rigorous verification—introduces specific, exploitable vulnerability classes. While AI-generated code appears plausible, it frequently contains hallucinated libraries, insecure defaults, swallowed errors, and brittle integration logic. Traditional tooling fails to catch these vulnerabilities because it is optimized for style enforcement rather than adversarial hardening.
+## What Is Vibe Coding?
 
-ClogBot serves as an offline, deterministic defense layer against vibe-coding attack surfaces.
+Vibe coding is the practice of developing software through AI assistance (LLMs, code generation tools) without rigorous verification. The resulting code appears plausible but frequently contains:
+
+*   Placeholder or partial implementations
+*   Hallucinated APIs, methods, and libraries
+*   Insecure defaults and shortcuts
+*   Swallowed errors and silent failures
+*   Tests that validate hallucinated behavior rather than actual requirements
+
+Traditional tooling fails to catch these failures because it is optimized for style enforcement, not adversarial verification of AI-generated patterns.
+
+## What Is AI Slop?
+
+AI slop refers to recurring, patterned defects introduced by AI code generation:
+
+*   `TODO`/`FIXME`/`pass`/`NotImplementedError` placeholders shipped to production
+*   Dead or unreachable code
+*   Empty or over-broad exception handlers
+*   Hardcoded secrets and magic values
+*   Unused variables and imports
+*   Large, unfocused diffs that exceed human review capacity
+*   Code touching high-risk domains (auth, payments, crypto, config) without specialized review
+
+ClogBot treats these as deterministic failure modes, not stochastic bugs.
 
 ## Doctrine
 
-> **AI-assisted code is guilty until proven safe.**
-> **Trust evidence, not plausibility.**
+> **AI-generated code is epistemically untrusted by default.**
+> **AI-generated tests are untrusted if produced by the same origin.**
+> **Vibe-coding failures are patterned, not stochastic.**
+> **Deterministic checks outperform human review for these failures.**
 
-Judgment comes exclusively from deterministic checks. LLMs are labor and commentators—never judges of correctness.
+Judgment is rule-based. LLMs are downstream labor only—never judges of correctness.
 
-## Vibe-Coding Vulnerability Taxonomy
+## Threat Model
 
-ClogBot implements an authoritative, 11-class taxonomy of vibe-coding vulnerabilities. Each class represents a specific attack surface introduced or exacerbated by AI-assisted development:
+ClogBot defends against:
 
-### Class 1: Supply-Chain Confusion
-**Attack surface**: Typosquatting, dependency confusion, slopsquatting, floating versions
-**Checks**: Floating version detection (`*`, `latest`, `^0.x`), lockfile consistency enforcement, install hook detection
-
-### Class 2: Insecure Defaults
-**Attack surface**: Missing input validation, missing authentication, weak cryptography, insecure cookies
-**Checks**: Auth decorator detection on sensitive routes, weak crypto primitive detection (MD5, SHA1, DES, RC4, ECB)
-
-### Class 3: Install/Build-Time Execution
-**Attack surface**: postinstall hooks, setup.py side effects, arbitrary build scripts
-**Checks**: Detection of preinstall/install/postinstall scripts
-
-### Class 4: Copy/Paste Command Injection
-**Attack surface**: Clipboard poisoning, hidden suffix commands, pipe-to-shell patterns
-**Checks**: `curl|bash` detection, dangerous shell operator warnings
-
-### Class 5: Tool/Repo Configuration Poisoning
-**Attack surface**: .cursor/rules manipulation, agent config backdoors, invisible Unicode
-**Checks**: AI config file change detection, Unicode control character detection
-
-### Class 6: Prompt Injection via Context
-**Attack surface**: README/comments hijacking agent behavior, instruction directives
-**Checks**: Prompt injection pattern scanning ("ignore previous", "system prompt", "exfiltrate")
-
-### Class 7: Secret Material in Code
-**Attack surface**: Hardcoded keys, high-entropy literals, token patterns
-**Checks**: Entropy analysis, token regex (AWS, JWT, PEM, GitHub PAT, OpenAI), forbidden file detection (.env, .pem, credentials)
-
-### Class 8: Swallowed Errors / Silent Failure
-**Attack surface**: try/except pass, empty catches, suppressed logging
-**Checks**: Bare except detection, placeholder body detection
-
-### Class 9: Weak Tests / Happy-Path Bias
-**Attack surface**: Tests pass while behavior is wrong, no negative test cases
-**Status**: Heuristic detection only (coverage analysis future work)
-
-### Class 10: Concurrency / State Races
-**Attack surface**: Shared mutable state in async, check-then-act patterns, timing attacks
-**Checks**: Global state mutation in async contexts
-
-### Class 11: "Agent Has Keys to Prod"
-**Attack surface**: Unsafe automation permissions, missing environment segregation
-**Checks**: Production endpoint detection in dev configs, destructive command detection (DROP, DELETE, rm -rf, terraform destroy)
+*   **Supply-Chain Attacks**: Dependency confusion, slopsquatting, typosquatting, hallucinated libraries
+*   **Insecure Defaults**: Missing input validation, missing authentication, weak cryptography
+*   **Install-Time Execution**: postinstall hooks, setup.py side effects
+*   **Command Injection**: Clipboard poisoning, pipe-to-shell patterns
+*   **Configuration Poisoning**: AI tool config backdoors, invisible Unicode
+*   **Prompt Injection**: README/comment hijacking of agent behavior
+*   **Secret Exposure**: Hardcoded keys, high-entropy literals, committed credentials
+*   **Silent Failures**: Swallowed exceptions, fail-open authentication
+*   **Weak Tests**: Happy-path bias, no negative test cases
+*   **Concurrency Races**: Shared mutable state in async, check-then-act patterns
+*   **Production Credential Exposure**: Agent/tool access to prod environments
 
 ## System Constraints
 
-*   ClogBot does not write code.
-*   ClogBot does not refactor.
-*   ClogBot enforces proof before trust.
-*   Zero LLM involvement in checks.
-*   Zero network access.
-*   Local execution only.
+*   ClogBot does NOT generate code
+*   ClogBot does NOT refactor code
+*   ClogBot does NOT rely on LLMs
+*   Zero network access (except local package managers)
+*   Local execution only
+*   Deterministic behavior only
 
 ## Installation
 
@@ -82,36 +74,77 @@ pip install -e .
 ## Usage
 
 ```bash
-clogbot
+clogbot check
 
 # Configuration
-clogbot --out ./results
-clogbot --fail-on-warn
-clogbot --max-diff-loc 500
+clogbot check --out ./results
+clogbot check --fail-on-warn
+clogbot check --max-diff-loc 500
 ```
 
 ## Check Suite
 
-### 1. Deterministic Correctness
-Executes truth-generating tools:
-*   **Python**: `compileall`, `pip check`, `ruff`, `pytest`
-*   **JavaScript/TypeScript**: `tsc`/`npm run typecheck`, `npm run lint`, `npm test`
+### 1. Deterministic Correctness Checks
 
-### 2. Security & Supply-Chain
-*   **Security Audits**: `pip-audit`, `npm audit --audit-level=high`
-*   **Import Validation**: Resolves newly introduced imports locally to detect hallucinated libraries
+**Python:**
+*   `python -m compileall .` — Bytecode compilation verification
+*   `pip check` — Dependency graph integrity
+*   `ruff check .` — Static analysis
+*   `ruff format --check .` — Formatting consistency
+*   `pytest -q` — Behavior proofs
 
-### 3. Taxonomy-Based Hardening
-Offline, deterministic checks for all 11 vibe-coding vulnerability classes (see above)
+**JavaScript/TypeScript:**
+*   `npm test` — Behavior proofs
+*   `npm run lint` — Static analysis
+*   `npm run typecheck` / `npx tsc --noEmit` — Type safety verification
 
-### 4. Failure Ranking
-1.  Build / Syntax Errors
-2.  Dependency Integrity or Audits
-3.  Unresolved or Suspicious Imports
-4.  Typecheck Failures
-5.  Test Failures
-6.  Lint / Format Failures
-7.  Heuristic Warnings (including taxonomy checks)
+### 2. Security & Supply-Chain Checks
+
+**Python:**
+*   `pip-audit` — Vulnerability scanning
+*   Import validation — Detects hallucinated libraries by attempting local resolution
+
+**Node:**
+*   `npm audit --audit-level=high` — Vulnerability scanning
+*   Import validation — Detects hallucinated requires by attempting local resolution
+
+**General:**
+*   Lockfile enforcement when dependencies change
+*   New dependencies treated as HIGH RISK
+
+### 3. AI Slop / Vibe-Coding Pattern Detection
+
+Deterministic detection of:
+*   Placeholder markers (TODO, FIXME, XXX, pass, NotImplementedError)
+*   Bare except clauses and swallowed errors
+*   High-entropy literals (potential secrets)
+*   Token patterns (AWS keys, JWTs, PEM blocks, GitHub PATs, OpenAI keys)
+*   Forbidden files (.env, .pem, id_rsa, credentials, kubeconfig)
+*   Weak cryptographic primitives (MD5, SHA1, DES, RC4, ECB)
+*   Missing auth decorators on sensitive routes
+*   Floating dependency versions (`*`, `latest`, `^0.x`, `~0.x`)
+*   Install-time script execution (preinstall, postinstall)
+*   Pipe-to-shell patterns (`curl|bash`)
+*   AI tool configuration changes (.cursor/rules, .cursorrules)
+*   Unicode control characters (obfuscation)
+*   Prompt injection patterns ("ignore previous", "system prompt", "exfiltrate")
+*   Production endpoints in dev configs
+*   Destructive commands (DROP, DELETE, rm -rf, terraform destroy)
+*   Async global state mutations
+*   Large, unfocused diffs
+*   High-risk path edits (auth, payments, crypto, config)
+
+### 4. Failure Ranking (Strict)
+
+1.  **Build / Syntax Errors** — Direct corruption
+2.  **Dependency Integrity or Audit Failures** — Supply-chain compromise
+3.  **Hallucinated or Unresolved Imports** — Missing or fabricated libraries
+4.  **Typecheck Failures** — Broken API contracts
+5.  **Test Failures** — Failed behavior proofs
+6.  **Lint / Format Failures** — Static analysis violations
+7.  **Heuristic Warnings** — AI slop patterns
+
+Critical or High failures result in FAIL.
 
 ## Output Artifacts
 
@@ -119,30 +152,37 @@ Offline, deterministic checks for all 11 vibe-coding vulnerability classes (see 
 clogbot_output/
 ├── verdict.md              # Integrity summary
 ├── diff_meta.json          # Git diff metadata
-├── evidence/              # Categorized tool outputs
-└── handoff_prompt.md      # Failure report for downstream repair
+├── evidence/              # Verbatim tool outputs
+│   ├── tests.txt
+│   ├── lint.txt
+│   ├── typecheck.txt
+│   ├── deps.txt
+│   └── security.txt
+└── handoff_prompt.md      # Paste-ready failure report
 ```
 
 ### handoff_prompt.md
-Designed for LLM consumption to perform targeted remedi ation:
-*   Explicit non-refactor instructions
-*   Ranked failure list with taxonomy class labels
+
+Designed for downstream LLM-assisted repair. Contains:
+*   Explicit instruction: "Fix ONLY blocking failures; minimal diff; no refactors"
+*   Ranked failure list with security issues clearly marked
 *   Reproduction commands
 *   Bounded log excerpts
 
 ## Exit Codes
 
-*   `0`: All integrity proofs succeeded
-*   `1`: Blocking failures detected
-*   `2`: Warnings detected (with `--fail-on-warn`)
+*   `0` — All integrity proofs succeeded
+*   `1` — Blocking failures detected
+*   `2` — Warnings detected (with `--fail-on-warn`)
 
 ## Non-Goals
 
-*   No IDE integration
+*   No LLM usage inside ClogBot
 *   No auto-fixing
-*   No background processes
-*   No AI-based summarization
-*   No online lookups
+*   No refactoring
+*   No IDE integration
+*   No UI
+*   No monetization
 
 ## License
 

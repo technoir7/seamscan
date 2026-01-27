@@ -1,0 +1,13 @@
+{
+  "files_changed": [
+    "README.md",
+    "HISTORY.md",
+    "NEXT.md"
+  ],
+  "loc_added": 228,
+  "loc_removed": 156,
+  "directories_touched": [
+    "."
+  ],
+  "dependency_changes": []
+}
