@@ -1,41 +1,46 @@
 # ClogBot Version History
 
-## v0.1.0 (2026-01-26) - MVP Release
+## v0.1.0 (2026-01-27) - MVP Release with Taxonomy Implementation
 
-### Features Implemented
+### Core Implementation
 
-**Core CLI Framework**
-- Typer-based interface with `clogbot` entry point.
-- Support for `--out`, `--fail-on-warn`, and `--max-diff-loc` flags.
-- Structured output generation (verdict, diff meta, evidence logs, handoff prompt).
+**11-Class Vibe-Coding Vulnerability Taxonomy**
+- Implemented authoritative, deterministic hardening rules for all 11 vulnerability classes
+- All checks run offline with zero network access and zero LLM involvement
+- Checks labeled with taxonomy class identifiers ([CLASS-1] through [CLASS-11]) for traceability
 
-**Vibe-Coding Hardening**
-- 7-tier adversarial failure ranking system.
-- Detection of vibe-coding markers (TODO/FIXME/HACK in diffs).
-- Detection of placeholder bodies (`pass`, `return None`, empty stubs).
-- Detection of bare except / swallowed errors.
-- Lockfile consistency enforcement for dependency changes.
-- High-risk path monitoring (auth, payments, db, migrations, config).
+**Class-Specific Detections Implemented:**
+1. **Supply-Chain Confusion**: Floating version detection (`*`, `latest`, `^0.x`, `~0.x`), install hook detection
+2. **Insecure Defaults**: Weak crypto primitive detection (MD5, SHA1, DES, RC4, ECB), missing auth decorator heuristics
+3. **Install/Build-Time Execution**: postinstall/preinstall script detection
+4. **Copy/Paste Command Injection**: `curl|bash` patterns, dangerous shell operator warnings
+5. **Tool/Repo Configuration Poisoning**: AI config file change detection (.cursor/rules, .cursorrules), Unicode control character detection
+6. **Prompt Injection via Context**: Instruction pattern scanning ("ignore previous", "system prompt", "exfiltrate")
+7. **Secret Material in Code**: High-entropy literal detection, token pattern matching (AWS, JWT, PEM, GitHub, OpenAI), forbidden file detection
+8. **Swallowed Errors**: Bare except detection, placeholder body detection
+9. **Weak Tests**: Heuristic warnings (full coverage analysis deferred)
+10. **Concurrency Races**: Global state mutation detection in async contexts
+11. **Agent Has Keys to Prod**: Production endpoint detection in configs, destructive command detection (DROP, DELETE, rm -rf, terraform destroy)
 
-**Security & Supply-Chain Hardening**
-- Integrated `pip-audit` for Python vulnerability scanning.
-- Integrated `npm audit` for Node vulnerability scanning.
-- Deterministic import validation: attempts to resolve newly introduced imports locally to detect hallucinated libraries in Python and Node.
-- Dedicated security evidence categorization (`security.txt`).
+**Security & Supply-Chain Hardening (Previously Implemented)**
+- `pip-audit` and `npm audit` integration for vulnerability scanning
+- Import validation for hallucinated library detection (Python and Node)
+- 7-tier severity classification
 
-**Stack Auto-Detection**
-- Deterministic detection of Python (pyproject.toml, requirements.txt).
-- Deterministic detection of Node/TypeScript (package.json, tsconfig.json).
+**CLI Framework**
+- Typer-based interface with `--out`, `--fail-on-warn`, `--max-diff-loc` flags
+- Structured output: verdict.md, diff_meta.json, evidence/, handoff_prompt.md
+- Stack auto-detection for Python, Node, TypeScript
 
 ### Design Principles
 
-- **Deterministic Only**: Zero LLM involvement in core checks.
-- **Epistemically Adversarial**: Assumes code is guilty until proven safe.
-- **No Auto-Fixing**: Reports findings without modifying the codebase.
-- **Local Execution**: No API calls or remote processing.
+- **Strictly Deterministic**: Zero LLM involvement, zero network access
+- **Epistemically Adversarial**: Assumes vibe-coded changes are guilty until proven safe
+- **Offline Only**: All checks run locally using static analysis and subprocess execution
+- **No Auto-Fixing**: Reports findings without modifying code
 
-### Documentation Updates
+### Documentation
 
-- Refocused repository framing on hardening against vibe-coding vulnerabilities.
-- Added comprehensive Vibe-Coding Threat Model documentation.
-- Reframed deterministic checks as consequences of an adversarial stance.
+- README.md reframed around the 11-class taxonomy with detailed attack surface descriptions
+- All vulnerability classes documented with attack surfaces and check mechanisms
+- Explicit non-goals: no IDE integration, no autonomous remediation, no online lookups

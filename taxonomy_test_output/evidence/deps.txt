@@ -1,0 +1,9 @@
+================================================================================
+CHECK: Python Security Audit (pip-audit)
+COMMAND: pip-audit
+EXIT CODE: 0
+PASSED: False
+================================================================================
+
+ERROR: Command not found: pip-audit
+

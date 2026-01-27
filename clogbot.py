@@ -602,6 +602,190 @@ def detect_heuristic_warnings(
                 )
                 break
 
+    # === TAXONOMY-BASED VULNERABILITY CHECKS ===
+
+    # Class 1: Supply-Chain Confusion - Floating versions
+    floating_version_pattern = re.compile(
+        r'^\+.*["\'](\*|latest|\^0\.|~0\.|>=|>)["\']', re.MULTILINE
+    )
+    for match in floating_version_pattern.finditer(diff_content):
+        warnings.append(
+            HeuristicWarning(
+                message=f"[CLASS-1] Floating dependency version: {match.group(0).strip()} (supply-chain risk)"
+            )
+        )
+
+    # Class 3: Install/Build-Time Execution - postinstall hooks
+    postinstall_pattern = re.compile(
+        r'^\+.*"(preinstall|install|postinstall)"\s*:', re.MULTILINE
+    )
+    for match in postinstall_pattern.finditer(diff_content):
+        warnings.append(
+            HeuristicWarning(
+                message=f"[CLASS-3] Install-time script: {match.group(0).strip()} (execution before runtime controls)"
+            )
+        )
+
+    # Class 4: Copy/Paste Command Injection - pipe-to-shell
+    pipe_to_shell_pattern = re.compile(
+        r'^\+.*(curl|wget).*\|\s*(sh|bash|zsh|powershell|iex)', re.MULTILINE
+    )
+    for match in pipe_to_shell_pattern.finditer(diff_content):
+        warnings.append(
+            HeuristicWarning(
+                message=f"[CLASS-4] Pipe-to-shell: {match.group(0).strip()} (command injection risk)"
+            )
+        )
+
+    # Class 4: Dangerous shell operators (only warn if excessive)
+    dangerous_shell_pattern = re.compile(
+        r'^\+.*(&&|\|\||;|\$\(|`[^`]+`).*', re.MULTILINE
+    )
+    shell_operator_matches = list(dangerous_shell_pattern.finditer(diff_content))
+    if len(shell_operator_matches) > 5:
+        warnings.append(
+            HeuristicWarning(
+                message=f"[CLASS-4] Multiple dangerous shell operators ({len(shell_operator_matches)} instances)"
+            )
+        )
+
+    # Class 5: Tool/Repo Configuration Poisoning - AI config changes
+    ai_config_files = [".cursor/rules", ".cursorrules", ".aider", ".copilot-instructions"]
+    for file_path in diff_meta.files_changed:
+        if any(cfg in file_path for cfg in ai_config_files):
+            warnings.append(
+                HeuristicWarning(
+                    message=f"[CLASS-5] AI tool config modified: {file_path} (control-plane backdoor risk)",
+                    file_path=file_path,
+                )
+            )
+
+    # Class 5: Unicode control characters
+    unicode_control_pattern = re.compile(r'[\u200b-\u200f\u202a-\u202e\u2060-\u206f]')
+    if unicode_control_pattern.search(diff_content):
+        warnings.append(
+            HeuristicWarning(
+                message="[CLASS-5] Invisible Unicode control characters detected (obfuscation risk)"
+            )
+        )
+
+    # Class 6: Prompt Injection via Context - instruction patterns
+    prompt_injection_pattern = re.compile(
+        r'^\+.*(ignore previous|system prompt|you are|exfiltrate|print env)', 
+        re.MULTILINE | re.IGNORECASE
+    )
+    for match in prompt_injection_pattern.finditer(diff_content):
+        warnings.append(
+            HeuristicWarning(
+                message=f"[CLASS-6] Prompt injection pattern: {match.group(0).strip()[:60]}... (context poisoning)"
+            )
+        )
+
+    # Class 7: Secret Material - high entropy strings
+    high_entropy_pattern = re.compile(r'^\+.*["\']([A-Za-z0-9+/=]{40,})["\']', re.MULTILINE)
+    for match in high_entropy_pattern.finditer(diff_content):
+        literal = match.group(1)
+        # Simple Shannon entropy approximation
+        if len(set(literal)) / len(literal) > 0.7:
+            warnings.append(
+                HeuristicWarning(
+                    message=f"[CLASS-7] High-entropy literal (potential secret): {literal[:20]}..."
+                )
+            )
+
+    # Class 7: Token patterns
+    token_patterns = [
+        (r'AKIA[0-9A-Z]{16}', "AWS Access Key"),
+        (r'eyJ[A-Za-z0-9-_]+\.eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+', "JWT Token"),
+        (r'-----BEGIN [A-Z ]+-----', "PEM Block"),
+        (r'ghp_[A-Za-z0-9]{36}', "GitHub PAT"),
+        (r'sk-[A-Za-z0-9]{48}', "OpenAI Key"),
+    ]
+    for pattern, name in token_patterns:
+        if re.search(pattern, diff_content):
+            warnings.append(
+                HeuristicWarning(
+                    message=f"[CLASS-7] {name} pattern detected (credential exposure)"
+                )
+            )
+
+    # Class 7: Forbidden files
+    forbidden_files = [".env", ".pem", "id_rsa", "credentials", ".p12", "kubeconfig"]
+    for file_path in diff_meta.files_changed:
+        for forbidden in forbidden_files:
+            if forbidden in file_path.lower():
+                warnings.append(
+                    HeuristicWarning(
+                        message=f"[CLASS-7] Forbidden file: {file_path} (credential exposure)",
+                        file_path=file_path,
+                    )
+                )
+
+    # Class 2: Weak crypto primitives
+    weak_crypto_pattern = re.compile(
+        r'^\+.*(MD5|SHA1|DES|RC4|ECB)\s*\(', re.MULTILINE
+    )
+    for match in weak_crypto_pattern.finditer(diff_content):
+        warnings.append(
+            HeuristicWarning(
+                message=f"[CLASS-2] Weak crypto primitive: {match.group(0).strip()}"
+            )
+        )
+
+    # Class 2: Missing auth decorators (simplified heuristic)
+    admin_route_pattern = re.compile(
+        r'^\+.*(@(app\.route|api\.route)|router\.(get|post|put|delete))\s*\(["\']/(admin|billing|internal)', 
+        re.MULTILINE
+    )
+    for match in admin_route_pattern.finditer(diff_content):
+        match_pos = match.start()
+        context = diff_content[max(0, match_pos - 300):match_pos]
+        if not re.search(r'@(require_auth|login_required|authenticated|check_auth)', context):
+            warnings.append(
+                HeuristicWarning(
+                    message=f"[CLASS-2] Sensitive route without auth decorator: {match.group(0).strip()[:60]}..."
+                )
+            )
+
+    # Class 10: Shared mutable state in async
+    async_global_pattern = re.compile(
+        r'^\+\s*global\s+\w+', re.MULTILINE
+    )
+    if async_global_pattern.search(diff_content) and 'async def' in diff_content:
+        warnings.append(
+            HeuristicWarning(
+                message="[CLASS-10] Global state mutation in async context (race condition risk)"
+            )
+        )
+
+    # Class 11: Production endpoints in configs
+    prod_pattern = re.compile(
+        r'^\+.*\.prod|production|prd|aws\.amazon|azure\.microsoft|cloud\.google', 
+        re.MULTILINE | re.IGNORECASE
+    )
+    for match in prod_pattern.finditer(diff_content):
+        for file_path in diff_meta.files_changed:
+            if any(cfg in file_path.lower() for cfg in ["config", ".env", "settings"]):
+                warnings.append(
+                    HeuristicWarning(
+                        message=f"[CLASS-11] Production endpoint in config: {match.group(0).strip()[:50]}...",
+                        file_path=file_path,
+                    )
+                )
+                break
+
+    # Class 11: Destructive commands
+    destructive_pattern = re.compile(
+        r'^\+.*(DROP\s+TABLE|DELETE\s+FROM|rm\s+-rf|terraform\s+destroy)', 
+        re.MULTILINE | re.IGNORECASE
+    )
+    for match in destructive_pattern.finditer(diff_content):
+        warnings.append(
+            HeuristicWarning(
+                message=f"[CLASS-11] Destructive command: {match.group(0).strip()} (requires approval)"
+            )
+        )
+
     return warnings
 
 
