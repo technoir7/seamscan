@@ -1,0 +1,14 @@
+{
+  "files_changed": [
+    "clogbot.py",
+    "README.md",
+    "NEXT.md",
+    "HISTORY.md"
+  ],
+  "loc_added": 218,
+  "loc_removed": 286,
+  "directories_touched": [
+    "."
+  ],
+  "dependency_changes": []
+}

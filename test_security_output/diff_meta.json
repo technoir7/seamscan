@@ -1,0 +1,11 @@
+{
+  "files_changed": [
+    "clogbot.py"
+  ],
+  "loc_added": 145,
+  "loc_removed": 5,
+  "directories_touched": [
+    "."
+  ],
+  "dependency_changes": []
+}

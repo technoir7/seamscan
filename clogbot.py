@@ -29,11 +29,12 @@ class Severity(IntEnum):
     """Failure severity levels in strict priority order."""
 
     BUILD_SYNTAX = 1  # Build / syntax errors
-    DEPENDENCY = 2  # Dependency integrity failures
-    TYPECHECK = 3  # Type errors
-    TEST = 4  # Test failures
-    LINT_FORMAT = 5  # Lint / format issues
-    HEURISTIC = 6  # Heuristic warnings
+    DEPENDENCY = 2  # Dependency integrity or audit failures
+    SUSPICIOUS_IMPORT = 3  # Unresolved or suspicious imports (hallucinated libraries)
+    TYPECHECK = 4  # Type errors
+    TEST = 5  # Test failures
+    LINT_FORMAT = 6  # Lint / format issues
+    HEURISTIC = 7  # Heuristic warnings
 
 
 # =============================================================================
@@ -247,6 +248,16 @@ def run_python_checks(stack: StackInfo, base_path: Path) -> List[CheckResult]:
             )
         )
 
+    # 6. Security audit
+    checks.append(
+        run_check(
+            ["pip-audit"],
+            "Python Security Audit (pip-audit)",
+            Severity.DEPENDENCY,
+            base_path,
+        )
+    )
+
     return checks
 
 
@@ -299,6 +310,106 @@ def run_node_checks(stack: StackInfo, base_path: Path) -> List[CheckResult]:
             )
         )
 
+    # 4. Security audit
+    checks.append(
+        run_check(
+            ["npm", "audit", "--audit-level=high"],
+            "Node Security Audit (npm audit)",
+            Severity.DEPENDENCY,
+            base_path,
+        )
+    )
+
+    return checks
+
+
+def extract_python_imports_from_diff(diff_content: str) -> List[str]:
+    """Extract new Python imports from git diff."""
+    imports = set()
+    # Match: from X import Y, import X, import X as Y
+    import_patterns = [
+        re.compile(r"^\+(?:from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)", re.MULTILINE),
+    ]
+    for pattern in import_patterns:
+        for match in pattern.finditer(diff_content):
+            module = match.group(1)
+            # Filter out relative imports and common builtins
+            if module and not module.startswith("."):
+                imports.add(module)
+    return list(imports)
+
+
+def extract_node_imports_from_diff(diff_content: str) -> List[str]:
+    """Extract new Node require/import statements from git diff."""
+    imports = set()
+    # Match: require('X'), require("X"), import X from 'Y', import 'X'
+    import_patterns = [
+        re.compile(r"^\+.*require\(['\"]([^'\"]+)['\"]\)", re.MULTILINE),
+        re.compile(r"^\+.*import\s+.*?from\s+['\"]([^'\"]+)['\"]", re.MULTILINE),
+        re.compile(r"^\+.*import\s+['\"]([^'\"]+)['\"]", re.MULTILINE),
+    ]
+    for pattern in import_patterns:
+        for match in pattern.finditer(diff_content):
+            module = match.group(1)
+            # Filter out relative imports
+            if module and not module.startswith("."):
+                imports.add(module)
+    return list(imports)
+
+
+def validate_python_imports(
+    imports: List[str], base_path: Path
+) -> List[CheckResult]:
+    """Validate that Python imports can be resolved."""
+    checks = []
+    for module in imports:
+        result = subprocess.run(
+            [sys.executable, "-c", f"import {module}"],
+            capture_output=True,
+            text=True,
+            cwd=base_path,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            checks.append(
+                CheckResult(
+                    name=f"Python Import Validation ({module})",
+                    passed=False,
+                    severity=Severity.SUSPICIOUS_IMPORT,
+                    stdout=result.stdout,
+                    stderr=result.stderr,
+                    exit_code=result.returncode,
+                    command=f"python -c 'import {module}'",
+                    error_message=f"Suspicious import: '{module}' cannot be resolved (possible hallucinated library)",
+                )
+            )
+    return checks
+
+
+def validate_node_imports(imports: List[str], base_path: Path) -> List[CheckResult]:
+    """Validate that Node imports can be resolved."""
+    checks = []
+    for module in imports:
+        result = subprocess.run(
+            ["node", "-e", f"require('{module}')"],
+            capture_output=True,
+            text=True,
+            cwd=base_path,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            checks.append(
+                CheckResult(
+                    name=f"Node Import Validation ({module})",
+                    passed=False,
+                    severity=Severity.SUSPICIOUS_IMPORT,
+                    stdout=result.stdout,
+                    stderr=result.stderr,
+                    exit_code=result.returncode,
+                    command=f"node -e \"require('{module}')\"",
+                    error_message=f"Suspicious import: '{module}' cannot be resolved (possible hallucinated library)",
+                )
+            )
     return checks
 
 
@@ -560,6 +671,7 @@ def generate_evidence_files(checks: List[CheckResult], output_dir: Path) -> None
         "lint.txt": [c for c in checks if c.severity == Severity.LINT_FORMAT],
         "typecheck.txt": [c for c in checks if c.severity == Severity.TYPECHECK],
         "deps.txt": [c for c in checks if c.severity == Severity.DEPENDENCY],
+        "security.txt": [c for c in checks if c.severity == Severity.SUSPICIOUS_IMPORT],
         "build.txt": [c for c in checks if c.severity == Severity.BUILD_SYNTAX],
     }
 
@@ -730,7 +842,35 @@ def check(
     typer.echo(f"  LOC: +{diff_meta.loc_added} / -{diff_meta.loc_removed}")
     typer.echo("")
 
-    # 4. Heuristic warnings
+    # 4. Import validation (security check for hallucinated libraries)
+    typer.echo("🔒 Validating imports...")
+    import_checks: List[CheckResult] = []
+    if stack.has_python and diff_content:
+        python_imports = extract_python_imports_from_diff(diff_content)
+        if python_imports:
+            typer.echo(f"  Checking {len(python_imports)} Python imports...")
+            try:
+                import_checks.extend(validate_python_imports(python_imports, base_path))
+            except Exception:
+                pass  # Don't crash on validation errors
+    if stack.has_node and diff_content:
+        node_imports = extract_node_imports_from_diff(diff_content)
+        if node_imports:
+            typer.echo(f"  Checking {len(node_imports)} Node imports...")
+            try:
+                import_checks.extend(validate_node_imports(node_imports, base_path))
+            except Exception:
+                pass  # Don't crash on validation errors
+    
+    all_checks.extend(import_checks)
+    suspicious_import_count = len([c for c in import_checks if not c.passed])
+    if suspicious_import_count > 0:
+        typer.echo(f"  ⚠️  {suspicious_import_count} suspicious imports detected")
+    else:
+        typer.echo(f"  ✅ All imports validated")
+    typer.echo("")
+
+    # 5. Heuristic warnings
     typer.echo("⚠️  Detecting heuristic warnings...")
     warnings = detect_heuristic_warnings(diff_meta, diff_content, max_diff_loc)
     typer.echo(f"  Found {len(warnings)} warnings")
