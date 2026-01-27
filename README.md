@@ -1,308 +1,128 @@
 # ClogBot
 
-**Deterministic, epistemically adversarial hardener for vibe-coded repositories**
+**Adversarial hardening for repositories at risk of vibe-coding vulnerabilities.**
 
-ClogBot is a CLI tool that runs truth-generating checks on Python, JavaScript, and TypeScript projects, ranks failures by severity, and emits structured artifacts for LLM-assisted fixes.
+ClogBot is a deterministic CLI tool designed to detect and rank failure modes introduced by AI-assisted and vibe-coding workflows. It executes truth-generating checks on Python, JavaScript, and TypeScript projects to identify unproven or silently incorrect code before it reaches production.
+
+Vibe coding—the practice of developing code through LLM assistance without rigorous verification—introduces specific classes of vulnerabilities. While the resulting code often appears plausible, it frequently contains partial implementations, mismatched APIs, and brittle integration logic. Traditional tooling often fails to catch these vulnerabilities because it is optimized for style and syntax rather than epistemically skeptical verification.
+
+ClogBot serves as an adversarial layer. It assumes all changes are guilty until proven safe through deterministic evidence.
 
 ## Doctrine
 
 ClogBot embodies epistemically adversarial hardening:
 
-> **AI-assisted code is guilty until proven safe.**  
+> **AI-assisted code is guilty until proven safe.**
 > **Trust evidence, not plausibility.**
 
-Judgment (PASS/FAIL) comes **ONLY** from deterministic checks. LLMs, when used later, are labor and commentators — **never judges**.
+Judgment comes exclusively from deterministic checks. LLMs are commentators; they are never judges of correctness.
 
-## What ClogBot Is
+## Vibe-Coding Vulnerabilities (Threat Model)
 
-- ✅ A local CLI tool
-- ✅ Deterministic truth-generator
-- ✅ Failure ranker and reporter
-- ✅ Structured output generator for LLM handoff
+ClogBot is specifically architected to detect the following failure modes inherent to vibe-coding:
 
-## What ClogBot Is NOT
+*   **Placeholder Implementations**: Code containing `pass`, `return None`, or empty stubs introduced by LLMs to satisfy syntax while deferring actual logic.
+*   **Hallucinated APIs**: Incorrect method signatures or imports that appear valid but fail at runtime or during deep type analysis.
+*   **Swallowed Exceptions**: Bare `except:` clauses or empty catch blocks that mask underlying logic failures.
+*   **Copy-Paste Pattern Drift**: Subtle inconsistencies introduced when LLMs adapt existing patterns to new contexts without maintaining semantic integrity.
+*   **Unfocused Diffs**: Large, high-LOC changes that exceed human review capacity and contain tangential modifications.
+*   **Superficial Tests**: Test suites that pass without validating actual behavior or edge cases.
+*   **Lockfile Divergence**: Manifest changes that lack corresponding lockfile updates, indicating automated dependency manipulation without environment synchronization.
+*   **Risk-Blind Edits**: Alterations to high-risk paths (auth, payments, database migrations) that lack specialized scrutiny.
 
-- ❌ An IDE or editor plugin
-- ❌ An autonomous agent
-- ❌ A refactoring tool
-- ❌ An auto-fixer
-- ❌ A background process
-- ❌ A CI/CD integration
+## System Constraints
+
+*   ClogBot does not write code.
+*   ClogBot does not refactor.
+*   ClogBot enforces proof before trust.
+*   Zero LLM involvement in core checks.
+*   Local execution only.
 
 ## Installation
 
 ```bash
-# Clone or copy clogbot to your system
-cd /path/to/clogbot
-
-# Install in development mode
+cd clogbot
 pip install -e .
-
-# Or install directly
-pip install .
 ```
 
 ## Usage
 
 ```bash
-# Basic usage - run checks in current directory
 clogbot
 
-# Specify output directory
-clogbot --out ./my_output
-
-# Fail on warnings
+# Configuration options
+clogbot --out ./results
 clogbot --fail-on-warn
-
-# Set maximum diff LOC threshold
 clogbot --max-diff-loc 500
-
-# Combine options
-clogbot --out ./results --fail-on-warn --max-diff-loc 1000
 ```
 
-## How It Works
+## Adversarial Check Suite
 
-### 1. Stack Auto-Detection
+The checks performed by ClogBot are consequences of its adversarial stance. They are designed to force the codebase to prove its integrity.
 
-ClogBot detects your project stack based on marker files:
+### 1. Stack Detection
+Identifies project boundaries and available toolchains for Python, Node, and TypeScript.
 
-- **Python**: `pyproject.toml`, `requirements*.txt`
-- **Node**: `package.json`
-- **TypeScript**: `tsconfig.json`
-
-### 2. Deterministic Checks
-
-Based on detected stack, ClogBot runs:
+### 2. Deterministic Verification
+Executes the following to establish ground truth:
 
 **Python:**
-- `python -m compileall .` - Syntax validation
-- `pip check` - Dependency integrity (if venv active)
-- `ruff check .` - Linting
-- `ruff format --check .` - Format checking
-- `pytest -q` - Tests (if pytest detected)
+*   `compileall`: Direct bytecode compilation to detect syntax corruption.
+*   `pip check`: Verification of dependency graph integrity.
+*   `ruff`: Enforcement of static rules and formatting consistency.
+*   `pytest`: Execution of established behavior proofs.
 
 **JavaScript/TypeScript:**
-- `npm test` - Tests (if script defined)
-- `npm run lint` - Linting (if script defined)
-- `npm run typecheck` - Type checking (if script defined)
-- `npx tsc -p tsconfig.json --noEmit` - Fallback type check (if tsconfig exists)
+*   `npm run typecheck` / `tsc`: Formal verification of type safety and API boundaries.
+*   `npm run lint`: Static analysis of code patterns.
+*   `npm test`: Execution of behavior proofs.
 
 ### 3. Failure Ranking
+Failures are ranked by their ability to block system integrity:
+1. Build/Syntax
+2. Dependency Integrity
+3. Typecheck Failures
+4. Test Failures
+5. Static Analysis Warnings
+6. Heuristic Red Flags
 
-Failures are ranked in **strict priority order**:
+### 4. Git Diff Meta-Analysis
+Analyzes the structure and risk profile of the current state:
+*   LOC threshold enforcement.
+*   High-risk path monitoring (auth, db, payments, config).
+*   Detection of placeholder markers (TODO, HACK, XXX).
 
-1. **Build/Syntax** - Compilation errors, syntax failures
-2. **Dependency** - Missing or conflicting dependencies
-3. **Typecheck** - Type errors
-4. **Test** - Test failures
-5. **Lint/Format** - Code style issues
-6. **Heuristic** - Red flag warnings
+## Output Artifacts
 
-### 4. Heuristic Red Flags
-
-ClogBot detects warning signs in your codebase:
-
-- `TODO`/`FIXME`/`HACK`/`XXX` comments introduced in diff
-- Bare `except:` clauses (swallowed errors)
-- Placeholder bodies in changed code (`pass`, `return None`, empty stubs)
-- Diffs exceeding configured LOC threshold
-- New dependencies without lockfile updates
-- Edits touching high-risk paths (auth, payments, db, migrations, config)
-
-### 5. Git Diff Analysis
-
-Extracts metadata from uncommitted changes:
-
-- Files changed
-- Lines added/removed
-- Directories touched
-- Dependency manifest changes
-
-### 6. Structured Output
-
-ClogBot generates a complete artifact directory:
+ClogBot produces a structured directory for handoff to human reviewers or LLM laborers:
 
 ```
 clogbot_output/
-├── verdict.md              # High-level pass/fail summary
+├── verdict.md              # High-level integrity summary
 ├── diff_meta.json          # Git diff metadata
-├── evidence/              # Raw check outputs
-│   ├── tests.txt
-│   ├── lint.txt
-│   ├── typecheck.txt
-│   ├── deps.txt
-│   └── build.txt
-└── handoff_prompt.md      # Paste-ready prompt for LLM fixes
+├── evidence/              # Categorized raw tool output
+└── handoff_prompt.md      # Concise failure report for targeted fixes
 ```
 
-## Output Files
-
-### `verdict.md`
-
-Human-readable summary of all failures and warnings, ranked by severity.
-
-### `diff_meta.json`
-
-Structured JSON with git diff metadata:
-```json
-{
-  "files_changed": ["file1.py", "file2.js"],
-  "loc_added": 150,
-  "loc_removed": 42,
-  "directories_touched": ["src/", "tests/"],
-  "dependency_changes": ["requirements.txt"]
-}
-```
-
-### `evidence/`
-
-Raw outputs from each check category, organized by type:
-- `build.txt` - Compilation/syntax errors
-- `deps.txt` - Dependency checks
-- `typecheck.txt` - Type checking output
-- `tests.txt` - Test results
-- `lint.txt` - Linting and formatting
-
-### `handoff_prompt.md`
-
-**The most important file** - a clean, concise, paste-ready artifact for LLM consumption:
-
-- Explicit instruction: "Fix ONLY blocking failures; minimal diff; no refactors"
-- Ranked failure list with severity levels
-- Reproduction commands for each failure
-- Relevant file list
-- Bounded log excerpts (~200 lines max per failure)
-
-This file is designed to be copy-pasted directly into Claude, GPT-4, Gemini, or any other LLM for targeted fixes.
+### handoff_prompt.md
+This artifact is designed for LLM consumption to perform targeted remediation. It contains:
+*   Explicit non-refactor instructions.
+*   Ranked failure list.
+*   Bounded log excerpts.
+*   Reproduction commands.
 
 ## Exit Codes
 
-- `0` - All checks passed
-- `1` - Blocking failures detected
-- `2` - Warnings detected (only with `--fail-on-warn`)
-
-## Philosophy
-
-Modern development increasingly relies on LLM assistance. While this accelerates iteration, it can introduce subtle bugs, type inconsistencies, untested code paths, and style drift.
-
-ClogBot provides **deterministic ground truth** before handing off to an LLM for fixes:
-
-1. **No guessing** - Only facts from actual tool execution
-2. **No auto-fixing** - Never modifies your code
-3. **No plausibility** - Evidence-based judgment only
-4. **Structured handoff** - Clean, actionable artifact for LLMs
-
-This creates a tight feedback loop:
-- You vibe-code with LLM assistance
-- ClogBot runs deterministic checks
-- ClogBot generates structured failure report
-- You hand report to LLM for targeted fixes
-- Repeat until clean
-
-## Examples
-
-### Example 1: Python Project
-
-```bash
-$ cd my-python-project
-$ clogbot
-
-🔍 ClogBot: Epistemically Adversarial Hardening
-📂 Working directory: /home/user/my-python-project
-
-🔎 Detecting stack...
-  Python: True
-  Node: False
-  TypeScript: False
-
-⚙️  Running deterministic checks...
-  ✅ 3 passed
-  ❌ 2 failed
-
-📊 Analyzing git diff...
-  Files changed: 5
-  LOC: +127 / -34
-
-⚠️  Detecting heuristic warnings...
-  Found 2 warnings
-
-📝 Generating output in ./clogbot_output...
-✅ Output generated:
-  - ./clogbot_output/verdict.md
-  - ./clogbot_output/diff_meta.json
-  - ./clogbot_output/evidence/
-  - ./clogbot_output/handoff_prompt.md
-
-❌ VERDICT: BLOCKING FAILURES DETECTED
-```
-
-### Example 2: TypeScript Project
-
-```bash
-$ clogbot --out ./check-results --max-diff-loc 200
-
-🔍 ClogBot: Epistemically Adversarial Hardening
-📂 Working directory: /home/user/ts-app
-
-🔎 Detecting stack...
-  Python: False
-  Node: True
-  TypeScript: True
-
-⚙️  Running deterministic checks...
-  ✅ 4 passed
-  ❌ 0 failed
-
-📊 Analyzing git diff...
-  Files changed: 12
-  LOC: +387 / -98
-
-⚠️  Detecting heuristic warnings...
-  Found 1 warnings
-
-📝 Generating output in ./check-results...
-✅ Output generated:
-  - ./check-results/verdict.md
-  - ./check-results/diff_meta.json
-  - ./check-results/evidence/
-  - ./check-results/handoff_prompt.md
-
-⚠️  VERDICT: WARNINGS DETECTED (--fail-on-warn)
-```
-
-## Requirements
-
-- Python 3.8+
-- Git (for diff analysis)
-- Stack-specific tools as needed:
-  - **Python**: `ruff` (for linting/formatting), `pytest` (for tests)
-  - **Node**: `npm` (for running scripts and tests)
-  - **TypeScript**: `tsc` (TypeScript compiler)
-
-Missing tools will be recorded in evidence files but won't crash ClogBot.
+*   `0`: All integrity proofs succeeded.
+*   `1`: Blocking failures detected.
+*   `2`: Warnings detected (with `--fail-on-warn`).
 
 ## Non-Goals
 
-ClogBot is intentionally limited in scope. It does **NOT**:
-
-- Provide IDE integration
-- Run in CI/CD (though you could integrate it yourself)
-- Auto-commit or auto-fix anything
-- Call any APIs
-- Use LLMs internally
-- Manage monorepos (single project only)
-- Support languages beyond Python/JS/TS
-- Provide a UI or web interface
-
-## Contributing
-
-ClogBot is designed to be simple and maintainable. Before adding features:
-
-1. Ensure they're deterministic
-2. Ensure they don't involve code modification
-3. Keep the single-file architecture
-4. Maintain the epistemically adversarial philosophy
+*   No IDE integration.
+*   No auto-fixing or autonomous agents.
+*   No background processes.
+*   No API-based summarization.
 
 ## License
 
@@ -310,7 +130,4 @@ MIT
 
 ## Version
 
-Current version: **0.1.0** (MVP)
-
-See [HISTORY.md](HISTORY.md) for changelog and [NEXT.md](NEXT.md) for planned features.
-# clogbot
+0.1.0

@@ -61,6 +61,7 @@ JavaScript/TypeScript:
 - Usage examples for Python and TypeScript projects
 - Clear non-goals and constraints
 - Installation instructions
+- Refocused all documentation on vibe-coding threat model and adversarial hardening
 
 ### Design Principles
 
