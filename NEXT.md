@@ -59,3 +59,25 @@
 - Regex-based sink detection has limited scope coverage
 - No mutation testing for test quality assessment
 - No runtime analysis (static only)
+
+## Phase 2 Expansion: Independent Test Provenance Enforcement (Pattern 7)
+
+### Goal
+Prevent false confidence where AI-generated tests validate AI-generated hallucinations.
+
+### Spec (MVP)
+- Detect test files (tests/, __tests__/, *.test.*, *.spec.*)
+- Compute deterministic AI-likelihood score for changed prod code and changed tests
+- Emit warnings when code+tests appear same-origin in the same diff
+- Add rules:
+  - TP1: same-origin AI-likelihood for code+tests (CRITICAL_WARNING)
+  - TP2: tests mirror implementation (clone/similarity on changed hunks) (HIGH_WARNING)
+  - TP3: mock signature mismatch (best-effort; TS strict where available) (CRITICAL_WARNING)
+  - TP4: high-risk paths touched but only unit tests changed (HIGH_WARNING)
+- Output:
+  - evidence/test_provenance.txt
+  - diff_meta.json includes test_provenance summary
+  - handoff_prompt.md includes “Test Provenance Warnings” section
+
+### Default behavior
+WARN by default; allow FAIL via --fail-on-warn or later .clogbot.yaml.
