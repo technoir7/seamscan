@@ -1,0 +1,7 @@
+================================================================================
+CHECK: Python Syntax (compileall)
+COMMAND: /home/aaron/code/clogbot/venv/bin/python3 -m compileall . -q
+EXIT CODE: 0
+PASSED: True
+================================================================================
+
