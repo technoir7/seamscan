@@ -43,8 +43,8 @@ Judgment is rule-based. LLMs are downstream labor only—never judges of correct
 
 ClogBot defends against:
 
-*   **Supply-Chain Attacks**: Dependency confusion, slopsquatting, typosquatting, hallucinated libraries
-*   **Insecure Defaults**: Missing input validation, missing authentication, weak cryptography
+*   **Supply-Chain Attacks**: Dependency confusion, slopsquatting, typosquatting, hallucinated libraries (new-dependency heuristic flags unverified package names)
+*   **Insecure Defaults**: Missing input validation, missing authentication, weak cryptography, TLS/certificate verification bypass, insecure fallback secrets
 *   **Install-Time Execution**: postinstall hooks, setup.py side effects
 *   **Command Injection**: Clipboard poisoning, pipe-to-shell patterns
 *   **Configuration Poisoning**: AI tool config backdoors, invisible Unicode
@@ -133,6 +133,9 @@ Deterministic detection of:
 *   Async global state mutations
 *   Large, unfocused diffs
 *   High-risk path edits (auth, payments, crypto, config)
+*   TLS/certificate verification bypass, with elevated warning when duplicated across files (Node `rejectUnauthorized: false`, Python `verify=False`/`ssl.CERT_NONE`, `curl --insecure`)
+*   Insecure fallback secrets (`process.env.SECRET || 'default'`, `os.getenv('SECRET', 'default')`)
+*   Newly-added dependencies in `package.json`/`requirements.txt`/`pyproject.toml` (slopsquatting/typosquatting risk)
 
 ### 4. Failure Ranking (Strict)
 
@@ -190,4 +193,4 @@ MIT
 
 ## Version
 
-0.1.0
+0.2.0

@@ -525,10 +525,269 @@ HIGH_RISK_PATHS = [
 ]
 
 
+DIFF_GIT_HEADER_PATTERN = re.compile(r"^diff --git a/(.+?) b/(.+?)$", re.MULTILINE)
+
+
+def _attribute_diff_hunks_to_files(diff_content: str) -> Dict[str, str]:
+    """Split a unified diff into per-file chunks keyed by the file path.
+
+    Uses the `diff --git a/X b/X` headers as chunk boundaries so callers can
+    search individual files rather than the diff as a whole.
+    """
+    chunks: Dict[str, str] = {}
+    headers = list(DIFF_GIT_HEADER_PATTERN.finditer(diff_content))
+    for i, header in enumerate(headers):
+        start = header.end()
+        end = headers[i + 1].start() if i + 1 < len(headers) else len(diff_content)
+        file_path = header.group(2)
+        chunks[file_path] = diff_content[start:end]
+    return chunks
+
+
+def _detect_tls_bypass(
+    diff_content: str, diff_meta: GitDiffMeta
+) -> List[HeuristicWarning]:
+    """CLASS-12: TLS/Certificate verification bypass detection."""
+    warnings: List[HeuristicWarning] = []
+
+    tls_bypass_patterns_node = [
+        (
+            re.compile(r"^\+.*rejectUnauthorized\s*:\s*false", re.MULTILINE),
+            "rejectUnauthorized: false",
+        ),
+        (
+            re.compile(
+                r"^\+.*rejectUnauthorized\s*:\s*(?!true\b|false\b)[a-zA-Z_][a-zA-Z0-9_.]*",
+                re.MULTILINE,
+            ),
+            "rejectUnauthorized set to non-literal-true value "
+            "(variable/undefined can silently disable verification)",
+        ),
+        (
+            re.compile(
+                r"^\+.*NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['\"]?0['\"]?", re.MULTILINE
+            ),
+            "NODE_TLS_REJECT_UNAUTHORIZED=0",
+        ),
+    ]
+
+    # This pattern uses re.DOTALL to span a config object's multiple lines/keys,
+    # so it must only ever run against a single file's own diff chunk -- run
+    # directly against the raw, multi-file diff_content it can match straight
+    # through a `diff --git` file-boundary header and misattribute an unrelated
+    # file's `rejectUnauthorized: false` to this file's dialectOptions/ssl block.
+    sequelize_pattern = (
+        re.compile(
+            r"^\+.*dialectOptions\s*.*ssl.*rejectUnauthorized\s*:\s*false",
+            re.MULTILINE | re.DOTALL,
+        ),
+        "Sequelize dialectOptions.ssl.rejectUnauthorized: false",
+    )
+
+    tls_bypass_patterns_python = [
+        (
+            re.compile(r"^\+.*verify\s*=\s*False", re.MULTILINE),
+            "requests/httpx verify=False",
+        ),
+        (
+            re.compile(r"^\+.*ssl\._create_unverified_context\s*\(", re.MULTILINE),
+            "ssl._create_unverified_context()",
+        ),
+        (re.compile(r"^\+.*ssl\.CERT_NONE", re.MULTILINE), "ssl.CERT_NONE"),
+        (
+            re.compile(r"^\+.*PYTHONHTTPSVERIFY\s*=\s*['\"]?0['\"]?", re.MULTILINE),
+            "PYTHONHTTPSVERIFY=0",
+        ),
+    ]
+
+    tls_bypass_patterns_shell = [
+        (
+            re.compile(r"^\+.*curl\s+.*(-k\b|--insecure)", re.MULTILINE),
+            "curl --insecure/-k",
+        ),
+        (re.compile(r"^\+.*GIT_SSL_NO_VERIFY", re.MULTILINE), "GIT_SSL_NO_VERIFY"),
+    ]
+
+    # Patterns safe to run directly against the full diff_content (no DOTALL,
+    # so they cannot span across a `diff --git` file-boundary header).
+    global_pass_patterns = (
+        tls_bypass_patterns_node + tls_bypass_patterns_python + tls_bypass_patterns_shell
+    )
+    # All patterns, including the file-scoped-only Sequelize pattern, for the
+    # per-file duplication booster below.
+    all_patterns = global_pass_patterns + [sequelize_pattern]
+
+    # Global pass: emit a warning per match, same convention as existing rules.
+    for pattern, description in global_pass_patterns:
+        for match in pattern.finditer(diff_content):
+            warnings.append(
+                HeuristicWarning(
+                    message=f"[CLASS-12] TLS verification bypass: {description} (MITM risk on this connection)"
+                )
+            )
+
+    file_chunks = _attribute_diff_hunks_to_files(diff_content)
+
+    # The Sequelize pattern is scoped to each file's own diff chunk instead of
+    # the raw diff_content -- see the comment where it's defined above.
+    seq_pattern, seq_description = sequelize_pattern
+    for file_path, chunk in file_chunks.items():
+        for match in seq_pattern.finditer(chunk):
+            warnings.append(
+                HeuristicWarning(
+                    message=(
+                        f"[CLASS-12] TLS verification bypass: {seq_description} "
+                        f"(MITM risk on this connection)"
+                    )
+                )
+            )
+
+    # Per-file attribution for the multi-file duplication booster.
+    description_to_files: Dict[str, set] = {}
+    for file_path, chunk in file_chunks.items():
+        for pattern, description in all_patterns:
+            if pattern.search(chunk):
+                description_to_files.setdefault(description, set()).add(file_path)
+
+    for description, files in description_to_files.items():
+        if len(files) >= 2:
+            warnings.append(
+                HeuristicWarning(
+                    message=(
+                        f"[CLASS-12] TLS verification bypass duplicated across "
+                        f"{len(files)} files — likely applied to both connection and "
+                        f"deploy/migration code (elevated risk)"
+                    )
+                )
+            )
+
+    return warnings
+
+
+FALLBACK_SECRET_NAME_PATTERN = (
+    r"[A-Z0-9_]*(?:SECRET|KEY|TOKEN|PASSWORD|PASSWD|PWD|SALT|CREDENTIAL|PRIVATE|AUTH)[A-Z0-9_]*"
+)
+FALLBACK_SECRET_EXCLUDE_LITERALS = {
+    "",
+    "changeme",
+    "placeholder",
+    "xxx",
+    "todo",
+    "replace_me",
+}
+
+
+def _detect_fallback_secrets(diff_content: str) -> List[HeuristicWarning]:
+    """CLASS-13: Insecure fallback secret detection (env.SECRET || 'default')."""
+    warnings: List[HeuristicWarning] = []
+
+    fallback_secret_patterns = [
+        # JS/TS: process.env.X || 'literal', process.env['X'] || 'literal',
+        # import.meta.env, Bun.env, and ??/||=/??= variants
+        re.compile(
+            r"^\+.*(?:process\.env|import\.meta\.env|Bun\.env)\s*(?:\.\s*("
+            + FALLBACK_SECRET_NAME_PATTERN
+            + r")"
+            r"|\[\s*['\"](" + FALLBACK_SECRET_NAME_PATTERN + r")['\"]\s*\])"
+            r"\s*(?:\|\||\?\?|\|\|=|\?\?=)\s*['\"]([^'\"]+)['\"]",
+            re.MULTILINE,
+        ),
+        # Python: os.environ.get('X', 'literal') / os.getenv('X', 'literal')
+        re.compile(
+            r"^\+.*os\.(?:environ\.get|getenv)\(\s*['\"]("
+            + FALLBACK_SECRET_NAME_PATTERN
+            + r")['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)",
+            re.MULTILINE,
+        ),
+        # Python: os.environ.get('X') or 'literal'
+        re.compile(
+            r"^\+.*os\.environ\.get\(\s*['\"]("
+            + FALLBACK_SECRET_NAME_PATTERN
+            + r")['\"]\s*\)\s+or\s+['\"]([^'\"]+)['\"]",
+            re.MULTILINE,
+        ),
+    ]
+
+    for pattern in fallback_secret_patterns:
+        for match in pattern.finditer(diff_content):
+            groups = [g for g in match.groups() if g is not None]
+            if not groups:
+                continue
+            # Variable name is the first group; literal (if captured) is the last.
+            var_name = groups[0]
+            literal = groups[-1] if len(groups) > 1 else None
+
+            if literal is not None and literal.strip().lower() in FALLBACK_SECRET_EXCLUDE_LITERALS:
+                continue
+
+            warnings.append(
+                HeuristicWarning(
+                    message=(
+                        f"[CLASS-13] Insecure fallback secret: {var_name} has a "
+                        f"hardcoded default value (app will silently run insecurely "
+                        f"if env var is unset)"
+                    )
+                )
+            )
+
+    return warnings
+
+
+NEW_NPM_DEP_PATTERN = re.compile(r'^\+\s*"([a-zA-Z0-9_@/.-]+)"\s*:\s*"[\^~]?[\d]', re.MULTILINE)
+REMOVED_NPM_DEP_PATTERN = re.compile(r'^-\s*"([a-zA-Z0-9_@/.-]+)"\s*:\s*"[\^~]?[\d]', re.MULTILINE)
+NEW_PIP_DEP_PATTERN = re.compile(r"^\+\s*([a-zA-Z0-9_.-]+)\s*(?:==|>=|~=)", re.MULTILINE)
+REMOVED_PIP_DEP_PATTERN = re.compile(r"^-\s*([a-zA-Z0-9_.-]+)\s*(?:==|>=|~=)", re.MULTILINE)
+
+DEPENDENCY_MANIFEST_FILES = {
+    "package.json",
+    "requirements.txt",
+    "requirements-dev.txt",
+    "pyproject.toml",
+}
+
+
+def _detect_new_dependency_risk(
+    diff_content: str, diff_meta: GitDiffMeta, base_path: Path
+) -> List[HeuristicWarning]:
+    """CLASS-14: Slopsquatting / newly-added dependency risk (offline heuristic only)."""
+    warnings: List[HeuristicWarning] = []
+
+    file_chunks = _attribute_diff_hunks_to_files(diff_content)
+
+    for file_path, chunk in file_chunks.items():
+        file_name = Path(file_path).name
+        if file_name not in DEPENDENCY_MANIFEST_FILES:
+            continue
+
+        if file_name == "package.json":
+            added_names = set(NEW_NPM_DEP_PATTERN.findall(chunk))
+            removed_names = set(REMOVED_NPM_DEP_PATTERN.findall(chunk))
+        else:
+            added_names = set(NEW_PIP_DEP_PATTERN.findall(chunk))
+            removed_names = set(REMOVED_PIP_DEP_PATTERN.findall(chunk))
+
+        new_names = added_names - removed_names
+        for name in sorted(new_names):
+            warnings.append(
+                HeuristicWarning(
+                    message=(
+                        f"[CLASS-14] New dependency added: '{name}' — verify this "
+                        f"package name is spelled correctly and exists on the "
+                        f"registry before merging (hallucinated/typosquatted "
+                        f"package risk)"
+                    ),
+                    file_path=file_path,
+                )
+            )
+
+    return warnings
+
+
 def detect_heuristic_warnings(
     diff_meta: GitDiffMeta,
     diff_content: str,
     max_diff_loc: Optional[int],
+    base_path: Optional[Path] = None,
 ) -> List[HeuristicWarning]:
     """Detect heuristic red flags in the codebase."""
     warnings = []
@@ -785,6 +1044,17 @@ def detect_heuristic_warnings(
                 message=f"[CLASS-11] Destructive command: {match.group(0).strip()} (requires approval)"
             )
         )
+
+    # Class 12: TLS/Certificate verification bypass
+    warnings.extend(_detect_tls_bypass(diff_content, diff_meta))
+
+    # Class 13: Insecure fallback secret
+    warnings.extend(_detect_fallback_secrets(diff_content))
+
+    # Class 14: Slopsquatting / newly-added dependency risk
+    warnings.extend(
+        _detect_new_dependency_risk(diff_content, diff_meta, base_path or Path.cwd())
+    )
 
     return warnings
 
@@ -1056,7 +1326,7 @@ def check(
 
     # 5. Heuristic warnings
     typer.echo("⚠️  Detecting heuristic warnings...")
-    warnings = detect_heuristic_warnings(diff_meta, diff_content, max_diff_loc)
+    warnings = detect_heuristic_warnings(diff_meta, diff_content, max_diff_loc, base_path)
     typer.echo(f"  Found {len(warnings)} warnings")
     typer.echo("")
 
