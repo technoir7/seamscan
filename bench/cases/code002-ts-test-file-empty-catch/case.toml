@@ -1,0 +1,10 @@
+id = "code002-ts-test-file-empty-catch"
+description = "test helper swallows cleanup errors; test files are out of scope"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

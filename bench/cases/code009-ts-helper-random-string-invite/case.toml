@@ -1,0 +1,12 @@
+id = "code009-ts-helper-random-string-invite"
+description = "invite token comes from a random-string helper built on Math.random"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "lib/invites.ts"
+line = 13

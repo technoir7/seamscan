@@ -1,0 +1,12 @@
+id = "code010-ts-rlo-in-comment"
+description = "Trojan Source: an RLO in a comment hides the early return in an admin check"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "lib/access.ts"
+line = 4

@@ -1,0 +1,10 @@
+id = "code009-ts-crypto-sources"
+description = "tokens and codes from crypto.randomUUID, randomInt and randomBytes"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

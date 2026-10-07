@@ -1,0 +1,12 @@
+id = "code002-ts-edge-delete-promise-catch-log"
+description = "edge function deletes expired sessions and logs any failure through .catch(console.error)"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "supabase/functions/cleanup-sessions/index.ts"
+line = 10

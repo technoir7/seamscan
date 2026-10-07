@@ -1,0 +1,10 @@
+id = "code010-tsx-rtl-text-no-controls"
+description = "Hebrew and Arabic UI copy without any control characters"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

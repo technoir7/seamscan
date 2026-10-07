@@ -1,0 +1,12 @@
+id = "code004-tsx-client-pin-unlock"
+description = "client component unlocks a vault screen when the PIN equals a literal"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "src/components/VaultLock.tsx"
+line = 8

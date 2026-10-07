@@ -1,0 +1,10 @@
+id = "code009-js-refresh-token-with-jitter"
+description = "token refresh waits a random jitter, but the token itself comes from the server"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

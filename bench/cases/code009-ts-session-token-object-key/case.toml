@@ -1,0 +1,12 @@
+id = "code009-ts-session-token-object-key"
+description = "login inserts a session row whose token comes from Math.random"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "src/server/api/login.ts"
+line = 12

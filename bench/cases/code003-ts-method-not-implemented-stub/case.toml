@@ -1,0 +1,12 @@
+id = "code003-ts-method-not-implemented-stub"
+description = "payment provider class keeps the editor's 'Method not implemented.' stub for refunds"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "lib/payments/paypal.ts"
+line = 16

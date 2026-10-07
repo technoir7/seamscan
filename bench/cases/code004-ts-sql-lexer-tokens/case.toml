@@ -1,0 +1,10 @@
+id = "code004-ts-sql-lexer-tokens"
+description = "SQL highlighter loops over lexer tokens and compares them with keywords"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

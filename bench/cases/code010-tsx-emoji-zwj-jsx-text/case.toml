@@ -1,0 +1,10 @@
+id = "code010-tsx-emoji-zwj-jsx-text"
+description = "family emoji with zero-width joiners in JSX text and a JSX attribute"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

@@ -1,0 +1,10 @@
+id = "code004-ts-placeholder-secret-guard"
+description = "startup refuses to run with the placeholder JWT secret"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

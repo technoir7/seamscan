@@ -1,0 +1,10 @@
+id = "code010-ts-bom-at-start"
+description = "file saved with a byte-order mark at the very start"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

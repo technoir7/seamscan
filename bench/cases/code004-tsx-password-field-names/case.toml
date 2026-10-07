@@ -1,0 +1,10 @@
+id = "code004-tsx-password-field-names"
+description = "form code compares field names, input types and strength labels with 'password'"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

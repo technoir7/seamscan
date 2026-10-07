@@ -1,0 +1,12 @@
+id = "code009-ts-csp-nonce-middleware"
+description = "middleware builds a CSP nonce from Math.random"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "middleware.ts"
+line = 4

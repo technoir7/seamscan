@@ -1,0 +1,10 @@
+id = "code010-mjs-zwnj-persian-string"
+description = "Persian copy uses a zero-width non-joiner inside a string, as the language requires"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

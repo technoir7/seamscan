@@ -1,0 +1,10 @@
+id = "code004-js-bearer-scheme-and-token-type"
+description = "auth header parsing compares the scheme and token type, not the token"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

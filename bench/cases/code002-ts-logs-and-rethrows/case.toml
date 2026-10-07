@@ -1,0 +1,10 @@
+id = "code002-ts-logs-and-rethrows"
+description = "server action logs a failed insert and rethrows so the error boundary shows it"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

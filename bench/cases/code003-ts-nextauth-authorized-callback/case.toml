@@ -1,0 +1,12 @@
+id = "code003-ts-nextauth-authorized-callback"
+description = "Auth.js middleware callback lets every request through"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "auth.config.ts"
+line = 6

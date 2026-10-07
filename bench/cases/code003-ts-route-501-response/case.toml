@@ -1,0 +1,10 @@
+id = "code003-ts-route-501-response"
+description = "unsupported method answers 501 Not Implemented on purpose instead of throwing"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

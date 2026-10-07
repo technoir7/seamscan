@@ -1,0 +1,10 @@
+id = "code009-tsx-random-ids-and-colors"
+description = "UI ids, React keys and avatar colors use Math.random"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

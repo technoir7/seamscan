@@ -1,0 +1,12 @@
+id = "code001-ts-node-tls-env-in-route"
+description = "route handler turns off TLS verification for the whole process"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "app/api/inventory/sync/route.ts"
+line = 3

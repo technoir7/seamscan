@@ -1,0 +1,10 @@
+id = "code009-js-game-room-code"
+description = "party game picks a short room code and a random seat order; neither is a secret"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

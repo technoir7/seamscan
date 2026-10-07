@@ -1,0 +1,12 @@
+id = "code004-tsx-client-admin-password-jsx"
+description = "Vite client component shows the admin panel when the typed password equals a literal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "src/pages/Admin.tsx"
+line = 10

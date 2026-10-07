@@ -1,0 +1,12 @@
+id = "code002-js-axios-post-console-warn"
+description = "order webhook forwarder only console.warns when the POST fails"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "server/forward.js"
+line = 6

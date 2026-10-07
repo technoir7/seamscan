@@ -1,0 +1,12 @@
+id = "code003-ts-verify-signature-returns-true"
+description = "webhook route's signature check always passes"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "app/api/webhooks/lemonsqueezy/route.ts"
+line = 4

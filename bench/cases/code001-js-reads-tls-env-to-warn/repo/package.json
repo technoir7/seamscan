@@ -1,0 +1,8 @@
+{
+  "name": "boot-check",
+  "private": true,
+  "scripts": {
+    "start": "NODE_TLS_REJECT_UNAUTHORIZED=1 node server/index.js",
+    "check:tls": "node -e \"require('./server/boot').assertTlsVerification()\""
+  }
+}

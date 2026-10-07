@@ -1,0 +1,10 @@
+id = "code004-ts-empty-password-checks"
+description = "emptiness and whitespace checks on a password"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

@@ -1,0 +1,12 @@
+id = "code002-tsx-post-fetch-catch-noop"
+description = "client component fires a POST and throws away any failure with .catch(() => {})"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "components/checkout-button.tsx"
+line = 13

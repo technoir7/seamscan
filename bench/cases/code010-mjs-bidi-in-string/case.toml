@@ -1,0 +1,12 @@
+id = "code010-mjs-bidi-in-string"
+description = "string literal with RLO and isolates makes a comparison read differently"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "lib/roles.mjs"
+line = 2

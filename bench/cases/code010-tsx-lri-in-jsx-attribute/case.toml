@@ -1,0 +1,12 @@
+id = "code010-tsx-lri-in-jsx-attribute"
+description = "a JSX attribute string carries bidi isolates"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "components/user-badge.tsx"
+line = 2

@@ -1,0 +1,10 @@
+id = "code002-mjs-sentry-capture"
+description = "webhook worker reports a failed write to Sentry and records the failure"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

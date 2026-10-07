@@ -1,0 +1,10 @@
+id = "code001-js-plain-local-connection"
+description = "TLS turned off entirely for a local database, which is not certificate verification"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

@@ -1,0 +1,10 @@
+id = "code002-ts-json-fallback-values"
+description = "request body and optional upstream data fall back to null and empty values on purpose"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

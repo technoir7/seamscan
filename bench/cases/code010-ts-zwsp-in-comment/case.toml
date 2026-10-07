@@ -1,0 +1,12 @@
+id = "code010-ts-zwsp-in-comment"
+description = "zero-width spaces sit inside a line comment in a route handler"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/api/admin/route.ts"
+line = 4

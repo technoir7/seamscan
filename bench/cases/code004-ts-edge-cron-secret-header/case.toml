@@ -1,0 +1,12 @@
+id = "code004-ts-edge-cron-secret-header"
+description = "edge function guards a cron job with a header secret written in the source"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "supabase/functions/nightly-cleanup/index.ts"
+line = 5

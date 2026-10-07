@@ -1,0 +1,12 @@
+id = "code002-js-express-stripe-refund-empty"
+description = "Express refund endpoint ignores Stripe errors and reports success"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "server/routes/billing.js"
+line = 11

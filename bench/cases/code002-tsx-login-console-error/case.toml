@@ -1,0 +1,12 @@
+id = "code002-tsx-login-console-error"
+description = "login handler only console.errors a failed sign-in"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "src/pages/Login.tsx"
+line = 15

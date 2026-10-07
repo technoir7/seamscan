@@ -1,0 +1,17 @@
+id = "code010-js-zwj-in-identifier"
+description = "a zero-width joiner makes a second isAdmin that looks identical to the real one"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "server/auth.js"
+line = 5
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "server/auth.js"
+line = 9

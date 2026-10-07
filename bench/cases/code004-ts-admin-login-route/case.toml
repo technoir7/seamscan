@@ -1,0 +1,12 @@
+id = "code004-ts-admin-login-route"
+description = "admin login route compares the posted password with a literal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "app/api/admin/login/route.ts"
+line = 7

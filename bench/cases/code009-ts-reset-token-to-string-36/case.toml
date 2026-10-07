@@ -1,0 +1,12 @@
+id = "code009-ts-reset-token-to-string-36"
+description = "forgot-password route builds the reset token from Math.random().toString(36)"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "app/api/auth/forgot-password/route.ts"
+line = 9
