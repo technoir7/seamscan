@@ -360,6 +360,13 @@ def _binding_scope(module: JsModule, ident: Node) -> tuple[Node, bool]:
     return module.root, False
 
 
+def assigned_values(module: JsModule, ident: Node) -> list[Node]:
+    """Values assigned to an identifier in the scope that binds it: its function, or the
+    module for a name no function binds. Empty for an unassigned parameter or an import."""
+    scope, _ = _binding_scope(module, ident)
+    return _declared_values(module, scope, text(module, ident))
+
+
 def _unwrap(node: Node) -> Node:
     while node.type in _WRAPPERS and node.named_children:
         node = node.named_children[0]
