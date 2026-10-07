@@ -1,0 +1,10 @@
+id = "sec003-pem-path-defaults"
+description = "JWT key variables that default to .pem paths; the key material lives in the file"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

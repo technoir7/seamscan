@@ -1,0 +1,10 @@
+id = "sec003-key-named-config"
+description = "config values whose names contain KEY but are not keys"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

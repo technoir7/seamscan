@@ -1,0 +1,17 @@
+id = "sec004-env-local-live-key"
+description = ".env.local holding a live Stripe key, exported and quoted"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.local"
+line = 1
+
+[[expected]]
+rule = "SC-SEC-001"
+path = ".env.local"
+line = 2

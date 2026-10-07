@@ -1,0 +1,17 @@
+id = "sec001-supabase-secret-in-env"
+description = "Supabase secret key in a committed .env: the secret and the file are both findings"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = ".env"
+line = 2
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env"
+line = 1

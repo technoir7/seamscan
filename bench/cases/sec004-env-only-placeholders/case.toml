@@ -1,0 +1,13 @@
+id = "sec004-env-only-placeholders"
+description = "a committed .env holding nothing but placeholders"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-004"
+
+[[forbidden]]
+rule = "SC-SEC-001"

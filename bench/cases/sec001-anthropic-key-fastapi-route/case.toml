@@ -1,0 +1,12 @@
+id = "sec001-anthropic-key-fastapi-route"
+description = "Anthropic API key passed straight to the client in a FastAPI router"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/routes/chat.py"
+line = 6

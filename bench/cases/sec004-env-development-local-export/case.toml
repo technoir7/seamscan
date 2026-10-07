@@ -1,0 +1,12 @@
+id = "sec004-env-development-local-export"
+description = ".env.development.local with `export` lines and single quotes"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.development.local"
+line = 2

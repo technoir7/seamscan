@@ -1,0 +1,12 @@
+id = "sec001-supabase-service-role-jwt"
+description = "Supabase service_role JWT hardcoded so the backend can bypass RLS"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/db.py"
+line = 5

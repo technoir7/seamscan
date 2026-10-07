@@ -1,0 +1,10 @@
+id = "sec003-conftest-setdefault"
+description = "test settings planted in conftest.py: test files are out of scope"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

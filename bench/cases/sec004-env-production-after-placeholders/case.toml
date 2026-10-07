@@ -1,0 +1,12 @@
+id = "sec004-env-production-after-placeholders"
+description = ".env.production: placeholders first, then a real database URL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.production"
+line = 6

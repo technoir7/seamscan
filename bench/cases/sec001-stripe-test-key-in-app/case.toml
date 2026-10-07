@@ -1,0 +1,12 @@
+id = "sec001-stripe-test-key-in-app"
+description = "Stripe test-mode key in app code: reported, at LOW severity"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/billing.py"
+line = 5

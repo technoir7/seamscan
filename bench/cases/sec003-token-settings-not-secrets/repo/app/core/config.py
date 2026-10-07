@@ -1,0 +1,9 @@
+import os
+
+SECRET_KEY = os.environ["SECRET_KEY"]
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+PASSWORD_MIN_LENGTH = int(os.getenv("PASSWORD_MIN_LENGTH", "12"))
+BCRYPT_SALT_ROUNDS = int(os.getenv("BCRYPT_SALT_ROUNDS", "12"))
+TOKEN_ISSUER = os.getenv("TOKEN_ISSUER", "https://auth.acme.dev")

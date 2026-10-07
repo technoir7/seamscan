@@ -1,0 +1,10 @@
+id = "sec003-token-settings-not-secrets"
+description = "JWT/token/password *settings* with defaults; the secret itself is required"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

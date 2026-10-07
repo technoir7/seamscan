@@ -1,0 +1,12 @@
+id = "sec004-backend-env-after-comments"
+description = "backend/.env with a header comment and an empty value before the first real one"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = "backend/.env"
+line = 5

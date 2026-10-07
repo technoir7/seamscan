@@ -1,0 +1,13 @@
+id = "sec004-env-sample-local-defaults"
+description = ".env.sample with working local defaults: a template, so allowed"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-004"
+
+[[forbidden]]
+rule = "SC-SEC-001"

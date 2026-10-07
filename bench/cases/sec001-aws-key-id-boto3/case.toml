@@ -1,0 +1,12 @@
+id = "sec001-aws-key-id-boto3"
+description = "AWS access key id hardcoded in a boto3 client; the secret half comes from the env"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/storage.py"
+line = 8

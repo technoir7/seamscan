@@ -1,0 +1,12 @@
+id = "sec001-token-in-docstring-example"
+description = "a real GitHub token pasted into a curl example inside a module docstring"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "tools/sync_issues.py"
+line = 7
