@@ -1,0 +1,12 @@
+id = "web001-tsx-inline-server-action-delete"
+description = "Admin page defines an inline 'use server' action that deletes any post by id"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/admin/posts/page.tsx"
+line = 10

@@ -1,0 +1,10 @@
+id = "web001-py-fastapi-annotated-current-user"
+description = "FastAPI template style: CurrentUser is an Annotated Depends alias defined in deps.py"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

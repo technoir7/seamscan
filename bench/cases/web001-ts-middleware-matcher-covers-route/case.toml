@@ -1,0 +1,10 @@
+id = "web001-ts-middleware-matcher-covers-route"
+description = "middleware.ts checks an admin token for /api/admin/:path*, which covers the products route"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

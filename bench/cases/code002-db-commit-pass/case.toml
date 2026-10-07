@@ -10,3 +10,8 @@ source = "original"
 rule = "SC-CODE-002"
 path = "app/orders.py"
 line = 14
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/orders.py"
+line = 13

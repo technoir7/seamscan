@@ -1,0 +1,10 @@
+id = "web001-js-express-auth-middleware-in-route"
+description = "Express routes pass requireAuth in the registration, after a rate limiter"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

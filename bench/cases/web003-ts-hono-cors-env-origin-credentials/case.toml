@@ -1,0 +1,10 @@
+id = "web003-ts-hono-cors-env-origin-credentials"
+description = "Hono cors with credentials but a single origin from the environment"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

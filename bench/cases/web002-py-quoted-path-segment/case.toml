@@ -1,0 +1,10 @@
+id = "web002-py-quoted-path-segment"
+description = "Fixed GitHub origin with a quote()-d username path segment"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

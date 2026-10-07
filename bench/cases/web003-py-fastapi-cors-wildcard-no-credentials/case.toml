@@ -1,0 +1,10 @@
+id = "web003-py-fastapi-cors-wildcard-no-credentials"
+description = "Public read-only API allows any origin but no credentials"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

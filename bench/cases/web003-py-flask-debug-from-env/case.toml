@@ -1,0 +1,10 @@
+id = "web003-py-flask-debug-from-env"
+description = "debug flag is read from the environment, not hard-coded"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

@@ -1,0 +1,12 @@
+id = "web001-ts-middleware-matcher-misses-route"
+description = "middleware.ts only guards /dashboard; the invites API route it doesn't cover writes freely"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/api/invites/route.ts"
+line = 6

@@ -1,0 +1,10 @@
+id = "web001-ts-server-action-get-user-first"
+description = "Server actions call supabase.auth.getUser() before inserting or updating todos"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

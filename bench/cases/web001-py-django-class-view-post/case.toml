@@ -1,0 +1,12 @@
+id = "web001-py-django-class-view-post"
+description = "Django class-based view updates stock on POST; csrf_exempt is not an auth check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "inventory/views.py"
+line = 19

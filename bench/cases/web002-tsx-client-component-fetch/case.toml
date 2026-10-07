@@ -1,0 +1,10 @@
+id = "web002-tsx-client-component-fetch"
+description = "Client component fetches a URL from useSearchParams; browser code is not SSRF"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

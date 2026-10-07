@@ -1,0 +1,10 @@
+id = "web002-mjs-fixed-url-user-body"
+description = "Summarize endpoint sends user text in the body of a request to a fixed API URL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

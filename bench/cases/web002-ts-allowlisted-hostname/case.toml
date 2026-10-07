@@ -1,0 +1,10 @@
+id = "web002-ts-allowlisted-hostname"
+description = "Image proxy parses the URL and checks hostname against an allowlist Set first"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

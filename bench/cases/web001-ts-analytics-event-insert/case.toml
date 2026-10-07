@@ -1,0 +1,10 @@
+id = "web001-ts-analytics-event-insert"
+description = "Public page-view tracking endpoint writes to an analytics table on purpose"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

@@ -1,0 +1,10 @@
+id = "web003-mjs-express-cors-origin-callback"
+description = "cors() with credentials, but the origin callback only accepts listed origins"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

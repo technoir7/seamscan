@@ -1,0 +1,12 @@
+id = "web003-js-next-config-headers-wildcard-credentials"
+description = "next.config.js headers() sends ACAO * together with Allow-Credentials true"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-003"
+path = "next.config.js"
+line = 9

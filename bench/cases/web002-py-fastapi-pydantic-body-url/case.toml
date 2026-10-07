@@ -1,0 +1,12 @@
+id = "web002-py-fastapi-pydantic-body-url"
+description = "FastAPI webhook tester POSTs to a URL field of the request body model"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "app/webhooks.py"
+line = 15

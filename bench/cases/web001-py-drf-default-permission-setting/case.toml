@@ -1,0 +1,10 @@
+id = "web001-py-drf-default-permission-setting"
+description = "DRF settings make IsAuthenticated the default, so the bare @api_view is protected"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

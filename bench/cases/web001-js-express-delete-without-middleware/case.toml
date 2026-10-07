@@ -1,0 +1,12 @@
+id = "web001-js-express-delete-without-middleware"
+description = "Express router guards GET and PUT with requireAuth but forgot it on DELETE"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "server/routes/users.js"
+line = 18

@@ -1,0 +1,17 @@
+id = "web001-py-drf-api-view-no-permissions"
+description = "DRF function views save and delete orders with the default AllowAny permission"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "orders/views.py"
+line = 16
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "orders/views.py"
+line = 22

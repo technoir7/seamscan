@@ -1,0 +1,10 @@
+id = "web001-py-fastapi-get-reads"
+description = "FastAPI GET handlers run select() through the session but never write"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

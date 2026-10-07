@@ -1,0 +1,12 @@
+id = "web001-ts-server-action-supabase-update"
+description = "Server action updates a profile row chosen by a form field, with no getUser() call"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/settings/actions.ts"
+line = 10

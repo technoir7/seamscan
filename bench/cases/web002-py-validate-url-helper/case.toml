@@ -1,0 +1,10 @@
+id = "web002-py-validate-url-helper"
+description = "Recipe import calls validate_url() (raises on internal hosts) before requests.get"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

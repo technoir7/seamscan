@@ -1,0 +1,17 @@
+id = "web001-mjs-hono-insert-and-update"
+description = "Hono API on Node: POST and PATCH write with Drizzle and no auth middleware"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "server/app.mjs"
+line = 16
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "server/app.mjs"
+line = 23

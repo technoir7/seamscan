@@ -1,0 +1,17 @@
+id = "web001-py-fastapi-sqlalchemy-no-auth"
+description = "FastAPI router creates and deletes items with only a DB-session dependency"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/routers/items.py"
+line = 18
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/routers/items.py"
+line = 29

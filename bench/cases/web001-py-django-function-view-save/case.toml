@@ -1,0 +1,12 @@
+id = "web001-py-django-function-view-save"
+description = "Django view saves any user's profile on POST without login_required"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "accounts/views.py"
+line = 12

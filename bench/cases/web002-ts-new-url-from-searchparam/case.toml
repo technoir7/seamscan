@@ -1,0 +1,12 @@
+id = "web002-ts-new-url-from-searchparam"
+description = "Screenshot route wraps a query value in new URL() and fetches it"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "app/api/screenshot/route.ts"
+line = 10

@@ -1,0 +1,10 @@
+id = "web003-ts-supabase-edge-cors-headers"
+description = "Supabase Edge Function shared corsHeaders: ACAO * but no credentials"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

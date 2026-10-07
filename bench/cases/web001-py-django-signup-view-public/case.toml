@@ -1,0 +1,10 @@
+id = "web001-py-django-signup-view-public"
+description = "Django sign-up view saves a new user from the form, which is public by design"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

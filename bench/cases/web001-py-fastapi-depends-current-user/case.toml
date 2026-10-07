@@ -1,0 +1,10 @@
+id = "web001-py-fastapi-depends-current-user"
+description = "FastAPI POST takes Depends(get_current_user) alongside the DB session"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"
