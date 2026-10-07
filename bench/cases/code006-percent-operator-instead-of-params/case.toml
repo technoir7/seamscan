@@ -1,0 +1,12 @@
+id = "code006-percent-operator-instead-of-params"
+description = "% string formatting used where a parameter tuple was meant"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "jobs/cleanup.py"
+line = 6

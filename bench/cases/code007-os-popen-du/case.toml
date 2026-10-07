@@ -1,0 +1,12 @@
+id = "code007-os-popen-du"
+description = "os.popen with an f-string path"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "admin/disk.py"
+line = 5

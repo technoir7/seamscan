@@ -1,0 +1,10 @@
+id = "code005-unrelated-decode-calls"
+description = "byte, base64 and codec decode calls are not JWT decoding"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

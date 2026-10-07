@@ -1,0 +1,12 @@
+id = "code006-django-raw-concatenation"
+description = "Django Manager.raw with string concatenation"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "accounts/views.py"
+line = 7

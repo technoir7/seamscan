@@ -1,0 +1,10 @@
+id = "code005-peek-issuer-then-verify"
+description = "multi-tenant: unverified peek at iss, then a verifying decode of the same token"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

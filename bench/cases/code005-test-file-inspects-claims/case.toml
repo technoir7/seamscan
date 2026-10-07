@@ -1,0 +1,10 @@
+id = "code005-test-file-inspects-claims"
+description = "a test reads claims without verification to assert on them"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

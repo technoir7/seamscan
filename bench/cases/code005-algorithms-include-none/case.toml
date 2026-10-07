@@ -1,0 +1,12 @@
+id = "code005-algorithms-include-none"
+description = "decode allows the 'none' algorithm next to HS256"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "auth/tokens.py"
+line = 10

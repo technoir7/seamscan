@@ -1,0 +1,10 @@
+id = "code006-bare-wrapper-parameter"
+description = "a helper that executes the caller's query with params"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

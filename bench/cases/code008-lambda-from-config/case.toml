@@ -1,0 +1,12 @@
+id = "code008-lambda-from-config"
+description = "a transform lambda built from a config expression"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "etl/transforms.py"
+line = 9

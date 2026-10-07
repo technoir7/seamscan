@@ -1,0 +1,12 @@
+id = "code006-sqlite-executescript-table-name"
+description = "executescript with a caller-chosen table name"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "storage/schema.py"
+line = 11

@@ -1,0 +1,10 @@
+id = "code006-joined-conditions-with-params"
+description = "conditions list of literal fragments joined into the WHERE clause"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

@@ -1,0 +1,12 @@
+id = "code007-check-output-command-variable"
+description = "git command built in a variable, run with shell=True"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "scripts/changelog.py"
+line = 6

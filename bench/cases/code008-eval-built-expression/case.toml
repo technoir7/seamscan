@@ -1,0 +1,12 @@
+id = "code008-eval-built-expression"
+description = "eval of an expression assembled with an f-string"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "bot/math_command.py"
+line = 4

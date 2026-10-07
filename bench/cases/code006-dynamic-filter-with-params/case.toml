@@ -1,0 +1,10 @@
+id = "code006-dynamic-filter-with-params"
+description = "WHERE clause grows with literal fragments, values go in params"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

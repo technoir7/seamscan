@@ -1,0 +1,12 @@
+id = "code005-jose-algorithm-none-mixed-case"
+description = "python-jose decode with algorithms='None'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "service/auth.py"
+line = 8

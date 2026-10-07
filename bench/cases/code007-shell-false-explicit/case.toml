@@ -1,0 +1,10 @@
+id = "code007-shell-false-explicit"
+description = "shell=False with a variable command is not a shell"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

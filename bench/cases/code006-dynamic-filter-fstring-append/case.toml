@@ -1,0 +1,12 @@
+id = "code006-dynamic-filter-fstring-append"
+description = "filters appended as f-strings while params sit unused"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "app/search.py"
+line = 9

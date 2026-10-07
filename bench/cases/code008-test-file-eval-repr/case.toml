@@ -1,0 +1,10 @@
+id = "code008-test-file-eval-repr"
+description = "a test checks that repr round-trips through eval"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

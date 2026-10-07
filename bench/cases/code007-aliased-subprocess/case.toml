@@ -1,0 +1,12 @@
+id = "code007-aliased-subprocess"
+description = "import subprocess as sp, shell=True with concatenation"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "deploy/restart.py"
+line = 5

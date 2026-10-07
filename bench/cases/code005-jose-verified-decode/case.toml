@@ -1,0 +1,10 @@
+id = "code005-jose-verified-decode"
+description = "python-jose decode with key, pinned algorithm and audience check relaxed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

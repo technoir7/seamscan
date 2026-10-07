@@ -1,0 +1,12 @@
+id = "code007-partially-quoted"
+description = "only one of two interpolated values goes through shlex.quote"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "backup/archive.py"
+line = 7

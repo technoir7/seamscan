@@ -1,0 +1,12 @@
+id = "code008-flask-calculator"
+description = "Flask calculator evals a query parameter"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "calc/app.py"
+line = 10
