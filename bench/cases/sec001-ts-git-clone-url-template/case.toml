@@ -1,0 +1,12 @@
+id = "sec001-ts-git-clone-url-template"
+description = "Route handler clones a repo with a token inside a template that has substitutions"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/api/import/route.ts"
+line = 9

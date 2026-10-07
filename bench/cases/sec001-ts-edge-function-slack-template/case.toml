@@ -1,0 +1,12 @@
+id = "sec001-ts-edge-function-slack-template"
+description = "Supabase Edge Function posts to Slack with a bot token in a template literal"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "supabase/functions/notify-slack/index.ts"
+line = 9

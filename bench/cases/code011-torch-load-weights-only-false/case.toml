@@ -1,0 +1,12 @@
+id = "code011-torch-load-weights-only-false"
+description = "Checkpoint path from the command line loaded with weights_only=False"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "train/resume.py"
+line = 12

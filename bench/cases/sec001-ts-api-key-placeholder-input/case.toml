@@ -1,0 +1,10 @@
+id = "sec001-ts-api-key-placeholder-input"
+description = "Settings form shows key-shaped placeholders and validates the prefix"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

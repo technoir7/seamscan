@@ -1,0 +1,10 @@
+id = "sec003-ts-public-keys-vite"
+description = "Public and publishable keys with literal fallbacks in a Vite client"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

@@ -1,0 +1,10 @@
+id = "code011-signed-and-json-loads"
+description = "json.loads, itsdangerous serializer.loads and ast.literal_eval: other `loads`"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

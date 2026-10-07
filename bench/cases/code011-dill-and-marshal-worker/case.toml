@@ -1,0 +1,17 @@
+id = "code011-dill-and-marshal-worker"
+description = "Task worker deserializes queued payloads with dill and marshal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "worker/tasks.py"
+line = 12
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "worker/tasks.py"
+line = 18

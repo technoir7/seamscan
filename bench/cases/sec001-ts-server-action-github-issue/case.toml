@@ -1,0 +1,12 @@
+id = "sec001-ts-server-action-github-issue"
+description = "Server action files GitHub issues with a token in a substitution-free template"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/feedback/actions.ts"
+line = 14

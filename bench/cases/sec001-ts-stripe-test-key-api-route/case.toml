@@ -1,0 +1,12 @@
+id = "sec001-ts-stripe-test-key-api-route"
+description = "Pages-router API route with a Stripe test-mode key: reported at LOW"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "pages/api/create-payment-intent.ts"
+line = 4

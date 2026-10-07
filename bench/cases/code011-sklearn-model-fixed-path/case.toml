@@ -1,0 +1,10 @@
+id = "code011-sklearn-model-fixed-path"
+description = "FastAPI service loads pickled sklearn artifacts shipped beside the module"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

@@ -1,0 +1,10 @@
+id = "code011-pickle-deepcopy-snapshot"
+description = "Undo history copies state with a pickle round-trip of the app's own objects"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

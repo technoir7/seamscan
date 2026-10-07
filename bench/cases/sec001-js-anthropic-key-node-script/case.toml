@@ -1,0 +1,12 @@
+id = "sec001-js-anthropic-key-node-script"
+description = "Node script summarizing files with an Anthropic key in the client options"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "scripts/summarize.mjs"
+line = 4

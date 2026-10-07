@@ -1,0 +1,10 @@
+id = "code011-literal-and-other-libraries"
+description = "yaml.load of a literal, shelve stores and other libraries' load methods"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

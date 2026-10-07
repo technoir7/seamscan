@@ -20,6 +20,9 @@ FAKES: dict[str, str] = {
     + "Vb7Kq2Xm9Lp4Rt8Nw3Jd6Hf1Gs5Yc0Ae7Uz2Wq4Ri9Ot3Pm6",
     "FAKE_SLACK_BOT": "xox" + "b-" + "2914736051-4820193746512-" + "Kq7Lm2Np9Xr4Tv8Bw3Jc6Hd1",
     "FAKE_SUPABASE_SECRET": "sb_" + "secret_" + "Nq4Wm8Kx2Lr7Tz5Bv9Jc3Hd6Fs1Gy0A",
+    # Public by design, but shaped like keys that GitHub secret scanning reports.
+    "FAKE_SUPABASE_PUBLISHABLE": "sb_" + "publishable_" + "Tz5Bv9Jc3Hd6Fs1Gy0ANq4Wm8Kx2Lr7",
+    "FAKE_FIREBASE_WEB_API_KEY": "AIza" + "SyB7kQ2mX9Lp4Rt8Nw3Jd6Hf1Gs5Yc0Ae7U",
     # Supabase-style JWTs: header.payload.signature, differing only in the `role` claim.
     "FAKE_SUPABASE_SERVICE_JWT": "eyJ"
     + "hbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."

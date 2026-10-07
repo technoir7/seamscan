@@ -1,0 +1,12 @@
+id = "code011-jsonpickle-cookie"
+description = "Shopping cart restored from a cookie with jsonpickle.decode"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "shop/views.py"
+line = 7

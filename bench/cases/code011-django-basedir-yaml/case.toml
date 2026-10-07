@@ -1,0 +1,10 @@
+id = "code011-django-basedir-yaml"
+description = "Django settings read a YAML file from the project directory with the full loader"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

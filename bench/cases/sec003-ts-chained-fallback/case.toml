@@ -1,0 +1,17 @@
+id = "sec003-ts-chained-fallback"
+description = "jose signing key from a chain of env reads ending in a literal, and an inline ||"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "lib/session.ts"
+line = 4
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "lib/session.ts"
+line = 6

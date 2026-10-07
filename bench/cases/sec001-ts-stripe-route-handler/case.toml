@@ -1,0 +1,12 @@
+id = "sec001-ts-stripe-route-handler"
+description = "Next.js route handler constructs Stripe with a live secret key"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/api/checkout/route.ts"
+line = 4

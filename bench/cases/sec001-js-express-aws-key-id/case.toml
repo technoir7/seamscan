@@ -1,0 +1,12 @@
+id = "sec001-js-express-aws-key-id"
+description = "Express upload service with an AWS access key id hardcoded in the S3 client"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "server/storage.js"
+line = 6

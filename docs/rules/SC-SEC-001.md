@@ -1,6 +1,6 @@
 # SC-SEC-001 — Provider secret in source
 
-**Severity:** CRITICAL (LOW for test-mode keys) · **Confidence:** HIGH · **CWE:** [CWE-798](https://cwe.mitre.org/data/definitions/798.html) · **Languages:** Python, `.env` files (TS/JS planned in M3)
+**Severity:** CRITICAL (LOW for test-mode keys) · **Confidence:** HIGH · **CWE:** [CWE-798](https://cwe.mitre.org/data/definitions/798.html) · **Languages:** Python, TS/JS, `.env` files
 
 ## What it finds
 
@@ -8,6 +8,10 @@ A credential with a known provider shape, written into the repository:
 
 - in any string literal of a non-test Python file, including docstrings and the text
   parts of f-strings
+- in any string literal or template literal of a non-test TS/TSX/JS/JSX file. The text
+  parts of a template with `${}` substitutions are read too, so
+  `` `https://${user}:ghp_…@github.com/${repo}` `` is found. JSX attribute strings
+  (`placeholder="…"`) are string literals and are read.
 - in the values of `.env` and `.env.*` files, including `.env.example` and `.env.sample`
 
 The shapes are Stripe `sk_live_`/`rk_live_`, OpenAI `sk-proj-`/`sk-`, Anthropic
@@ -17,6 +21,15 @@ The shapes are Stripe `sk_live_`/`rk_live_`, OpenAI `sk-proj-`/`sk-`, Anthropic
 
 Stripe test-mode keys (`sk_test_`) are reported at LOW severity. Publishable values
 (`pk_live_`, `sb_publishable_`, anon JWTs) are not reported.
+
+In a TS/JS file whose role is **client** (spec §5.6: `"use client"`, or `src/**` in a
+Vite/CRA app outside its server folders), the message says the key is in browser code
+and ships to every visitor. The severity stays CRITICAL either way. SC-SEC-002 (M4)
+will own the full client-exposure story, including public env vars.
+
+Test files are skipped in both languages: `test_*.py`, `*_test.py`, `conftest.py`,
+`*.test.*`, `*.spec.*`, and anything under `tests/`, `test/`, `__tests__/`, `e2e/` or
+`cypress/`.
 
 The finding never contains the value: message and evidence show only the redacted
 form, such as `sk_live_51Hx…L2mN4`.
@@ -37,6 +50,17 @@ client = Anthropic(api_key="sk-ant-api03-…")
 headers = {"Authorization": f"Bearer xoxb-…"}
 ```
 
+```tsx
+"use client";
+const openai = new OpenAI({ apiKey: "sk-proj-…", dangerouslyAllowBrowser: true });
+```
+
+```ts
+const stripe = new Stripe("sk_live_51Hx…");                       // route handler
+headers: { Authorization: `Bearer xoxb-…` }                        // Edge Function
+const remote = `https://ghp_…@github.com/${owner}/${repo}.git`;   // deploy script
+```
+
 ```sh
 # .env.example
 OPENAI_API_KEY=sk-proj-Qm7R…   # a real key pasted into the template
@@ -52,6 +76,15 @@ key.startswith("sk_test_")                  # a prefix, not a key
 stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
 ```
 
+```ts
+loadStripe("pk_live_51Hx…");
+createClient(SUPABASE_URL, "sb_publishable_…");
+const firebaseConfig = { apiKey: "AIza…", authDomain: "acme.firebaseapp.com" };
+<input placeholder="sk-proj-your-openai-api-key-here" />
+const STRIPE_KEY = /^(sk|rk)_(live|test)_[A-Za-z0-9]{24,}$/;      // a pattern, not a key
+vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_…");                     // in lib/stripe.test.ts
+```
+
 ## How to fix
 
 Revoke the key with the provider first: it is already exposed. Then read it from the
@@ -62,9 +95,14 @@ environment or a secret manager, and keep real values in an ignored `.env`.
 - Only known provider shapes are found. Generic secrets (a random `SECRET_KEY`, a
   database password, an AWS *secret* access key) are not.
 - A key split across concatenated literals (`"sk_live_" + "51Hx…"`) is missed.
-- Comments are not read, so a key pasted into a `# example:` comment is missed.
-- Test files are skipped entirely, so a live key in `tests/` is missed.
-- Keys in other file types (JSON, YAML, TOML, JS) are not checked yet.
+- Comments are not read, so a key pasted into a `# example:` or `// e.g.` comment is
+  missed. JSX text between tags (`<code>sk_live_…</code>`) is not a string literal and
+  is missed too.
+- Test files are skipped entirely, so a live key in `tests/` or a `*.test.ts` is missed.
+- Keys in other file types (JSON, YAML, TOML, HTML) are not checked yet.
+- Only client files get the "browser code" wording. A key in a shared module that a
+  client component imports is reported, but without that wording, since the rule
+  doesn't follow imports.
 - Placeholder detection is a short list: a run of eight or more `x`, or the words
   `your` or `example` anywhere in the value. Other key-shaped dummies are reported.
 - AWS key ids are reported on their own; the spec's "40-char secret nearby" check is

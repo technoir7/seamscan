@@ -1,0 +1,17 @@
+id = "sec003-js-destructured-env-defaults"
+description = "Config module destructures process.env with literal defaults for secrets"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "config/index.js"
+line = 6
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "config/index.js"
+line = 7

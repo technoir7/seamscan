@@ -1,0 +1,10 @@
+id = "sec003-ts-test-setup-secrets"
+description = "Vitest files plant dummy secrets with fallbacks: test files are out of scope"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

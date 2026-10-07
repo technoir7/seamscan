@@ -1,0 +1,10 @@
+id = "code011-bundled-model-file"
+description = "Model and config files shipped next to the module, opened by fixed paths"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

@@ -1,0 +1,12 @@
+id = "sec003-js-session-secret-bracket"
+description = "express-session secret read with a bracket lookup and a ?? fallback"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "server/app.mjs"
+line = 8

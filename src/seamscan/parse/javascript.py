@@ -216,6 +216,8 @@ def qualified_name(module: JsModule, node: Node) -> str | None:
         return module.aliases.get(name, name)
     if node.type == "this":
         return "this"
+    if node.type == "meta_property":  # `import.meta`, as in Vite's `import.meta.env.X`
+        return text(module, node)
     if node.type == "member_expression":
         obj = node.child_by_field_name("object")
         prop = node.child_by_field_name("property")
