@@ -1,0 +1,12 @@
+id = "code009-temporary-password"
+description = "admin password reset hands out a random.sample password"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "app/routes/admin_users.py"
+line = 17

@@ -535,9 +535,237 @@ def _hardcoded_credentials(ctx: RuleContext) -> Iterator[Finding]:
                 )
 
 
+# ---------------------------------------------------------------- SC-CODE-009
+
+PREDICTABLE_RANDOM = meta(
+    "SC-CODE-009",
+    "Predictable randomness for secrets",
+    Severity.MEDIUM,
+    Confidence.HIGH,
+    ("CWE-338",),
+    frozenset({"python"}),
+    "A token, password or code comes from the `random` module, whose output can be predicted.",
+)
+
+_SECRET_WORDS = frozenset(
+    {
+        "token",
+        "tokens",
+        "secret",
+        "secrets",
+        "password",
+        "passwd",
+        "otp",
+        "nonce",
+        "salt",
+        "passcode",
+        "apikey",
+    }
+)
+# `code`, `key`, `link` and `url` mostly name ordinary things (status_code, cache_key);
+# they name a secret only after one of these qualifiers.
+_SECRET_QUALIFIERS = frozenset(
+    {
+        "verification",
+        "verify",
+        "confirm",
+        "confirmation",
+        "reset",
+        "recovery",
+        "backup",
+        "activation",
+        "invite",
+        "invitation",
+        "login",
+        "auth",
+        "mfa",
+        "2fa",
+        "sms",
+        "security",
+        "access",
+        "session",
+        "api",
+        "secret",
+        "private",
+        "signing",
+        "encryption",
+        "license",
+        "magic",
+        "unlock",
+    }
+)
+_QUALIFIED_NOUNS = frozenset({"code", "codes", "key", "keys", "link", "url"})
+
+Origins = dict[int, str]  # id(origin call) -> what it calls, e.g. "random.choice"
+
+
+def _is_secret_name(name: str) -> bool:
+    words = name_words(name)
+    return any(w in _SECRET_WORDS for w in words) or any(
+        (prev in _SECRET_QUALIFIERS and w in _QUALIFIED_NOUNS) or (prev, w) == ("session", "id")
+        for prev, w in zip(words, words[1:])
+    )
+
+
+def _random_call(module: PyModule, call: ast.Call) -> str | None:
+    # SystemRandom draws from os.urandom; `random.SystemRandom().choice` resolves to no
+    # qualified name, so only the constructor needs excluding.
+    name = qualified_name(module, call.func)
+    if name and name.startswith("random.") and name != "random.SystemRandom":
+        return name
+    return None
+
+
+def _callee(call: ast.Call) -> str | None:
+    if isinstance(call.func, ast.Name):
+        return call.func.id
+    if isinstance(call.func, ast.Attribute):
+        return call.func.attr
+    return None
+
+
+def _origins(
+    module: PyModule, expr: ast.expr, tainted: dict[str, Origins], helpers: frozenset[str]
+) -> Origins:
+    found: Origins = {}
+    for node in ast.walk(expr):
+        if isinstance(node, ast.Call):
+            source = _random_call(module, node)
+            callee = _callee(node)
+            if source is None and callee in helpers:
+                source = f"{callee}()"
+            if source:
+                found[id(node)] = source
+        elif isinstance(node, ast.Name) and node.id in tainted:
+            found.update(tainted[node.id])
+    return found
+
+
+def _target_label(target: ast.expr) -> str | None:
+    if isinstance(target, ast.Name):
+        return target.id
+    if isinstance(target, ast.Attribute):
+        return target.attr
+    if isinstance(target, ast.Subscript) and isinstance(target.slice, ast.Constant):
+        key = target.slice.value
+        return key if isinstance(key, str) else None
+    return None
+
+
+Anchor = ast.expr | ast.stmt
+Sink = tuple[Anchor, str, ast.expr]  # where to report, the name it gets, the value
+
+
+def _scope_nodes(module: PyModule) -> dict[int, list[ast.AST]]:
+    """Every node grouped by the function it runs in (the module counts as one scope)."""
+    scopes: dict[int, list[ast.AST]] = {}
+    for node in ast.walk(module.tree):
+        scope = enclosing_function(module, node) or module.tree
+        scopes.setdefault(id(scope), []).append(node)
+    return scopes
+
+
+def _assignments(nodes: list[ast.AST]) -> list[tuple[str, ast.expr]]:
+    pairs: list[tuple[str, ast.expr]] = []
+    for node in nodes:
+        if isinstance(node, ast.Assign):
+            pairs += [(t.id, node.value) for t in node.targets if isinstance(t, ast.Name)]
+        elif isinstance(node, ast.AnnAssign | ast.AugAssign) and isinstance(node.target, ast.Name):
+            if node.value is not None:
+                pairs.append((node.target.id, node.value))
+    return pairs
+
+
+def _taint(
+    module: PyModule, assignments: list[tuple[str, ast.expr]], helpers: frozenset[str]
+) -> dict[str, Origins]:
+    """Local names holding a random value, followed through plain assignments
+    (flow-insensitive; the fixpoint ends because origins are finite)."""
+    tainted: dict[str, Origins] = {}
+    changed = True
+    while changed:
+        changed = False
+        for name, value in assignments:
+            found = _origins(module, value, tainted, helpers)
+            known = tainted.setdefault(name, {})
+            if not found.keys() <= known.keys():
+                known.update(found)
+                changed = True
+    return {name: o for name, o in tainted.items() if o}
+
+
+def _sinks(module: PyModule, nodes: list[ast.AST]) -> list[Sink]:
+    sinks: list[Sink] = []
+    for node in nodes:
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if label := _target_label(t):
+                    sinks.append((node, label, node.value))
+        elif isinstance(node, ast.AnnAssign | ast.AugAssign) and node.value is not None:
+            if label := _target_label(node.target):
+                sinks.append((node, label, node.value))
+        elif isinstance(node, ast.Return) and node.value is not None:
+            fn = enclosing_function(module, node)
+            if isinstance(fn, ast.FunctionDef | ast.AsyncFunctionDef):
+                sinks.append((node, fn.name, node.value))
+        elif isinstance(node, ast.Call):
+            sinks += [(kw.value, kw.arg, kw.value) for kw in node.keywords if kw.arg]
+        elif isinstance(node, ast.Dict):
+            for key, value in zip(node.keys, node.values, strict=True):
+                if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                    sinks.append((value, key.value, value))
+    return sorted(
+        (s for s in sinks if _is_secret_name(s[1])), key=lambda s: (s[0].lineno, s[0].col_offset)
+    )
+
+
+def _random_helpers(module: PyModule, scopes: dict[int, list[ast.AST]]) -> frozenset[str]:
+    """Functions in this module that return a random value, one hop deep. A helper with a
+    secret-like name is reported where it is defined, so it isn't followed into callers."""
+    helpers: set[str] = set()
+    for node in ast.walk(module.tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        if _is_secret_name(node.name):
+            continue
+        nodes = scopes.get(id(node), [])
+        tainted = _taint(module, _assignments(nodes), frozenset())
+        if any(
+            isinstance(n, ast.Return)
+            and n.value is not None
+            and _origins(module, n.value, tainted, frozenset())
+            for n in nodes
+        ):
+            helpers.add(node.name)
+    return frozenset(helpers)
+
+
+def _predictable_random(ctx: RuleContext) -> Iterator[Finding]:
+    for module in _shipped(ctx):
+        scopes = _scope_nodes(module)
+        helpers = _random_helpers(module, scopes)
+        for nodes in scopes.values():
+            tainted = _taint(module, _assignments(nodes), helpers)
+            reported: set[int] = set()
+            for anchor, label, value in _sinks(module, nodes):
+                found = _origins(module, value, tainted, helpers)
+                if found.keys() <= reported:
+                    continue  # the same random value, already reported where it was named
+                reported |= found.keys()
+                source = next(iter(found.values()))
+                yield finding(
+                    PREDICTABLE_RANDOM,
+                    location(module, anchor),
+                    f"`{label}` comes from `{source}`, which is predictable; "
+                    "use the `secrets` module",
+                    snippet(module, anchor),
+                )
+
+
 RULES: tuple[Rule, ...] = (
     Rule(TLS_DISABLED, _tls_disabled),
     Rule(SWALLOWED_EXCEPTION, _swallowed_exceptions),
     Rule(UNFINISHED_CODE, _unfinished_code),
     Rule(HARDCODED_CREDENTIAL, _hardcoded_credentials),
+    Rule(PREDICTABLE_RANDOM, _predictable_random),
 )

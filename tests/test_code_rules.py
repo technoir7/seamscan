@@ -6,6 +6,7 @@ from seamscan.model import Finding, Severity, SourceFile
 from seamscan.rules.base import Rule
 from seamscan.rules.code import (
     HARDCODED_CREDENTIAL,
+    PREDICTABLE_RANDOM,
     RULES,
     SWALLOWED_EXCEPTION,
     UNFINISHED_CODE,
@@ -149,3 +150,44 @@ def test_only_a_loop_variable_named_token_is_exempt():
         "    return token == 'letmein'\n"
     )
     assert lines(run(HARDCODED_CREDENTIAL.id, src)) == [4]
+
+
+# ---------------------------------------------------------------- SC-CODE-009
+
+
+def test_one_finding_per_random_value():
+    src = (
+        "import random\n"
+        "def make_token():\n"
+        "    token = str(random.random())\n"
+        "    secret = token\n"
+        "    return token\n"
+    )
+    assert lines(run(PREDICTABLE_RANDOM.id, src)) == [3]
+
+
+def test_two_random_values_give_two_findings():
+    src = "import random as r\ndef f():\n    salt = r.randbytes(8)\n    nonce = r.randbytes(8)\n"
+    assert lines(run(PREDICTABLE_RANDOM.id, src)) == [3, 4]
+
+
+def test_secret_named_helper_is_reported_once_where_defined():
+    src = (
+        "import random\n"
+        "def generate_api_key():\n"
+        "    return '%x' % random.getrandbits(64)\n"
+        "def create(user):\n"
+        "    user.api_key = generate_api_key()\n"
+    )
+    assert lines(run(PREDICTABLE_RANDOM.id, src)) == [3]
+
+
+def test_qualified_nouns_and_system_random():
+    src = (
+        "import random\n"
+        "from random import SystemRandom\n"
+        "status_code = random.choice([500, 503])\n"
+        "reset_url = f'/reset/{random.randint(0, 10**9)}'\n"
+        "session_id = SystemRandom().getrandbits(64)\n"
+    )
+    assert lines(run(PREDICTABLE_RANDOM.id, src)) == [4]

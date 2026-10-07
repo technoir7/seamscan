@@ -1,0 +1,12 @@
+id = "code009-salt-from-import"
+description = "password salt from `from random import choice` inside a generator"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "app/passwords.py"
+line = 7

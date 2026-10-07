@@ -1,0 +1,10 @@
+id = "code009-test-fixture"
+description = "test fixture makes a throwaway token with random"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

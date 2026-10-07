@@ -1,0 +1,12 @@
+id = "code009-api-key-via-local"
+description = "API key body built with random.choices, returned through a local"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "app/keys.py"
+line = 9

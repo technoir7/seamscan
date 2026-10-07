@@ -1,0 +1,10 @@
+id = "code009-locust-keys"
+description = "load test picks random product and cart keys"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"
