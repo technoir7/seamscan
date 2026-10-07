@@ -1,0 +1,10 @@
+id = "code003-overridden-in-subclass"
+description = "exporter base class without 'Base' in its name; every subclass overrides export"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

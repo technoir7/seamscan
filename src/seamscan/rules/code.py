@@ -9,7 +9,9 @@ from collections.abc import Iterator
 from seamscan.facts.roles import Role, role_of
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse.python import (
+    FunctionNode,
     PyModule,
+    enclosing_function,
     is_constant,
     keyword,
     location,
@@ -221,7 +223,146 @@ def _swallowed_exceptions(ctx: RuleContext) -> Iterator[Finding]:
                     )
 
 
+# ---------------------------------------------------------------- SC-CODE-003
+
+UNFINISHED_CODE = meta(
+    "SC-CODE-003",
+    "Unfinished code in a shipped path",
+    Severity.HIGH,
+    Confidence.HIGH,
+    ("CWE-1164",),
+    frozenset({"python"}),
+    "A placeholder ships where real logic belongs: NotImplementedError, or a security "
+    "check that always passes.",
+)
+
+# Matched against whole words of the function name, with the inflections spelled out.
+_GUARD_WORD = re.compile(
+    r"auth|authn|authz|authenticat\w*|authori[sz]\w*|verif\w*|validat\w*|check|checks"
+    r"|permissions?|allowed|charge|refund\w*"
+)
+# Flask-Login's and Django's user classes define `is_authenticated` to return True.
+_GUARD_EXEMPT = frozenset({"is_authenticated"})
+_STUB_DECORATORS = frozenset({"abstractmethod", "overload"})
+
+
+def _last_segment(name: str | None) -> str:
+    return (name or "").rsplit(".", 1)[-1]
+
+
+def _is_interface(module: PyModule, cls: ast.ClassDef) -> bool:
+    """Protocols, ABCs and Base*/Abstract* classes: their methods exist to be overridden."""
+    words = name_words(cls.name)
+    if "base" in words or "abstract" in words:
+        return True
+    for base in cls.bases:
+        target = base.value if isinstance(base, ast.Subscript) else base
+        if _last_segment(qualified_name(module, target)) in ("Protocol", "ABC"):
+            return True
+    return any(
+        kw.arg == "metaclass" and _last_segment(qualified_name(module, kw.value)) == "ABCMeta"
+        for kw in cls.keywords
+    )
+
+
+def _overridden_in_module(module: PyModule, cls: ast.ClassDef, method: str) -> bool:
+    """A subclass in the same file overrides the method, so the class is an interface
+    whatever it's called. A subclass that inherits the stub instead doesn't count."""
+    for node in ast.walk(module.tree):
+        if isinstance(node, ast.ClassDef) and any(
+            _last_segment(qualified_name(module, b.value if isinstance(b, ast.Subscript) else b))
+            == cls.name
+            for b in node.bases
+        ):
+            if any(
+                isinstance(s, ast.FunctionDef | ast.AsyncFunctionDef) and s.name == method
+                for s in node.body
+            ):
+                return True
+    return False
+
+
+def _meant_to_be_overridden(module: PyModule, fn: FunctionNode | None) -> bool:
+    if fn is None or isinstance(fn, ast.Lambda):
+        return False
+    for dec in fn.decorator_list:
+        target = dec.func if isinstance(dec, ast.Call) else dec
+        if _last_segment(qualified_name(module, target)) in _STUB_DECORATORS:
+            return True
+    parent = module.parents.get(id(fn))
+    return isinstance(parent, ast.ClassDef) and (
+        _is_interface(module, parent) or _overridden_in_module(module, parent, fn.name)
+    )
+
+
+def _raises_not_implemented(node: ast.Raise) -> bool:
+    exc = node.exc.func if isinstance(node.exc, ast.Call) else node.exc
+    return isinstance(exc, ast.Name) and exc.id == "NotImplementedError"
+
+
+def _placeholder(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
+    """How the check is stubbed out, when its body (ignoring a docstring) is a placeholder."""
+    body = fn.body
+    first = body[0]
+    if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant):
+        if isinstance(first.value.value, str):
+            body = body[1:]
+    if not body:
+        return "has no body, so the check it names is never made"
+    if len(body) != 1:
+        return None
+    stmt = body[0]
+    if isinstance(stmt, ast.Pass) or (isinstance(stmt, ast.Expr) and is_constant(stmt.value, ...)):
+        return "has no body, so the check it names is never made"
+    if isinstance(stmt, ast.Return) and is_constant(stmt.value, True):
+        return "always returns True, so the check it names always passes"
+    return None
+
+
+def _is_guard_name(name: str) -> bool:
+    return name not in _GUARD_EXEMPT and any(_GUARD_WORD.fullmatch(w) for w in name_words(name))
+
+
+def _unfinished_code(ctx: RuleContext) -> Iterator[Finding]:
+    for module in _shipped(ctx):
+        for node in ast.walk(module.tree):
+            if isinstance(node, ast.Raise) and _raises_not_implemented(node):
+                fn = enclosing_function(module, node)
+                if _meant_to_be_overridden(module, fn):
+                    continue
+                where = (
+                    f"`{fn.name}`"
+                    if isinstance(fn, ast.FunctionDef | ast.AsyncFunctionDef)
+                    else "module code"
+                )
+                yield finding(
+                    UNFINISHED_CODE,
+                    location(module, node),
+                    f"{where} raises NotImplementedError in shipped code",
+                    snippet(module, node),
+                )
+            elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and _is_guard_name(
+                node.name
+            ):
+                stub = _placeholder(node)
+                if stub is None or _meant_to_be_overridden(module, node):
+                    continue
+                yield finding(
+                    UNFINISHED_CODE,
+                    Location(
+                        module.path,
+                        node.lineno,
+                        node.col_offset + 1,
+                        node.lineno,
+                        node.col_offset + 1,
+                    ),
+                    f"`{node.name}` {stub}",
+                    _source_line(module.source, node.lineno),
+                )
+
+
 RULES: tuple[Rule, ...] = (
     Rule(TLS_DISABLED, _tls_disabled),
     Rule(SWALLOWED_EXCEPTION, _swallowed_exceptions),
+    Rule(UNFINISHED_CODE, _unfinished_code),
 )

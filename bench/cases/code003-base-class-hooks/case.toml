@@ -1,0 +1,10 @@
+id = "code003-base-class-hooks"
+description = "base class with an overridable send and a permissive default hook"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

@@ -7,6 +7,7 @@ from seamscan.rules.base import Rule
 from seamscan.rules.code import (
     RULES,
     SWALLOWED_EXCEPTION,
+    UNFINISHED_CODE,
     name_words,
 )
 
@@ -55,3 +56,47 @@ def test_except_star_and_test_files():
 def test_handler_that_does_anything_else_is_not_silent():
     src = "try:\n    run()\nexcept Exception:\n    cleanup()\n    pass\n"
     assert run(SWALLOWED_EXCEPTION.id, src) == []
+
+
+# ---------------------------------------------------------------- SC-CODE-003
+
+
+def test_not_implemented_at_module_level_and_in_concrete_class():
+    src = (
+        "raise NotImplementedError\n"
+        "class Exporter:\n"
+        "    def export(self):\n"
+        "        raise NotImplementedError('pdf')\n"
+    )
+    assert lines(run(UNFINISHED_CODE.id, src)) == [1, 4]
+
+
+def test_abcmeta_metaclass_and_protocol_generic_are_interfaces():
+    src = (
+        "import abc\n"
+        "from typing import Protocol, TypeVar\n"
+        "T = TypeVar('T')\n"
+        "class Store(metaclass=abc.ABCMeta):\n"
+        "    def save(self):\n"
+        "        raise NotImplementedError\n"
+        "class Checker(Protocol[T]):\n"
+        "    def check(self, item: T) -> bool:\n"
+        "        return True\n"
+    )
+    assert run(UNFINISHED_CODE.id, src) == []
+
+
+def test_guard_names_match_whole_words_only():
+    src = (
+        "def get_author(): pass\n"
+        "def authorize(user): pass\n"
+        "def is_verified(user):\n"
+        "    '''Docstring only.'''\n"
+        "def checkout(cart): pass\n"
+    )
+    assert lines(run(UNFINISHED_CODE.id, src)) == [2, 3]
+
+
+def test_guard_with_real_logic_or_return_false_is_fine():
+    src = "def verify(sig):\n    return False\ndef check(x):\n    return x > 0\n"
+    assert run(UNFINISHED_CODE.id, src) == []

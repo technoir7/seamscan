@@ -1,0 +1,10 @@
+id = "code003-protocol-verifier"
+description = "Protocol method stub plus a real implementation"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

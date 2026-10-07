@@ -1,0 +1,10 @@
+id = "code003-test-fakes"
+description = "fake verifier and gateway in a test module"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

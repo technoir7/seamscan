@@ -1,0 +1,10 @@
+id = "code003-checkbox-handler"
+description = "Qt checkbox handler with an empty body; 'checkbox' is not a check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

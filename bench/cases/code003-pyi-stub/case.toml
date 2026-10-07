@@ -1,0 +1,10 @@
+id = "code003-pyi-stub"
+description = "type stub declares the verifier; the .py has the real body"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

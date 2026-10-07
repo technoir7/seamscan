@@ -1,0 +1,10 @@
+id = "code003-flask-login-user"
+description = "Flask-Login user model: is_authenticated returning True is the documented contract"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

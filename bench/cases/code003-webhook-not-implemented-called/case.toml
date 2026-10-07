@@ -1,0 +1,12 @@
+id = "code003-webhook-not-implemented-called"
+description = "webhook route ships with NotImplementedError where processing should be"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "app/webhooks.py"
+line = 11

@@ -1,0 +1,10 @@
+id = "code003-not-implemented-value"
+description = "returning NotImplemented and catching NotImplementedError are not unfinished code"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"
