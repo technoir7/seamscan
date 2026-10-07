@@ -12,12 +12,11 @@ import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from tree_sitter import Node
-
 from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse import python as py
+from seamscan.parse.javascript import JsNode
 from seamscan.rules.base import Rule, RuleContext, finding, meta
 
 MISSING_AUTH = meta(
@@ -100,6 +99,8 @@ LOG_TABLE_WORDS = frozenset(
 PUBLIC_FLOW_WORDS = frozenset(
     {"register", "registration", "signup", "login", "signin", "logout", "signout"}
     | {"forgotpassword", "resetpassword", "verifyemail", "callback", "oauth"}
+    # Passwordless sign-in: the caller asking for a link or code isn't logged in yet.
+    | {"magiclink", "otp", "passwordless"}
 )
 
 _MUTATING = frozenset({"POST", "PUT", "PATCH", "DELETE"})
@@ -179,12 +180,12 @@ _FASTIFY_HOOKS = ("preHandler", "onRequest", "preValidation")
 
 @dataclass(frozen=True)
 class _JsHandler:
-    fn: Node
+    fn: JsNode
     label: str
     route: str  # path, file or action name: what `_public_flow` judges
 
 
-def _top_level_function(module: js.JsModule, name: str) -> Node | None:
+def _top_level_function(module: js.JsModule, name: str) -> JsNode | None:
     for stmt in module.root.named_children:
         decl = stmt.child_by_field_name("declaration") if stmt.type == "export_statement" else stmt
         if decl is None:
@@ -201,7 +202,7 @@ def _top_level_function(module: js.JsModule, name: str) -> Node | None:
     return None
 
 
-def _handler_function(module: js.JsModule, value: Node) -> Node | None:
+def _handler_function(module: js.JsModule, value: JsNode) -> JsNode | None:
     """The function a value holds: itself, a named top-level function, or the function a
     non-auth wrapper is given (`withErrorHandling(async (req) => ...)`). None for an
     auth wrapper (`withAuth(...)`): that handler is protected."""
@@ -220,7 +221,7 @@ def _handler_function(module: js.JsModule, value: Node) -> Node | None:
     return None
 
 
-def _exports(module: js.JsModule) -> Iterator[tuple[str, Node]]:
+def _exports(module: js.JsModule) -> Iterator[tuple[str, JsNode]]:
     """(exported name, value) for each top-level export; `default` for the default one."""
     for stmt in module.root.named_children:
         if stmt.type != "export_statement":
@@ -248,7 +249,7 @@ def _exports(module: js.JsModule) -> Iterator[tuple[str, Node]]:
                     yield js.text(module, alias or name), name
 
 
-def _use_server_body(module: js.JsModule, fn: Node) -> bool:
+def _use_server_body(module: js.JsModule, fn: JsNode) -> bool:
     body = fn.child_by_field_name("body")
     if body is None or body.type != "statement_block" or not body.named_children:
         return False
@@ -260,7 +261,7 @@ def _use_server_body(module: js.JsModule, fn: Node) -> bool:
     )
 
 
-def _path_value(module: js.JsModule, node: Node | None) -> str | None:
+def _path_value(module: js.JsModule, node: JsNode | None) -> str | None:
     return None if node is None else js.string_value(module, node)
 
 
@@ -292,7 +293,7 @@ def _auth_mounts(module: js.JsModule) -> list[_Mount]:
     return mounts
 
 
-def _middleware_protects(module: js.JsModule, middleware: Sequence[Node]) -> bool:
+def _middleware_protects(module: js.JsModule, middleware: Sequence[JsNode]) -> bool:
     for m in middleware:
         if m.type == "object":  # Fastify route options: { preHandler: [app.authenticate] }
             hooks = (js.object_property(m, h, module) for h in _FASTIFY_HOOKS)
@@ -379,7 +380,7 @@ def _covers(pattern: list[str], route: list[str]) -> bool:
     return bool(route) and route[0] == head and _covers(rest, route[1:])
 
 
-def _denies(module: js.JsModule, scope: Node) -> list[int]:
+def _denies(module: js.JsModule, scope: JsNode) -> list[int]:
     """Start bytes of `status: 401`, `res.status(403)`, `c.json(..., 401)` and the like:
     a request turned away, so some check came first."""
     out: list[int] = []
@@ -395,7 +396,7 @@ def _denies(module: js.JsModule, scope: Node) -> list[int]:
     return out
 
 
-def _auth_checks(module: js.JsModule, scope: Node) -> list[int]:
+def _auth_checks(module: js.JsModule, scope: JsNode) -> list[int]:
     calls = js.captures(module, "(call_expression) @c", scope).get("c", [])
     found = [c.start_byte for c in calls if _auth_call(js.call_name(module, c) or "")]
     return found + _denies(module, scope)
@@ -477,9 +478,9 @@ _JS_GLOBALS = frozenset(
 )
 
 
-def _from_table(module: js.JsModule, node: Node) -> tuple[bool, str | None]:
+def _from_table(module: js.JsModule, node: JsNode) -> tuple[bool, str | None]:
     """Whether a call chain goes through Supabase's `.from(...)`, and the table it names."""
-    current: Node | None = node
+    current: JsNode | None = node
     while current is not None and current.type in ("call_expression", "member_expression"):
         if current.type == "member_expression":
             current = current.child_by_field_name("object")
@@ -493,7 +494,7 @@ def _from_table(module: js.JsModule, node: Node) -> tuple[bool, str | None]:
     return False, None
 
 
-def _js_write(module: js.JsModule, call: Node) -> tuple[str, str | None] | None:
+def _js_write(module: js.JsModule, call: JsNode) -> tuple[str, str | None] | None:
     """(what, table) when the call writes data."""
     callee = call.child_by_field_name("function")
     if callee is None or callee.type != "member_expression":
@@ -528,7 +529,7 @@ def _js_write(module: js.JsModule, call: Node) -> tuple[str, str | None] | None:
     return None
 
 
-def _document_model(module: js.JsModule, ident: Node) -> str | None:
+def _document_model(module: js.JsModule, ident: JsNode) -> str | None:
     """The model of a Mongoose document: `new Order({...})` or `await User.findById(id)`.
     Other `.save()` receivers (a pdf-lib document, a form) aren't database rows."""
     values = js.assigned_values(module, ident)

@@ -10,3 +10,8 @@ source = "original"
 rule = "SC-CODE-005"
 path = "pages/api/account/delete.js"
 line = 9
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "pages/api/account/delete.js"
+line = 10

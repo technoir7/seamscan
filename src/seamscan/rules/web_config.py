@@ -7,11 +7,10 @@ import json
 from collections.abc import Iterator
 from typing import cast
 
-from tree_sitter import Node
-
 from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.model import Confidence, Finding, Location, Severity, SourceFile
 from seamscan.parse import javascript as js
+from seamscan.parse.javascript import JsNode
 from seamscan.parse.python import (
     PyModule,
     assigned_values,
@@ -154,7 +153,7 @@ _CORS_FACTORIES = frozenset({"cors", "hono/cors.cors"})
 _CORS_PLUGINS = frozenset({"@fastify/cors", "fastify-cors"})
 
 
-def _resolve(module: js.JsModule, node: Node, hops: int = 0) -> Node:
+def _resolve(module: js.JsModule, node: JsNode, hops: int = 0) -> JsNode:
     """An identifier's single bound value (e.g. a `corsOptions` object), else the node."""
     if node.type == "identifier" and hops < 3:
         values = js.assigned_values(module, node)
@@ -174,7 +173,7 @@ _STAR_WITH_CREDENTIALS = (
 )
 
 
-def _origin_kind(module: js.JsModule, node: Node | None) -> str | None:
+def _origin_kind(module: js.JsModule, node: JsNode | None) -> str | None:
     """ "reflect" for `origin: true`, "star" for `"*"` or a list holding it, else None."""
     if node is None:
         return None
@@ -188,7 +187,7 @@ def _origin_kind(module: js.JsModule, node: Node | None) -> str | None:
     return None
 
 
-def _credentialed_wildcard(module: js.JsModule, options: Node | None) -> str | None:
+def _credentialed_wildcard(module: js.JsModule, options: JsNode | None) -> str | None:
     if options is None:
         return None
     options = _resolve(module, options)
@@ -219,14 +218,14 @@ def _cors_calls(module: js.JsModule) -> Iterator[Finding]:
             )
 
 
-def _key(module: js.JsModule, node: Node) -> str:
+def _key(module: js.JsModule, node: JsNode) -> str:
     return (js.string_value(module, node) or js.text(module, node)).lower()
 
 
-def _header_object(module: js.JsModule, obj: Node) -> Node | None:
+def _header_object(module: js.JsModule, obj: JsNode) -> JsNode | None:
     """`{ "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Credentials": "true" }`:
     the ACAO pair when both are present."""
-    acao: Node | None = None
+    acao: JsNode | None = None
     credentials = False
     for pair in obj.named_children:
         key, value = pair.child_by_field_name("key"), pair.child_by_field_name("value")
@@ -241,7 +240,7 @@ def _header_object(module: js.JsModule, obj: Node) -> Node | None:
     return acao if credentials else None
 
 
-def _key_value(module: js.JsModule, obj: Node) -> tuple[str, str] | None:
+def _key_value(module: js.JsModule, obj: JsNode) -> tuple[str, str] | None:
     """`{ key: "...", value: "..." }` as used by next.config headers() and vercel.json."""
     key = js.object_property(obj, "key", module)
     value = js.object_property(obj, "value", module)
@@ -251,7 +250,7 @@ def _key_value(module: js.JsModule, obj: Node) -> tuple[str, str] | None:
     return None if k is None or v is None else (k.lower(), v)
 
 
-def _header_list(module: js.JsModule, array: Node) -> Node | None:
+def _header_list(module: js.JsModule, array: JsNode) -> JsNode | None:
     entries = [(o, _key_value(module, o)) for o in array.named_children if o.type == "object"]
     acao = next((o for o, kv in entries if kv == (_ACAO, "*")), None)
     credentials = any(kv == (_ACAC, "true") for _, kv in entries)

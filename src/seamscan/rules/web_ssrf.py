@@ -11,12 +11,11 @@ import ast
 import re
 from collections.abc import Iterator
 
-from tree_sitter import Node
-
 from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.model import Confidence, Finding, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse import python as py
+from seamscan.parse.javascript import JsNode
 from seamscan.rules.base import Rule, RuleContext, finding, meta
 
 SSRF = meta(
@@ -96,20 +95,20 @@ def _server_side(module: js.JsModule) -> bool:
     return True
 
 
-def _unwrap(node: Node) -> Node:
+def _unwrap(node: JsNode) -> JsNode:
     while node.type in _JS_WRAPPERS and node.named_children:
         node = node.named_children[0]
     return node
 
 
-def _field(node: Node, name: str) -> Node:
+def _field(node: JsNode, name: str) -> JsNode:
     child = node.child_by_field_name(name)
     if child is None:
         raise ValueError(f"{node.type} without {name}")
     return child
 
 
-def _chain(module: js.JsModule, node: Node) -> tuple[Node, list[str]]:
+def _chain(module: js.JsModule, node: JsNode) -> tuple[JsNode, list[str]]:
     """(root object, property names from the root outwards) of a member/subscript chain."""
     props: list[str] = []
     node = _unwrap(node)
@@ -120,7 +119,7 @@ def _chain(module: js.JsModule, node: Node) -> tuple[Node, list[str]]:
     return node, props[::-1]
 
 
-def _is_parameter(module: js.JsModule, ident: Node) -> bool:
+def _is_parameter(module: js.JsModule, ident: JsNode) -> bool:
     if ident.type != "identifier" or js.assigned_values(module, ident):
         return False
     name = js.text(module, ident)
@@ -132,7 +131,7 @@ def _is_parameter(module: js.JsModule, ident: Node) -> bool:
     return False
 
 
-def _request_member(module: js.JsModule, node: Node) -> bool:
+def _request_member(module: js.JsModule, node: JsNode) -> bool:
     """`req.body.url`, `req.query.url`, `ctx.request.body`, `req.nextUrl.searchParams`."""
     root, props = _chain(module, node)
     if "searchParams" in props:
@@ -140,13 +139,13 @@ def _request_member(module: js.JsModule, node: Node) -> bool:
     return bool(_REQUEST_FIELDS.intersection(props)) and _is_parameter(module, root)
 
 
-def _request_object(module: js.JsModule, node: Node) -> bool:
+def _request_object(module: js.JsModule, node: JsNode) -> bool:
     """The request itself: a handler parameter (`req`), or Hono's `c.req`."""
     root, props = _chain(module, node)
     return _is_parameter(module, root) and props in ([], ["req"])
 
 
-def _search_params(module: js.JsModule, node: Node) -> bool:
+def _search_params(module: js.JsModule, node: JsNode) -> bool:
     node = _unwrap(node)
     if node.type == "identifier":
         return js.text(module, node) == "searchParams"
@@ -155,7 +154,7 @@ def _search_params(module: js.JsModule, node: Node) -> bool:
     )
 
 
-def _js_tainted_call(module: js.JsModule, call: Node, hops: int) -> bool:
+def _js_tainted_call(module: js.JsModule, call: JsNode, hops: int) -> bool:
     name = js.call_name(module, call) or ""
     if name == "encodeURIComponent":
         return False
@@ -175,7 +174,7 @@ def _js_tainted_call(module: js.JsModule, call: Node, hops: int) -> bool:
     return _js_tainted(module, obj, hops)  # url.trim(), form.get("url"), body.url.toString()
 
 
-def _js_tainted(module: js.JsModule, node: Node, hops: int = 0) -> bool:
+def _js_tainted(module: js.JsModule, node: JsNode, hops: int = 0) -> bool:
     """The value carries request input: read from the request, or built from such a value."""
     if hops > _MAX_HOPS:
         return False
@@ -212,7 +211,7 @@ def _js_tainted(module: js.JsModule, node: Node, hops: int = 0) -> bool:
     return False
 
 
-def _destructured_parameter(module: js.JsModule, ident: Node) -> bool:
+def _destructured_parameter(module: js.JsModule, ident: JsNode) -> bool:
     """`({ params })` or `(req, { params })`, not a helper's plain `params` argument."""
     if not _is_parameter(module, ident):
         return False
@@ -233,14 +232,14 @@ def _destructured_parameter(module: js.JsModule, ident: Node) -> bool:
     return False
 
 
-def _js_env(module: js.JsModule, node: Node) -> bool:
+def _js_env(module: js.JsModule, node: JsNode) -> bool:
     if node.type == "call_expression":
         return js.call_name(module, node) == "Deno.env.get"
     name = js.qualified_name(module, node) or js.text(module, node)
     return name.startswith(("process.env.", "import.meta.env."))
 
 
-def _js_prefix(module: js.JsModule, node: Node, hops: int = 0) -> tuple[str, bool]:
+def _js_prefix(module: js.JsModule, node: JsNode, hops: int = 0) -> tuple[str, bool]:
     """(the URL's leading text known from the source, whether that is all of it)."""
     node = _unwrap(node)
     literal = js.string_value(module, node)
@@ -281,14 +280,14 @@ def _js_prefix(module: js.JsModule, node: Node, hops: int = 0) -> tuple[str, boo
     return "", False
 
 
-def _identifiers(node: Node) -> Iterator[Node]:
+def _identifiers(node: JsNode) -> Iterator[JsNode]:
     if node.type == "identifier":
         yield node
     for child in node.named_children:
         yield from _identifiers(child)
 
 
-def _js_related(module: js.JsModule, url: Node, scope: Node) -> set[str]:
+def _js_related(module: js.JsModule, url: JsNode, scope: JsNode) -> set[str]:
     """Names the URL is built from, and URL objects parsed from those names, so that a
     check on `new URL(raw).hostname` covers a later `fetch(raw)` and vice versa."""
     related: set[str] = set()
@@ -314,7 +313,7 @@ def _js_related(module: js.JsModule, url: Node, scope: Node) -> set[str]:
 _HOST_PARTS = frozenset({"hostname", "host", "origin"})
 
 
-def _host_compared(module: js.JsModule, member: Node) -> bool:
+def _host_compared(module: js.JsModule, member: JsNode) -> bool:
     """`ALLOWED.has(u.hostname)`, `u.hostname === "x"`, `u.hostname.endsWith(".x.com")`."""
     parent = member.parent
     if parent is None:
@@ -330,7 +329,7 @@ def _host_compared(module: js.JsModule, member: Node) -> bool:
     return False
 
 
-def _js_sanitized(module: js.JsModule, sink: Node, url: Node) -> bool:
+def _js_sanitized(module: js.JsModule, sink: JsNode, url: JsNode) -> bool:
     scope = js.enclosing_function(module, sink) or module.root
     related = _js_related(module, url, scope)
     url_text = js.text(module, _unwrap(url))

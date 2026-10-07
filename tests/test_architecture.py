@@ -72,3 +72,16 @@ def test_layers_only_import_downward():
             if target_layer not in allowed and target not in allowed:
                 violations.append(f"{path.relative_to(SRC)} ({layer}) imports {name}")
     assert not violations, "\n".join(violations)
+
+
+def test_only_the_parse_layer_touches_tree_sitter():
+    # Rules get node types from seamscan.parse.javascript, so swapping or upgrading the
+    # parsing library (spec §6.2, ADR-003) never reaches them.
+    offenders = [
+        f"{p.relative_to(SRC)} imports {name}"
+        for p in SRC.rglob("*.py")
+        if layer_of(p) != "parse"
+        for name in imports_of(p)
+        if name.split(".")[0].startswith("tree_sitter")
+    ]
+    assert not offenders, "\n".join(offenders)

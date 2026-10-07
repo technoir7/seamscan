@@ -160,3 +160,19 @@ def test_assigned_values_follow_the_binding_scope():
     q = call_arg(m, "execAsync")
     assert sorted(n.type for n in assigned_values(m, q)) == ["string", "template_string"]
     assert assigned_values(m, call_arg(m, "run")) == []  # an unassigned parameter
+
+
+def test_deno_style_imports_resolve_to_package_names():
+    m = module(
+        'import jwt from "npm:jsonwebtoken@9";\n'
+        'import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=deno";\n'
+        'import { decodeJwt } from "jsr:@panva/jose@5";\n'
+        "jwt.decode(t); createClient(u, k); decodeJwt(t);\n",
+        "supabase/functions/notify/index.ts",
+    )
+    names = {call_name(m, c) for c in captures(m, "(call_expression) @c")["c"]}
+    assert {
+        "jsonwebtoken.decode",
+        "@supabase/supabase-js.createClient",
+        "@panva/jose.decodeJwt",
+    } <= names

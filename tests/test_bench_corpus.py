@@ -78,3 +78,18 @@ def test_every_registered_rule_has_docs_and_enough_cases_per_language():
             if positives < 5 or negatives < 5:
                 problems.append(f"{rid} [{lang}]: {positives} positive / {negatives} negative")
     assert not problems, "\n".join(problems)
+
+
+def test_no_case_file_is_hidden_by_gitignore():
+    # Cases live on disk while they are written, so a case can pass locally while git
+    # silently leaves files out (an unanchored `lib/` once hid 61 TypeScript files).
+    import subprocess
+
+    hidden = subprocess.run(
+        ["git", "ls-files", "--others", "--ignored", "--exclude-standard", "bench/cases"],
+        cwd=CASES_DIR.parent.parent,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert not hidden, f"git ignores these case files: {hidden[:10]}"

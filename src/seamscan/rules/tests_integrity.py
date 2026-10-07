@@ -12,12 +12,10 @@ import re
 from collections.abc import Iterator
 from enum import Enum
 
-from tree_sitter import Node
-
 from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.model import ChangeSet, Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
-from seamscan.parse.javascript import JsModule
+from seamscan.parse.javascript import JsModule, JsNode
 from seamscan.parse.python import PyModule, enclosing_function, location, qualified_name, snippet
 from seamscan.rules.base import Rule, RuleContext, finding, meta
 
@@ -476,7 +474,7 @@ def _js_test_modules(ctx: RuleContext) -> Iterator[JsModule]:
     return (m for m in ctx.js if js_role(m) is Role.TEST)
 
 
-def _js_walk(node: Node) -> Iterator[Node]:
+def _js_walk(node: JsNode) -> Iterator[JsNode]:
     stack = [node]
     while stack:
         current = stack.pop()
@@ -484,7 +482,7 @@ def _js_walk(node: Node) -> Iterator[Node]:
         stack.extend(reversed(current.named_children))
 
 
-def _js_chain(module: JsModule, node: Node) -> list[str]:
+def _js_chain(module: JsModule, node: JsNode) -> list[str]:
     """Names along a callee, root first, stepping through calls: `it.each(rows)` gives
     ["it", "each"] and `expect(x).not.toBe` ["expect", "not", "toBe"]. A root that is
     not a name (`new Page(p).check`) is "", so it never matches a runner or module name.
@@ -513,11 +511,11 @@ def _js_chain(module: JsModule, node: Node) -> list[str]:
     return names[::-1]
 
 
-def _js_callee(call: Node) -> Node | None:
+def _js_callee(call: JsNode) -> JsNode | None:
     return call.child_by_field_name("function")
 
 
-def _js_title(module: JsModule, call: Node) -> str:
+def _js_title(module: JsModule, call: JsNode) -> str:
     args = js.arguments(call)
     if not args:
         return ""
@@ -525,7 +523,7 @@ def _js_title(module: JsModule, call: Node) -> str:
     return value if value is not None else js.text(module, args[0])
 
 
-def _js_tests(module: JsModule) -> Iterator[tuple[Node, list[str], Node]]:
+def _js_tests(module: JsModule) -> Iterator[tuple[JsNode, list[str], JsNode]]:
     """(the declaring call, its callee chain, the test callback) for every test in the file."""
     for call in js.captures(module, "(call_expression) @c").get("c", []):
         callee = _js_callee(call)
@@ -539,7 +537,7 @@ def _js_tests(module: JsModule) -> Iterator[tuple[Node, list[str], Node]]:
             yield call, chain, callback
 
 
-def _js_first_line(module: JsModule, node: Node) -> str:
+def _js_first_line(module: JsModule, node: JsNode) -> str:
     return js.text(module, node).splitlines()[0].strip()
 
 
@@ -558,14 +556,14 @@ _JS_IMPLICIT_QUERY = re.compile(r"(?:get|find)(?:All)?By[A-Z]\w*")
 _JS_IMPLICIT_WAITS = frozenset({"waitForURL", "waitForSelector", "waitForElementToBeRemoved"})
 
 
-def _js_statement(call: Node) -> bool:
+def _js_statement(call: JsNode) -> bool:
     parent = call.parent
     if parent is not None and parent.type == "await_expression":
         parent = parent.parent
     return parent is not None and parent.type == "expression_statement"
 
 
-def _js_testing_library_query(module: JsModule, callee: Node) -> bool:
+def _js_testing_library_query(module: JsModule, callee: JsNode) -> bool:
     """`getByText()` destructured from render(), `screen.getByText()`, `within(el).getBy...`.
     Not `page.getByText()`: a Playwright locator is lazy and never throws on its own."""
     if callee.type == "identifier":
@@ -578,7 +576,7 @@ def _js_testing_library_query(module: JsModule, callee: Node) -> bool:
     return obj.type == "call_expression" and _js_chain(module, obj)[-1:] == ["within"]
 
 
-def _js_is_assertion(module: JsModule, node: Node, helpers: frozenset[str]) -> bool:
+def _js_is_assertion(module: JsModule, node: JsNode, helpers: frozenset[str]) -> bool:
     if node.type == "member_expression":
         prop = node.child_by_field_name("property")
         return prop is not None and js.text(module, prop) == "should"
@@ -611,7 +609,7 @@ def _js_is_assertion(module: JsModule, node: Node, helpers: frozenset[str]) -> b
 
 
 def _js_contains_assertion(
-    module: JsModule, body: Node, helpers: frozenset[str] = frozenset()
+    module: JsModule, body: JsNode, helpers: frozenset[str] = frozenset()
 ) -> bool:
     return any(_js_is_assertion(module, n, helpers) for n in _js_walk(body))
 
@@ -678,7 +676,7 @@ _JS_OBJECT_LITERALS = frozenset(
 _JS_MAX_HOPS = 5
 
 
-def _js_unwrap(node: Node) -> Node:
+def _js_unwrap(node: JsNode) -> JsNode:
     while node.type in _JS_WRAPPERS and node.named_children:
         node = node.named_children[0]
     return node
@@ -706,7 +704,7 @@ def _js_number(literal: str) -> float | None:
         return None  # a legacy octal such as 010: not a value worth modelling
 
 
-def _js_scope_nodes(scope: Node) -> Iterator[Node]:
+def _js_scope_nodes(scope: JsNode) -> Iterator[JsNode]:
     """Nodes of one scope, without descending into nested functions."""
     stack = list(scope.named_children)
     while stack:
@@ -716,7 +714,7 @@ def _js_scope_nodes(scope: Node) -> Iterator[Node]:
             stack.extend(node.named_children)
 
 
-def _js_const_initializer(module: JsModule, ident: Node) -> Node | None:
+def _js_const_initializer(module: JsModule, ident: JsNode) -> JsNode | None:
     """The initializer when `ident` names a `const` declared once in its scope, else None.
 
     A const binding can't be reassigned, so a primitive literal stays that value and an
@@ -748,7 +746,7 @@ def _js_const_initializer(module: JsModule, ident: Node) -> Node | None:
         scope = js.enclosing_function(module, scope)
 
 
-def _js_constant(module: JsModule, node: Node, hops: int = 0) -> _Const | None:
+def _js_constant(module: JsModule, node: JsNode, hops: int = 0) -> _Const | None:
     """The value of `node` whatever the code under test does, or None if it can vary."""
     node = _js_unwrap(node)
     t = node.type
@@ -820,7 +818,7 @@ _JS_UNSTABLE = frozenset(
 _JS_FRESH_OBJECTS = frozenset({"object", "array", "regex"})
 
 
-def _js_stable(module: JsModule, node: Node, identity: bool) -> bool:
+def _js_stable(module: JsModule, node: JsNode, identity: bool) -> bool:
     for n in _js_walk(node):
         if n.type in _JS_UNSTABLE or (identity and n.type in _JS_FRESH_OBJECTS):
             return False
@@ -831,7 +829,7 @@ def _js_stable(module: JsModule, node: Node, identity: bool) -> bool:
     return True
 
 
-def _js_shape(module: JsModule, node: Node) -> tuple[object, ...]:
+def _js_shape(module: JsModule, node: JsNode) -> tuple[object, ...]:
     """Syntax without layout: `a+b` and `a + b`, or "x" and 'x', have the same shape."""
     node = _js_unwrap(node)
     value = js.string_value(module, node)
@@ -842,11 +840,11 @@ def _js_shape(module: JsModule, node: Node) -> tuple[object, ...]:
     return (node.type, *(_js_shape(module, c) for c in node.children if c.type != "comment"))
 
 
-def _js_same_expression(module: JsModule, a: Node, b: Node, identity: bool) -> bool:
+def _js_same_expression(module: JsModule, a: JsNode, b: JsNode, identity: bool) -> bool:
     return _js_shape(module, a) == _js_shape(module, b) and _js_stable(module, a, identity)
 
 
-def _js_fixed(module: JsModule, node: Node) -> str:
+def _js_fixed(module: JsModule, node: JsNode) -> str:
     shown = js.snippet(module, node, 80)
     if _js_unwrap(node).type == "identifier":
         return f"`{shown}`, a const bound to a literal,"
@@ -876,7 +874,7 @@ def _js_state_holds(matcher: str, value: _Const) -> bool | None:
     return None
 
 
-def _js_expect_parts(module: JsModule, call: Node) -> tuple[str, list[str], Node] | None:
+def _js_expect_parts(module: JsModule, call: JsNode) -> tuple[str, list[str], JsNode] | None:
     """(matcher, modifiers, subject) for `expect(subject).<modifiers>.matcher(...)`."""
     callee = _js_callee(call)
     prop = callee.child_by_field_name("property") if callee is not None else None
@@ -898,7 +896,7 @@ def _js_expect_parts(module: JsModule, call: Node) -> tuple[str, list[str], Node
     return (js.text(module, prop), modifiers, args[0]) if args else None
 
 
-def _js_why_expect_cannot_fail(module: JsModule, call: Node) -> str | None:
+def _js_why_expect_cannot_fail(module: JsModule, call: JsNode) -> str | None:
     parts = _js_expect_parts(module, call)
     if parts is None:
         return None
@@ -922,7 +920,7 @@ def _js_why_expect_cannot_fail(module: JsModule, call: Node) -> str | None:
     return f"`{matcher}` on {_js_fixed(module, subject)} always passes"
 
 
-def _js_assert_method(module: JsModule, callee: Node) -> str | None:
+def _js_assert_method(module: JsModule, callee: JsNode) -> str | None:
     """`ok` for `assert(x)`, `equal` for `assert.equal` / `t.assert.equal` / an imported
     `equal` from node:assert; None when the call isn't an assert-module call."""
     chain = _js_chain(module, callee)
@@ -935,7 +933,7 @@ def _js_assert_method(module: JsModule, callee: Node) -> str | None:
     return chain[-1] if "assert" in chain[:-1] else None
 
 
-def _js_why_always_true(module: JsModule, expr: Node) -> str | None:
+def _js_why_always_true(module: JsModule, expr: JsNode) -> str | None:
     expr = _js_unwrap(expr)
     if expr.type == "binary_expression":
         op = expr.child_by_field_name("operator")
@@ -963,7 +961,7 @@ def _js_why_always_true(module: JsModule, expr: Node) -> str | None:
 _JS_ASSERT_TRUTHY = frozenset({"ok", "isOk"})
 
 
-def _js_why_assert_cannot_fail(module: JsModule, call: Node) -> str | None:
+def _js_why_assert_cannot_fail(module: JsModule, call: JsNode) -> str | None:
     callee = _js_callee(call)
     method = _js_assert_method(module, callee) if callee is not None else None
     args = js.arguments(call)
@@ -1018,7 +1016,7 @@ _JS_COMMENTED_TEST = re.compile(
 _JS_LITERALS = frozenset({"string", "number", "true", "false", "null", "undefined"})
 
 
-def _js_module_constant(module: JsModule, name: str) -> Node | None:
+def _js_module_constant(module: JsModule, name: str) -> JsNode | None:
     for node in module.root.named_children:
         if node.type == "export_statement":
             node = node.child_by_field_name("declaration") or node
@@ -1031,7 +1029,7 @@ def _js_module_constant(module: JsModule, name: str) -> Node | None:
     return None
 
 
-def _js_returned(block: Node) -> Node | None:
+def _js_returned(block: JsNode) -> JsNode | None:
     """The expression of a block that is just `return <expr>;`."""
     statements = block.named_children
     if len(statements) != 1 or statements[0].type != "return_statement":
@@ -1040,7 +1038,7 @@ def _js_returned(block: Node) -> Node | None:
     return returned[0] if returned else None
 
 
-def _js_environment_only(module: JsModule, node: Node, depth: int = 0) -> bool:
+def _js_environment_only(module: JsModule, node: JsNode, depth: int = 0) -> bool:
     if depth > _JS_MAX_HOPS:
         return False
     node = _js_unwrap(node)
@@ -1064,7 +1062,7 @@ def _js_environment_only(module: JsModule, node: Node, depth: int = 0) -> bool:
         if body is not None and body.type == "statement_block":
             body = _js_returned(body)
         return body is not None and _js_environment_only(module, body, depth)
-    children: list[Node]
+    children: list[JsNode]
     if t == "call_expression":
         callee = _js_callee(node)
         children = [*([] if callee is None else [callee]), *js.arguments(node)]
@@ -1075,12 +1073,12 @@ def _js_environment_only(module: JsModule, node: Node, depth: int = 0) -> bool:
     return all(_js_environment_only(module, c, depth) for c in children)
 
 
-def _js_is_environment_condition(module: JsModule, cond: Node) -> bool:
+def _js_is_environment_condition(module: JsModule, cond: JsNode) -> bool:
     has_reference = any(n.type in ("identifier", "member_expression") for n in _js_walk(cond))
     return has_reference and _js_environment_only(module, cond)
 
 
-def _js_guarded_by_environment(module: JsModule, node: Node) -> bool:
+def _js_guarded_by_environment(module: JsModule, node: JsNode) -> bool:
     """Inside `if (<platform check>)` or `<platform check> ? it.skip : it`."""
     child, current = node, node.parent
     while current is not None and current.type not in js.FUNCTION_TYPES:
@@ -1097,7 +1095,7 @@ def _js_wholly_added(change: ChangeSet, module: JsModule) -> bool:
     return all(change.touches(module.path, n, n) for n in range(1, lines + 1))
 
 
-def _js_called(node: Node) -> Node | None:
+def _js_called(node: JsNode) -> JsNode | None:
     """The call that `node` is the callee of, if any."""
     parent = node.parent
     if parent is not None and parent.type == "call_expression" and _js_callee(parent) == node:
@@ -1105,7 +1103,7 @@ def _js_called(node: Node) -> Node | None:
     return None
 
 
-def _js_skip_exempt(module: JsModule, chain: list[str], call: Node | None) -> bool:
+def _js_skip_exempt(module: JsModule, chain: list[str], call: JsNode | None) -> bool:
     """A skip gated on the platform or browser: Vitest's skipIf/runIf, Playwright's
     `test.skip(browserName === "webkit", reason)`."""
     args = js.arguments(call) if call is not None else []
@@ -1118,7 +1116,7 @@ def _js_skip_exempt(module: JsModule, chain: list[str], call: Node | None) -> bo
     return False
 
 
-def _js_disabling_chains(module: JsModule, change: ChangeSet) -> Iterator[tuple[Node, str]]:
+def _js_disabling_chains(module: JsModule, change: ChangeSet) -> Iterator[tuple[JsNode, str]]:
     """`it.skip`, `describe.only`, `test.fixme(...)`, `xit(...)` and friends."""
     query = "[(member_expression) (identifier)] @n"
     for node in js.captures(module, query).get("n", []):
@@ -1143,7 +1141,7 @@ def _js_disabling_chains(module: JsModule, change: ChangeSet) -> Iterator[tuple[
             yield node, f"`{name}` added in this change"
 
 
-def _js_imperative_skips(module: JsModule, callbacks: set[int]) -> Iterator[tuple[Node, str]]:
+def _js_imperative_skips(module: JsModule, callbacks: set[int]) -> Iterator[tuple[JsNode, str]]:
     """`this.skip()` (Mocha), `t.skip()` / `t.todo()` (node:test), `testInfo.skip()`
     (Playwright), called inside a test."""
     for call in js.captures(module, "(call_expression) @c").get("c", []):
@@ -1161,7 +1159,7 @@ def _js_imperative_skips(module: JsModule, callbacks: set[int]) -> Iterator[tupl
         yield call, f"`{js.text(module, callee)}()` added in this change"
 
 
-def _js_skip_options(module: JsModule) -> Iterator[tuple[Node, str]]:
+def _js_skip_options(module: JsModule) -> Iterator[tuple[JsNode, str]]:
     """node:test's `test(title, { skip: "flaky" }, fn)`; `{ skip: false }` and platform
     conditions are fine."""
     for call in js.captures(module, "(call_expression) @c").get("c", []):
@@ -1184,7 +1182,9 @@ def _js_skip_options(module: JsModule) -> Iterator[tuple[Node, str]]:
                 yield pair, f"`{js.text(module, key)}` option added in this change"
 
 
-def _js_commented_out_tests(module: JsModule, change: ChangeSet) -> Iterator[tuple[int, str, Node]]:
+def _js_commented_out_tests(
+    module: JsModule, change: ChangeSet
+) -> Iterator[tuple[int, str, JsNode]]:
     for comment in js.captures(module, "(comment) @c").get("c", []):
         first, last = comment.start_point[0] + 1, comment.end_point[0] + 1
         # Wrapping tests in /* ... */ adds only the delimiter lines; the test lines inside

@@ -6,6 +6,7 @@ py-tree-sitter (its query API changed in 0.25 and 0.26) touches one file.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from functools import cache
@@ -15,6 +16,10 @@ import tree_sitter_typescript as ts_typescript
 from tree_sitter import Language, Node, Parser, Query, QueryCursor, Tree
 
 from seamscan.model import Location, SourceFile
+
+# The node type rules work with. Rules import it from here, never from tree_sitter, so
+# the parser stays the only layer that knows which parsing library is underneath.
+JsNode = Node
 
 _LANGUAGES: dict[str, Language] = {
     "typescript": Language(ts_typescript.language_typescript()),
@@ -95,8 +100,29 @@ def text(module: JsModule, node: Node) -> str:
     return node_text(module.source, node)
 
 
+# Deno (Supabase Edge Functions) imports npm packages by specifier or CDN URL.
+_CDN_PREFIX = re.compile(
+    r"^https?://(?:esm\.sh|cdn\.skypack\.dev|esm\.run|cdn\.jsdelivr\.net/npm)/"
+)
+_PACKAGE = re.compile(r"^(@[^/@]+/[^/@?#]+|[^/@?#]+)(?:@[^/?#]*)?")
+
+
 def _module_name(raw: str) -> str:
-    return raw.removeprefix("node:")
+    """The package a specifier names: `node:fs` -> `fs`, `npm:jose@5` -> `jose`,
+    `https://esm.sh/@supabase/supabase-js@2?target=deno` -> `@supabase/supabase-js`."""
+    if raw.startswith("node:"):
+        return raw.removeprefix("node:")
+    spec = raw
+    for prefix in ("npm:", "jsr:"):
+        spec = spec.removeprefix(prefix)
+    spec = _CDN_PREFIX.sub("", spec)
+    if spec == raw and (raw.startswith((".", "/")) or "://" in raw):
+        return raw  # relative paths and other URLs stay as written
+    m = _PACKAGE.match(spec)
+    if m is None:
+        return raw
+    rest = spec[m.end() :].split("?", 1)[0].split("#", 1)[0]
+    return m.group(1) + rest
 
 
 _REQUIRE = """
@@ -397,13 +423,6 @@ def _binding_scope(module: JsModule, ident: Node) -> tuple[Node, bool]:
             return fn, False
         fn = enclosing_function(module, fn)
     return module.root, False
-
-
-def assigned_values(module: JsModule, ident: Node) -> list[Node]:
-    """Values assigned to an identifier in the scope that binds it: its function, or the
-    module for a name no function binds. Empty for an unassigned parameter or an import."""
-    scope, _ = _binding_scope(module, ident)
-    return _declared_values(module, scope, text(module, ident))
 
 
 def _unwrap(node: Node) -> Node:

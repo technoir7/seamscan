@@ -50,8 +50,12 @@ BUDGETS = {
 }
 
 
-def budget_failures(dev: dict[str, RuleScore]) -> list[str]:
+def budget_failures(dev: dict[str, RuleScore], holdout: dict[str, RuleScore]) -> list[str]:
     failures: list[str] = []
+    # A crashed rule shows up only as misses for that rule, which is easy to read past.
+    crashes = sum(s.tp + s.fp for s in (dev.get("SC-META-003"), holdout.get("SC-META-003")) if s)
+    if crashes:
+        failures.append(f"SC-META-003: a rule crashed {crashes} time(s); see the findings")
     for rule in RULES:
         rid = rule.meta.id
         min_p, min_r = BUDGETS[rule.meta.confidence]
@@ -75,11 +79,14 @@ def main(argv: list[str] | None = None) -> int:
     cases = load_all()
     results: dict[str, dict[str, dict[str, int]]] = {}
     dev_scores: dict[str, RuleScore] = {}
+    holdout_scores: dict[str, RuleScore] = {}
     for split in ("dev", "holdout"):
         chosen = [c for c in cases if c.split == split]
         scores = aggregate(run_case(c) for c in chosen)
         if split == "dev":
             dev_scores = scores
+        else:
+            holdout_scores = scores
         print(f"\n== {split} split · {len(chosen)} cases ==")
         print(table(scores))
         results[split] = {r: {"tp": s.tp, "fp": s.fp, "fn": s.fn} for r, s in scores.items()}
@@ -87,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
         payload = {"cases": len(cases), "splits": results}
         args.record.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     if args.check:
-        failures = budget_failures(dev_scores)
+        failures = budget_failures(dev_scores, holdout_scores)
         print("\nbudget: " + ("OK" if not failures else "FAILED"))
         for line in failures:
             print(f"  {line}")

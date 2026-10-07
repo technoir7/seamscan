@@ -10,3 +10,8 @@ source = "original"
 rule = "SC-SEC-001"
 path = "scripts/deploy.mjs"
 line = 6
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "scripts/deploy.mjs"
+line = 9

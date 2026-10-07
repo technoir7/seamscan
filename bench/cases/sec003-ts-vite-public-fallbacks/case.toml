@@ -1,0 +1,10 @@
+id = "sec003-ts-vite-public-fallbacks"
+description = "public-prefixed env vars (VITE_, NEXT_PUBLIC_, EXPO_PUBLIC_, REACT_APP_) with literal defaults"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

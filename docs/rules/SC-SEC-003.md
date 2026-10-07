@@ -66,7 +66,6 @@ os.environ.setdefault("DB_PASSWORD", "postgres")
 ```ts
 secret: process.env.NEXTAUTH_SECRET || "supersecret-change-me",
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const API_KEY = import.meta.env.VITE_API_KEY ?? "dev-api-key-123";
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "whsec_local_dev";
 const { PORT = "3000", JWT_SECRET = "dev-jwt-secret" } = process.env;   // JWT_SECRET only
 ```
@@ -104,11 +103,10 @@ throws when it is missing (TS/JS), or validate the environment at startup with a
 - In TS/JS, a fallback through a ternary (`process.env.X ? process.env.X : "dev"`), a
   read stored in a variable first (`const s = process.env.X; s || "dev"`), or a
   defaulting assignment (`process.env.X ??= "dev"`) is missed.
-- Vite exposes only `VITE_`-prefixed variables to the browser, so a `VITE_*` value is
-  public whatever its fallback. The rule still reports a secret-named one
-  (`VITE_API_KEY ?? "dev"`): the name says it should be secret, and SC-SEC-002 (M4)
-  will report the exposure itself. `VITE_FIREBASE_API_KEY ?? "AIza…"`, a public key by
-  design, is reported too.
+- Variables with a bundled-public prefix (`VITE_`, `NEXT_PUBLIC_`, `EXPO_PUBLIC_`,
+  `REACT_APP_`, `NUXT_PUBLIC_`, `GATSBY_`) are skipped: the framework ships them to the
+  browser, so a literal default exposes nothing new. A real secret under such a name is
+  SC-SEC-002's finding (M4), and until that rule lands it goes unreported.
 - A secret name whose last word is a qualifier, such as `DB_PASSWORD_PROD` or
   `SECRET_KEY_BASE`, is missed.
 - A `KEY` name that is not a credential but ends in `KEY` (`SORT_KEY`, `S3_OBJECT_KEY`)

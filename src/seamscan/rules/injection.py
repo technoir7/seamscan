@@ -10,12 +10,10 @@ import ast
 import re
 from collections.abc import Iterator
 
-from tree_sitter import Node
-
 from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
-from seamscan.parse.javascript import JsModule
+from seamscan.parse.javascript import JsModule, JsNode
 from seamscan.parse.python import (
     PyModule,
     assigned_values,
@@ -41,7 +39,7 @@ def _calls(ctx: RuleContext) -> Iterator[tuple[PyModule, ast.Call, str]]:
                 yield module, node, qualified_name(module, node.func) or ""
 
 
-def _js_calls(ctx: RuleContext) -> Iterator[tuple[JsModule, Role, Node, str]]:
+def _js_calls(ctx: RuleContext) -> Iterator[tuple[JsModule, Role, JsNode, str]]:
     """Every call and `new` in non-test TS/JS, with its alias-resolved name ("" if none).
 
     Tagged templates (sql`...`, Prisma.sql`...`) are left out: the tag receives the
@@ -58,7 +56,7 @@ def _js_calls(ctx: RuleContext) -> Iterator[tuple[JsModule, Role, Node, str]]:
             yield module, role, call, js.call_name(module, call) or ""
 
 
-def _js_method(module: JsModule, call: Node) -> str:
+def _js_method(module: JsModule, call: JsNode) -> str:
     """The property name when the callee is `obj.method`, else ""."""
     callee = call.child_by_field_name("function")
     if callee is None or callee.type != "member_expression":
@@ -67,7 +65,7 @@ def _js_method(module: JsModule, call: Node) -> str:
     return js.text(module, prop) if prop is not None else ""
 
 
-def _js_site(module: JsModule, call: Node) -> Location:
+def _js_site(module: JsModule, call: JsNode) -> Location:
     """Where a call is reported: from the method name, so a sink in the middle of a long
     builder chain (`knex("t").where(...).whereRaw(...)`) points at its own line. Any other
     node is reported whole."""
@@ -80,7 +78,7 @@ def _js_site(module: JsModule, call: Node) -> Location:
     return Location(whole.path, start.start_line, start.start_col, whole.end_line, whole.end_col)
 
 
-def _js_callee_label(module: JsModule, call: Node) -> str:
+def _js_callee_label(module: JsModule, call: JsNode) -> str:
     """The callee as written (`pool.query`), or `.method` for a long builder chain."""
     callee = call.child_by_field_name("function") or call.child_by_field_name("constructor")
     label = js.text(module, callee) if callee is not None else ""
@@ -89,7 +87,7 @@ def _js_callee_label(module: JsModule, call: Node) -> str:
     return label
 
 
-def _js_positional(module: JsModule, fn: Node) -> list[str | None]:
+def _js_positional(module: JsModule, fn: JsNode) -> list[str | None]:
     """Parameter names in order; None for a destructured or rest parameter."""
     single = fn.child_by_field_name("parameter")
     if single is not None:
@@ -103,7 +101,7 @@ def _js_positional(module: JsModule, fn: Node) -> list[str | None]:
     return names
 
 
-def _js_mapped_join(module: JsModule, node: Node, safe: js.Sanitizer) -> bool:
+def _js_mapped_join(module: JsModule, node: JsNode, safe: js.Sanitizer) -> bool:
     """`xs.map((x, i) => <inert>).join(sep)`: the shape of an IN-list of placeholders
     (`$${i + 1}`, `"?"`) and of escaped HTML list items. The item parameter stays
     untrusted; the index parameter is a number."""
@@ -123,7 +121,7 @@ def _js_mapped_join(module: JsModule, node: Node, safe: js.Sanitizer) -> bool:
     params = _js_positional(module, arrow)
     index = params[1] if len(params) > 1 else None
 
-    def item_safe(n: Node) -> bool:
+    def item_safe(n: JsNode) -> bool:
         if index is not None and n.type == "identifier" and js.text(module, n) == index:
             fn = js.enclosing_function(module, n)
             return fn is not None and fn.id == arrow.id
@@ -252,7 +250,7 @@ _JS_CONDITIONALS = frozenset(
 )
 
 
-def _js_none_algorithm(module: JsModule, call: Node) -> bool:
+def _js_none_algorithm(module: JsModule, call: JsNode) -> bool:
     args = js.arguments(call)
     options = args[2] if len(args) > 2 else None
     algorithms = js.object_property(options, "algorithms", module) if options else None
@@ -263,7 +261,7 @@ def _js_none_algorithm(module: JsModule, call: Node) -> bool:
     )
 
 
-def _js_flows_up(node: Node) -> Node:
+def _js_flows_up(node: JsNode) -> JsNode:
     """The outermost expression that still holds `node`'s value: through casts, `await`,
     parentheses, a ternary branch and `??`/`||` defaults."""
     while (parent := node.parent) is not None:
@@ -280,7 +278,7 @@ def _js_flows_up(node: Node) -> Node:
     return node
 
 
-def _js_function_name(module: JsModule, fn: Node | None) -> str:
+def _js_function_name(module: JsModule, fn: JsNode | None) -> str:
     if fn is None:
         return ""
     name = fn.child_by_field_name("name")
@@ -289,7 +287,7 @@ def _js_function_name(module: JsModule, fn: Node | None) -> str:
     return js.text(module, name) if name is not None else ""
 
 
-def _js_in_condition(node: Node, stop: Node) -> bool:
+def _js_in_condition(node: JsNode, stop: JsNode) -> bool:
     child, current = node, node.parent
     while current is not None and current.id != stop.id:
         if current.type in _JS_CONDITIONALS:
@@ -300,7 +298,7 @@ def _js_in_condition(node: Node, stop: Node) -> bool:
     return False
 
 
-def _js_auth_use(module: JsModule, node: Node, scope: Node) -> bool:
+def _js_auth_use(module: JsModule, node: JsNode, scope: JsNode) -> bool:
     """Whether this occurrence of the decoded claims decides who the caller is."""
     node = _js_flows_up(node)
     while (parent := node.parent) is not None and parent.type == "member_expression":
@@ -329,7 +327,7 @@ def _js_auth_use(module: JsModule, node: Node, scope: Node) -> bool:
     return _js_in_condition(node, scope)
 
 
-def _js_claims_trusted(module: JsModule, call: Node, scope: Node) -> bool:
+def _js_claims_trusted(module: JsModule, call: JsNode, scope: JsNode) -> bool:
     """Whether the decoded claims decide access: read off the call itself, destructured into
     an identity claim (`const { sub } = decode(t)`), or read later through the name the
     result is bound to."""
@@ -365,7 +363,7 @@ def _js_claims_trusted(module: JsModule, call: Node, scope: Node) -> bool:
     )
 
 
-def _js_verifies_same_token(module: JsModule, call: Node, scope: Node) -> bool:
+def _js_verifies_same_token(module: JsModule, call: JsNode, scope: JsNode) -> bool:
     """The JS form of peek-then-verify: the same token, by its source text, verified in the
     same function."""
     args = js.arguments(call)
@@ -517,7 +515,7 @@ _JS_SQL_SHAPED_METHODS = frozenset({"query", "exec", "prepare"})
 _JS_NOT_SQL = re.compile(r"^(String\.raw|child_process\.)")
 
 
-def _js_literal_text(module: JsModule, node: Node, hops: int = 0) -> str:
+def _js_literal_text(module: JsModule, node: JsNode, hops: int = 0) -> str:
     """The literal fragments of a value, in order, following names a few hops."""
     if node.type == "string_fragment":
         return js.text(module, node)
@@ -528,7 +526,7 @@ def _js_literal_text(module: JsModule, node: Node, hops: int = 0) -> str:
     return " ".join(_js_literal_text(module, c, hops) for c in node.named_children)
 
 
-def _js_sql_sink(module: JsModule, call: Node, name: str) -> Node | None:
+def _js_sql_sink(module: JsModule, call: JsNode, name: str) -> JsNode | None:
     method = _js_method(module, call)
     args = js.arguments(call)
     if not args or _JS_NOT_SQL.match(name):
@@ -546,7 +544,7 @@ def _js_sql_built(ctx: RuleContext) -> Iterator[Finding]:
     for module, _role, call, name in _js_calls(ctx):
         arg = _js_sql_sink(module, call, name)
 
-        def placeholders(node: Node, m: JsModule = module) -> bool:
+        def placeholders(node: JsNode, m: JsModule = module) -> bool:
             return _js_mapped_join(m, node, placeholders)
 
         if arg is None or not js.built_from_values(module, arg, placeholders):
@@ -639,7 +637,7 @@ _JS_SHELLS = frozenset({"sh", "bash", "zsh", "/bin/sh", "/bin/bash", "/bin/zsh"}
 _JS_SHELL_QUOTERS = frozenset({"shell-quote.quote", "shell-escape"})
 
 
-def _js_promisified(module: JsModule, call: Node) -> str | None:
+def _js_promisified(module: JsModule, call: JsNode) -> str | None:
     """`const run = promisify(exec)`: the wrapped function's name when `call` calls `run`."""
     callee = call.child_by_field_name("function")
     if callee is None or callee.type != "identifier":
@@ -653,21 +651,21 @@ def _js_promisified(module: JsModule, call: Node) -> str | None:
     return js.qualified_name(module, wrapped[0]) if wrapped else None
 
 
-def _js_shell_sets(module: JsModule, options: Node) -> bool:
+def _js_shell_sets(module: JsModule, options: JsNode) -> bool:
     shell = js.object_property(options, "shell", module)
     if shell is None:
         return False
     return shell.type == "true" or bool(js.string_value(module, shell))
 
 
-def _js_sh_c(module: JsModule, argv: list[Node]) -> Node | None:
+def _js_sh_c(module: JsModule, argv: list[JsNode]) -> JsNode | None:
     """The script in `["sh", "-c", script]`, else None."""
     if len(argv) < 3 or js.string_value(module, argv[0]) not in _JS_SHELLS:
         return None
     return argv[2] if js.string_value(module, argv[1]) in ("-c", "-lc") else None
 
 
-def _js_shell_text(module: JsModule, call: Node, name: str) -> list[Node]:
+def _js_shell_text(module: JsModule, call: JsNode, name: str) -> list[JsNode]:
     """The values that end up in text a shell parses."""
     args = js.arguments(call)
     if not args:
@@ -693,7 +691,7 @@ def _js_shell_built(ctx: RuleContext) -> Iterator[Finding]:
         if name not in _JS_SHELL_SINKS:
             sink = _js_promisified(module, call) or ""
 
-        def quoted(node: Node, m: JsModule = module) -> bool:
+        def quoted(node: JsNode, m: JsModule = module) -> bool:
             return node.type == "call_expression" and js.call_name(m, node) in _JS_SHELL_QUOTERS
 
         unsafe = [
@@ -816,7 +814,7 @@ _JS_PURIFY = re.compile(r"purify[^.]*\.sanitize$", re.IGNORECASE)  # DOMPurify, 
 _JS_HTML_PROPERTIES = frozenset({"innerHTML", "outerHTML"})
 
 
-def _js_escapes_lt(module: JsModule, node: Node) -> bool:
+def _js_escapes_lt(module: JsModule, node: JsNode) -> bool:
     """`.replace(/</g, ...)`: no tag can open, which is the fix the Next.js docs give for
     JSON-LD in a <script>."""
     if node.type != "call_expression" or _js_method(module, node) not in ("replace", "replaceAll"):
@@ -831,7 +829,7 @@ def _js_escapes_lt(module: JsModule, node: Node) -> bool:
 
 
 def _js_html_safe(module: JsModule) -> js.Sanitizer:
-    def safe(node: Node) -> bool:
+    def safe(node: JsNode) -> bool:
         if node.type == "call_expression":
             name = js.call_name(module, node) or ""
             if name in _JS_HTML_SANITIZERS or _JS_PURIFY.search(name):
@@ -854,7 +852,7 @@ def _js_html_safe(module: JsModule) -> js.Sanitizer:
     return safe
 
 
-def _js_jsx_html(module: JsModule) -> Iterator[tuple[Node, Node]]:
+def _js_jsx_html(module: JsModule) -> Iterator[tuple[JsNode, JsNode]]:
     """(attribute, value) for each `dangerouslySetInnerHTML={{ __html: value }}`."""
     if module.dialect == "typescript":  # .ts has no JSX; the grammar has no such node
         return
@@ -868,7 +866,7 @@ def _js_jsx_html(module: JsModule) -> Iterator[tuple[Node, Node]]:
             yield attr, value
 
 
-def _js_dom_html(module: JsModule) -> Iterator[tuple[Node, Node, str]]:
+def _js_dom_html(module: JsModule) -> Iterator[tuple[JsNode, JsNode, str]]:
     """(site, value, sink) for `el.innerHTML = value`, `+=`, and `insertAdjacentHTML`."""
     query = "(assignment_expression) @s (augmented_assignment_expression) @s (call_expression) @s"
     for site in js.captures(module, query).get("s", []):

@@ -10,13 +10,12 @@ import ast
 import re
 from collections.abc import Iterator
 
-from tree_sitter import Node
-
 from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.facts.secrets import SecretMatch, find_secrets, redact
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse.envfile import parse_env
+from seamscan.parse.javascript import JsNode
 from seamscan.parse.python import PyModule, keyword, location, qualified_name
 from seamscan.rules.base import Rule, RuleContext, finding, meta
 
@@ -241,7 +240,24 @@ _JS_ENV_OBJECTS = frozenset({"process.env", "import.meta.env"})
 _JS_FALLBACK_OPERATORS = frozenset({"||", "??"})
 
 
-def _js_env_read(module: js.JsModule, node: Node) -> tuple[str, str] | None:
+# Frameworks inline variables with these prefixes into the browser bundle, so a literal
+# default exposes nothing the variable itself doesn't. A real secret stored under such a
+# name is a client-exposure problem (SC-SEC-002), not a fallback problem.
+_BUNDLED_PREFIXES = (
+    "VITE_",
+    "NEXT_PUBLIC_",
+    "EXPO_PUBLIC_",
+    "REACT_APP_",
+    "NUXT_PUBLIC_",
+    "GATSBY_",
+)
+
+
+def _bundled_public(name: str) -> bool:
+    return name.upper().startswith(_BUNDLED_PREFIXES)
+
+
+def _js_env_read(module: js.JsModule, node: JsNode) -> tuple[str, str] | None:
     """(how it is read, variable name) for an env read of a secret-named variable."""
     name: str | None = None
     shown = ""
@@ -262,21 +278,21 @@ def _js_env_read(module: js.JsModule, node: Node) -> tuple[str, str] | None:
         args = js.arguments(node)
         name = js.string_value(module, args[0]) if args else None
         shown = f'Deno.env.get("{name}")'
-    if name is None or not _names_a_secret(name):
+    if name is None or not _names_a_secret(name) or _bundled_public(name):
         return None
     return shown, name
 
 
-def _js_hardcoded(module: js.JsModule, node: Node | None) -> bool:
+def _js_hardcoded(module: js.JsModule, node: JsNode | None) -> bool:
     return node is not None and _hardcoded_value(js.string_value(module, node))
 
 
-def _fallback_operator(node: Node) -> str | None:
+def _fallback_operator(node: JsNode) -> str | None:
     op = node.child_by_field_name("operator") if node.type == "binary_expression" else None
     return op.type if op is not None and op.type in _JS_FALLBACK_OPERATORS else None
 
 
-def _fallback_chain(node: Node) -> list[Node]:
+def _fallback_chain(node: JsNode) -> list[JsNode]:
     """`a ?? b ?? c` parses as `(a ?? b) ?? c`: the operands before the last, in order."""
     left = node.child_by_field_name("left")
     if left is None:
@@ -327,7 +343,11 @@ def _js_destructured_fallbacks(module: js.JsModule) -> Iterator[Finding]:
             if key is None:
                 continue
             name = js.string_value(module, key) or js.text(module, key)
-            if _names_a_secret(name) and _js_hardcoded(module, default):
+            if (
+                _names_a_secret(name)
+                and not _bundled_public(name)
+                and _js_hardcoded(module, default)
+            ):
                 loc = js.location(module, item)
                 yield _fallback_finding(loc, name, f"{{ {name} = … }} = {env}")
 

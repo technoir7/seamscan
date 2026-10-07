@@ -82,7 +82,8 @@ def test_js_fallback_forms():
         'const { DB_PASSWORD = "postgres", PORT = "3000" } = process.env;\n'
         'const { ADMIN_TOKEN: admin = "x" } = process.env;\n'
     )
-    assert lines({"server/config.ts": src}) == [1, 2, 3, 4, 5, 6, 7, 8]
+    # Line 4 reads VITE_API_KEY: bundled into the browser, so not a fallback secret.
+    assert lines({"server/config.ts": src}) == [1, 2, 3, 5, 6, 7, 8]
 
 
 def test_js_fallback_resolves_imported_env():

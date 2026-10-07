@@ -8,3 +8,13 @@ source = "original"
 
 [[forbidden]]
 rule = "SC-CODE-003"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/todos/actions.ts"
+line = 9
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/todos/actions.ts"
+line = 15
