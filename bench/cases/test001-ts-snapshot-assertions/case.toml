@@ -1,0 +1,10 @@
+id = "test001-ts-snapshot-assertions"
+description = "snapshot, inline snapshot and expect.assertions + rejects are assertions"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

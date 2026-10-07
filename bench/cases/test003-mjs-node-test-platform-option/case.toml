@@ -1,0 +1,10 @@
+id = "test003-mjs-node-test-platform-option"
+description = "node:test skip option gated on process.platform"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

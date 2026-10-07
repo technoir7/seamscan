@@ -1,0 +1,12 @@
+id = "test001-js-jest-swallowed-error"
+description = "jest API-route test that wraps the call in try/catch and checks nothing"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "__tests__/signup.test.js"
+line = 5

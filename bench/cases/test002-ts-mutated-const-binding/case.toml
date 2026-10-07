@@ -1,0 +1,10 @@
+id = "test002-ts-mutated-const-binding"
+description = "const arrays and objects mutated by the code under test"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

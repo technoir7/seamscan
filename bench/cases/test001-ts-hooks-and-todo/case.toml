@@ -1,0 +1,10 @@
+id = "test001-ts-hooks-and-todo"
+description = "describe.each, hooks and it.todo around a real test"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

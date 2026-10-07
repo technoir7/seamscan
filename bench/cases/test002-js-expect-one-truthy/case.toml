@@ -1,0 +1,12 @@
+id = "test002-js-expect-one-truthy"
+description = "expect(1).toBeTruthy() after calling the code under test"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "__tests__/webhook.test.js"
+line = 7

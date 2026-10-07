@@ -1,0 +1,12 @@
+id = "test001-js-jest-mock-never-checked"
+description = "jest mock calls read but never asserted"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "__tests__/notify.test.js"
+line = 4

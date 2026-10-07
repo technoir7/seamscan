@@ -1,0 +1,10 @@
+id = "test003-ts-edit-inside-existing-skip"
+description = "editing the body of a test that was already skipped"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

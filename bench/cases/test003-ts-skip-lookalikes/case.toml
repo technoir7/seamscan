@@ -1,0 +1,10 @@
+id = "test003-ts-skip-lookalikes"
+description = "Prisma skip, a Skip button, test.step titled skip and an `// it's` comment"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

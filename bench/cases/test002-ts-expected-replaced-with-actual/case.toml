@@ -1,0 +1,12 @@
+id = "test002-ts-expected-replaced-with-actual"
+description = "expected value replaced by the actual one"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "src/server/__tests__/invoice.test.ts"
+line = 7

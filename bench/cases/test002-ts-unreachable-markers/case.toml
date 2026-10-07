@@ -1,0 +1,10 @@
+id = "test002-ts-unreachable-markers"
+description = "assert.fail / assert(false) mark unreachable code"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

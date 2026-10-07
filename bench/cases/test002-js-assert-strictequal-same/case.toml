@@ -1,0 +1,17 @@
+id = "test002-js-assert-strictequal-same"
+description = "assert.strictEqual / deepStrictEqual with the same expression twice"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "test/users.test.js"
+line = 8
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "test/users.test.js"
+line = 9

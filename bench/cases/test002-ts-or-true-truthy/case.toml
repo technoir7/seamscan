@@ -1,0 +1,12 @@
+id = "test002-ts-or-true-truthy"
+description = "`|| true` inside a toBeTruthy subject"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "src/hooks/useSession.test.tsx"
+line = 8

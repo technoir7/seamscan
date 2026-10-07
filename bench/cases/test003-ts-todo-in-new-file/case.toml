@@ -1,0 +1,10 @@
+id = "test003-ts-todo-in-new-file"
+description = "it.todo placeholders in a test file this change creates"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

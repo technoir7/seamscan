@@ -1,0 +1,10 @@
+id = "test001-ts-rtl-implicit-queries"
+description = "Testing Library getBy/findBy queries throw when nothing matches"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

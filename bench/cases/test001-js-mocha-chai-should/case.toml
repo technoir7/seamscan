@@ -1,0 +1,10 @@
+id = "test001-js-mocha-chai-should"
+description = "supertest .expect(status, body) and chai should"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

@@ -1,0 +1,10 @@
+id = "test001-ts-playwright-helper-asserts"
+description = "Playwright tests whose expects live in same-file helpers and a page-object method"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

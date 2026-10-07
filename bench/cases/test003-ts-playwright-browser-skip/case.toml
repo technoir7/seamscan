@@ -1,0 +1,10 @@
+id = "test003-ts-playwright-browser-skip"
+description = "Playwright skips gated on browserName / isMobile"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

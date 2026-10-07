@@ -1,0 +1,17 @@
+id = "test003-mjs-node-test-skip-option"
+description = "node:test skip option and t.skip() added"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "test/csv.test.mjs"
+line = 5
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "test/csv.test.mjs"
+line = 10

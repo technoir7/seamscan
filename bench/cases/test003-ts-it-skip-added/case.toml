@@ -1,0 +1,12 @@
+id = "test003-ts-it-skip-added"
+description = "vitest it changed to it.skip"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "src/lib/dates.test.ts"
+line = 11

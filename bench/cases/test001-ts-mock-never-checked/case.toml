@@ -1,0 +1,12 @@
+id = "test001-ts-mock-never-checked"
+description = "mock call count read but never asserted"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "app/api/invite/__tests__/route.test.ts"
+line = 10

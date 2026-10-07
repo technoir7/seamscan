@@ -1,0 +1,12 @@
+id = "test001-ts-vitest-expect-replaced-by-log"
+description = "vitest test whose expect was swapped for console.log"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "src/lib/pricing.test.ts"
+line = 14

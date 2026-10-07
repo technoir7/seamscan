@@ -1,0 +1,10 @@
+id = "test001-ts-todo-skip-and-hooks"
+description = "test.todo, hooks and test.step are not tests without assertions"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

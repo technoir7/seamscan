@@ -1,0 +1,10 @@
+id = "test001-js-renders-without-crashing"
+description = "CRA 'renders without crashing' and a 'does not throw' test say what they check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

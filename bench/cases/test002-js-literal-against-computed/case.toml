@@ -1,0 +1,10 @@
+id = "test002-js-literal-against-computed"
+description = "literals compared with computed values, including a literal on the left"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

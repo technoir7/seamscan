@@ -1,0 +1,10 @@
+id = "test001-js-rtl-implicit-queries"
+description = "destructured getByText and screen.findByRole throw when nothing matches"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

@@ -1,0 +1,12 @@
+id = "test001-ts-it-each-no-assert"
+description = "vitest it.each table whose callback ignores the expected value"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "src/utils/slug.test.ts"
+line = 5

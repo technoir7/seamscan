@@ -1,0 +1,12 @@
+id = "test003-ts-playwright-fixme"
+description = "Playwright test changed to test.fixme"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "e2e/cart.spec.ts"
+line = 9

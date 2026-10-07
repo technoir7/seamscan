@@ -1,0 +1,10 @@
+id = "test002-ts-determinism-calls"
+description = "identical sides that are calls are determinism checks"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

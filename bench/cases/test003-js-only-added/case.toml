@@ -1,0 +1,12 @@
+id = "test003-js-only-added"
+description = ".only added, which silently skips the rest of the file"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "__tests__/search.test.js"
+line = 12
