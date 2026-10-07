@@ -1,6 +1,6 @@
 # SC-CODE-007 — Shell command built from strings
 
-**Severity:** HIGH · **Confidence:** MEDIUM · **CWE:** [CWE-78](https://cwe.mitre.org/data/definitions/78.html) · **Languages:** Python (TS/JS `child_process` planned in M3)
+**Severity:** HIGH · **Confidence:** MEDIUM · **CWE:** [CWE-78](https://cwe.mitre.org/data/definitions/78.html) · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
 
@@ -25,6 +25,37 @@ visible in the same function. A value quoted earlier and stored in a variable
 A command given as a list without a shell is never flagged, whatever it contains.
 Fixed strings with `shell=True`, inline or via a module constant, are not flagged.
 Test files are skipped.
+
+### TypeScript and JavaScript
+
+A shell parses text that isn't inert (spec §6.2):
+
+- `child_process.exec` and `execSync`, which always use a shell. The command is
+  checked whether it's built or just a variable, as in Python.
+- `spawn`, `spawnSync`, `execFile` and `execFileSync` with `shell: true` (or a shell
+  path string) in an options object. Node joins the command and the argv array with
+  spaces, unescaped, so the command **and every argv element** are checked.
+- A shell run as a program: `spawn("bash", ["-c", script])`, the same through
+  `execFile`, and Bun's `Bun.spawn(["sh", "-c", script])` / `Bun.spawnSync`. The
+  shells recognized are `sh`, `bash` and `zsh` (bare or under `/bin/`), with `-c` or
+  `-lc`.
+- `promisify(exec)`: a name bound to `util.promisify(...)` of one of these sinks is
+  treated as that sink, so `const execAsync = promisify(exec); await execAsync(cmd)` is
+  checked.
+
+Imports are resolved, including `node:` prefixes and `require` destructuring.
+
+**What counts as quoted.** `shell-quote`'s `quote([...])` and `shell-escape`'s default
+export, applied where the value enters the string. Numbers (`Number(x)`, `parseInt`,
+`.length`) are inert. If any value is unquoted, the call is flagged.
+
+Not flagged:
+
+- `spawn`/`execFile`/`execFileSync`/`Bun.spawn` with an argv array and no shell,
+  whatever the argv holds.
+- Fixed commands, inline or via a module constant.
+- `zx`'s `` $`...` ``: it quotes every interpolated value itself, and as a tagged
+  template it isn't a sink. `@actions/exec` runs without a shell and isn't a sink.
 
 ## Why it matters
 
@@ -53,13 +84,37 @@ subprocess.run(f"convert {shlex.quote(src)} -resize {int(w)}x {shlex.quote(dst)}
 subprocess.run(shlex.join(["grep", "-n", pattern, path]) + " | head -50", shell=True)
 ```
 
+TypeScript, flagged:
+
+```ts
+const execAsync = promisify(exec);
+await execAsync(`ping -c 4 ${host}`);
+execSync("ffmpeg -i uploads/" + filename + " out." + format);
+spawn(`git clone --depth 1 ${repoUrl} ${dest}`, { shell: true });
+execFile("magick", [`uploads/${file}`, "-resize", size, out], { shell: true }, cb);
+Bun.spawn(["sh", "-c", `pg_dump ${db} | gzip > /backups/${db}.sql.gz`]);
+```
+
+TypeScript, not flagged:
+
+```ts
+await execFileAsync("convert", [name, "-thumbnail", "200x200", "out.png"]);
+spawn("git", ["clone", "--depth", "1", "--", repoUrl, dest]);
+await execAsync(`grep -rn ${quote([pattern])} /var/log/app`);
+execSync(`kill -TERM ${Number(pid)}`);
+await $`git log --oneline -n 20 ${branch}`;              // zx quotes values
+```
+
 ## How to fix
 
 Pass an argument list and drop the shell: `subprocess.run(["ping", "-c", "1", host])`.
 If you need shell features such as pipes, `shlex.quote` every value, or build the
-pipeline with two `Popen` calls.
+pipeline with two `Popen` calls. In Node, use `execFile`/`spawn` with an argv array
+and no `shell` option, or `quote([...])` from `shell-quote` for every value.
 
 ## Known gaps
+
+Python:
 
 - **Intra-procedural only.** A command built by a helper function and returned is
   judged at the call site as a bare call result, so it is flagged. A command
@@ -74,6 +129,21 @@ pipeline with two `Popen` calls.
 - Argument injection without a shell, such as a value starting with `-` in a list
   argv or `shlex.split(f"... {x}")`, is out of scope for this rule.
 - `int`/`float` annotations are trusted, though plain Python doesn't enforce them.
+
+TypeScript and JavaScript:
+
+- **Intra-procedural only.** A command built by a helper and returned is flagged at
+  the call site as "not a literal". A value quoted by a helper other than the two
+  listed is flagged too.
+- `shell` set from a variable, or an options object built elsewhere
+  (`spawn(cmd, args, opts)`), isn't read.
+- Only `promisify` of a sink is followed. Other wrappers (`const run = (c) => exec(c)`)
+  are judged inside the wrapper, where the command is a parameter, so they're flagged
+  there and not at their callers.
+- `execa` with `shell: true`, `execaCommand`, Deno's `new Deno.Command("sh", { args: ["-c", x] })`
+  and `Bun.spawn({ cmd: [...] })` (object form) aren't covered.
+- `Bun.$` and `zx`'s `$` are trusted to quote. `$.verbatim`/`unsafe` escapes and
+  `zx`'s `$({ quote: (s) => s })` aren't detected.
 
 ## References
 
