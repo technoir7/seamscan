@@ -1,0 +1,10 @@
+id = "web001-py-flask-login-required"
+description = "Flask routes that write are decorated with @login_required"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

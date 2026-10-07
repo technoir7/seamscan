@@ -1,0 +1,12 @@
+id = "web003-py-django-settings-debug-true"
+description = "Django settings.py hard-codes DEBUG = True"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-003"
+path = "mysite/settings.py"
+line = 8

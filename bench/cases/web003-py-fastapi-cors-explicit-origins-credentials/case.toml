@@ -1,0 +1,10 @@
+id = "web003-py-fastapi-cors-explicit-origins-credentials"
+description = "Credentials allowed only for named origins"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

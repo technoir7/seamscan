@@ -1,0 +1,10 @@
+id = "web002-py-fixed-url-with-params"
+description = "Weather endpoint sends the city as a query param to a fixed API URL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

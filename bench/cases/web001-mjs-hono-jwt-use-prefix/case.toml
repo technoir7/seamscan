@@ -1,0 +1,10 @@
+id = "web001-mjs-hono-jwt-use-prefix"
+description = "Hono app mounts jwt() on /api/* before the POST route that writes"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

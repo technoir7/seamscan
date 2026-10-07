@@ -1,0 +1,10 @@
+id = "web002-js-express-is-allowed-url"
+description = "Import endpoint rejects the URL unless isAllowedUrl() passes, then fetches it"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

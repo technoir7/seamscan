@@ -1,0 +1,10 @@
+id = "web003-ts-cors-reflect-without-credentials"
+description = "cors({ origin: true }) with credentials explicitly false"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

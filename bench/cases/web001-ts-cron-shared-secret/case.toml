@@ -1,0 +1,10 @@
+id = "web001-ts-cron-shared-secret"
+description = "Cleanup endpoint compares a bearer token to CRON_SECRET and returns 401 before deleting"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

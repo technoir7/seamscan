@@ -1,0 +1,10 @@
+id = "web001-ts-get-handler-reads"
+description = "GET route handler only selects from Supabase; reads need no write check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

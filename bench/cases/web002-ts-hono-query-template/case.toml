@@ -1,0 +1,12 @@
+id = "web002-ts-hono-query-template"
+description = "Hono status checker builds the URL from a query value, so the host is the caller's"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "src/routes/status.ts"
+line = 10

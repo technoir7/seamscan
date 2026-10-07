@@ -1,0 +1,10 @@
+id = "web001-ts-stripe-webhook-signature"
+description = "Stripe webhook verifies the signature with constructEvent before upserting a subscription"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

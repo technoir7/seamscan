@@ -1,0 +1,10 @@
+id = "web002-ts-env-base-url-query"
+description = "Search route calls a service whose origin comes from an env var; user text only in the query"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

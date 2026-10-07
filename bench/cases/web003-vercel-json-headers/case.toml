@@ -1,0 +1,12 @@
+id = "web003-vercel-json-headers"
+description = "vercel.json headers send ACAO * with Allow-Credentials true for the API"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-003"
+path = "vercel.json"
+line = 7

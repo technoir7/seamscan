@@ -1,0 +1,10 @@
+id = "web003-mjs-next-config-wildcard-no-credentials"
+description = "next.config.mjs sets ACAO * on a public API without Allow-Credentials"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

@@ -1,0 +1,12 @@
+id = "web002-py-fastapi-httpx-client-param"
+description = "FastAPI link preview fetches a query parameter through an httpx AsyncClient"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "app/main.py"
+line = 11

@@ -1,0 +1,10 @@
+id = "web001-js-router-use-authenticate"
+description = "Express router applies authenticate to every route with router.use before registering POST"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

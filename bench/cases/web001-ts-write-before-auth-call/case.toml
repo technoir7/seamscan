@@ -1,0 +1,12 @@
+id = "web001-ts-write-before-auth-call"
+description = "PATCH handler updates the project first and only calls auth() afterwards for the activity log"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/api/projects/[id]/route.ts"
+line = 9

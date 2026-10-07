@@ -1,0 +1,12 @@
+id = "web002-ts-route-json-body-fetch"
+description = "Link-preview route fetches a URL taken from the JSON body"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "app/api/link-preview/route.ts"
+line = 7

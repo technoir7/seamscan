@@ -1,0 +1,10 @@
+id = "web003-py-django-dev-settings-debug"
+description = "DEBUG = True only in settings/dev.py; production keeps it off"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

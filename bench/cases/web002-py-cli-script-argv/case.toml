@@ -1,0 +1,10 @@
+id = "web002-py-cli-script-argv"
+description = "Link-checker script fetches URLs from sys.argv; not request input"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

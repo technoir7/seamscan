@@ -1,0 +1,10 @@
+id = "web001-py-flask-blueprint-before-request"
+description = "Admin blueprint checks the user in a before_request hook that covers every route"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

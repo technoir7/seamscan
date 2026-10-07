@@ -1,0 +1,10 @@
+id = "web001-py-django-login-required-mixin"
+description = "Django class-based view uses LoginRequiredMixin and scopes writes to request.user"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

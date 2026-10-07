@@ -1,0 +1,10 @@
+id = "web003-ts-express-cors-allowlist-credentials"
+description = "Credentials allowed only for a list of named origins"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

@@ -1,0 +1,10 @@
+id = "web002-py-urlparse-hostname-allowlist"
+description = "Flask image proxy checks urlparse(src).hostname against an allowlist before fetching"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

@@ -1,0 +1,10 @@
+id = "web003-js-express-cors-wildcard-no-credentials"
+description = "Express cors() defaults and an explicit origin '*' without credentials"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

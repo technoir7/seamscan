@@ -1,0 +1,12 @@
+id = "web002-py-starlette-request-json"
+description = "Starlette endpoint reads await request.json() and fetches its url field"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "service/app.py"
+line = 11

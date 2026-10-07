@@ -1,0 +1,10 @@
+id = "web002-ts-encoded-path-segment"
+description = "Fixed GitHub API origin with an encodeURIComponent-ed username in the path"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

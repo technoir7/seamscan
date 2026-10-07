@@ -1,0 +1,10 @@
+id = "web001-py-flask-pageview-log"
+description = "Public page-view beacon writes a PageView log row on purpose"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

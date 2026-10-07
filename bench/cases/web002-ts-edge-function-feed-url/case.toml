@@ -1,0 +1,12 @@
+id = "web002-ts-edge-function-feed-url"
+description = "Supabase Edge Function fetches a feed URL from the request JSON"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "supabase/functions/fetch-feed/index.ts"
+line = 9

@@ -1,0 +1,10 @@
+id = "web003-py-pydantic-settings-debug-field"
+description = "FastAPI settings class has a debug field defaulting to True; not Django's DEBUG"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

@@ -1,0 +1,10 @@
+id = "web003-py-flask-debug-env-guard"
+description = "app.run(debug=True) only under a __main__ guard that checks FLASK_ENV"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

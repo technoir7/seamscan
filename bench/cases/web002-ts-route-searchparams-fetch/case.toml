@@ -1,0 +1,12 @@
+id = "web002-ts-route-searchparams-fetch"
+description = "Image proxy route fetches whatever ?url= says"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "app/api/og-image/route.ts"
+line = 9

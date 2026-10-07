@@ -1,0 +1,12 @@
+id = "web003-ts-hono-cors-wildcard-credentials"
+description = "Hono cors middleware with origin '*' and credentials true"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-003"
+path = "server/app.ts"
+line = 9

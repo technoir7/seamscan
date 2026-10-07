@@ -1,0 +1,10 @@
+id = "web001-ts-session-checked-first"
+description = "POST and DELETE handlers call getServerSession and return 401 before writing"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

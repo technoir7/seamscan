@@ -1,0 +1,10 @@
+id = "web001-py-fastapi-stripe-webhook"
+description = "Stripe webhook verifies the signature with construct_event before updating"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

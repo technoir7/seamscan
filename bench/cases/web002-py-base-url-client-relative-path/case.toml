@@ -1,0 +1,10 @@
+id = "web002-py-base-url-client-relative-path"
+description = "httpx client pinned to a settings base_url; the user value is only in the relative path"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"
