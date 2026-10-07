@@ -1,0 +1,10 @@
+id = "sec001-ts-test-files-hold-keys"
+description = "Vitest and Playwright files carry Stripe keys: test files are out of scope"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

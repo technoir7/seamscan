@@ -1,0 +1,10 @@
+id = "sec003-ts-non-env-fallbacks"
+description = "Fallbacks on headers, query params, storage and options: not environment reads"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

@@ -1,0 +1,10 @@
+id = "sec001-ts-publishable-keys-client"
+description = "Client checkout uses a Stripe publishable key and a Supabase publishable key"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

@@ -1,0 +1,10 @@
+id = "sec001-ts-redaction-patterns"
+description = "A log redactor holds key regexes and masks values; no key literal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

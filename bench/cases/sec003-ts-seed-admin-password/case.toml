@@ -1,0 +1,12 @@
+id = "sec003-ts-seed-admin-password"
+description = "Prisma seed creates the admin user with a fallback password"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "prisma/seed.ts"
+line = 8

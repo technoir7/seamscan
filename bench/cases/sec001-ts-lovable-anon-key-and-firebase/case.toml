@@ -1,0 +1,10 @@
+id = "sec001-ts-lovable-anon-key-and-firebase"
+description = "Lovable-style Supabase client with the anon JWT and a Firebase web config"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

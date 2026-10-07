@@ -1,0 +1,12 @@
+id = "sec001-ts-vite-service-role-jwt"
+description = "Vite app ships an admin Supabase client built with the service_role JWT"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "src/lib/supabaseAdmin.ts"
+line = 6

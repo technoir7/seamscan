@@ -1,0 +1,12 @@
+id = "sec003-js-express-jwt-secret"
+description = "Express auth middleware signs JWTs with a literal fallback secret"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "middleware/auth.js"
+line = 3

@@ -1,0 +1,12 @@
+id = "sec003-ts-vite-api-key-meta-env"
+description = "Vite client reads an API key from import.meta.env with a literal fallback"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "src/lib/api.ts"
+line = 2

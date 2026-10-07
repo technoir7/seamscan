@@ -1,0 +1,12 @@
+id = "sec001-ts-openai-key-client-component"
+description = "React client component calls OpenAI from the browser with a project key"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "components/ChatBox.tsx"
+line = 7

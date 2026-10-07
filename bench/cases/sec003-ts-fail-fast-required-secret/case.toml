@@ -1,0 +1,10 @@
+id = "sec003-ts-fail-fast-required-secret"
+description = "Secrets are required at startup: throw on missing, no literal fallback"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

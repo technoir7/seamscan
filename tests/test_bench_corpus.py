@@ -12,6 +12,8 @@ DOCS = Path(__file__).resolve().parent.parent / "docs" / "rules"
 SECRET_SHAPES = re.compile(
     r"sk_live_|rk_live_|sk-proj-|sk-ant-|ghp_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9_]{20}|AKIA[0-9A-Z]{16}"
     r"|sb_secret_|xox[baprs]-[0-9A-Za-z]{6}|eyJ[A-Za-z0-9_-]{10,}\.eyJ"
+    # Public keys, but GitHub secret scanning reports these shapes too.
+    r"|sb_publishable_[A-Za-z0-9_-]{16}|AIza[0-9A-Za-z_-]{35}"
 )
 
 

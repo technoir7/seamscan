@@ -1,0 +1,12 @@
+id = "sec003-ts-edge-function-deno-env"
+description = "Supabase Edge Function verifies Stripe webhooks with a fallback signing secret"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "supabase/functions/stripe-webhook/index.ts"
+line = 4
