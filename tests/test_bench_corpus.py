@@ -5,6 +5,7 @@ from pathlib import Path
 
 from bench.case import CASES_DIR, case_files, expected_split, load_all
 from bench.fake_secrets import FAKES
+from seamscan.parse.javascript import js_dialect
 from seamscan.rules.registry import RULES
 
 DOCS = Path(__file__).resolve().parent.parent / "docs" / "rules"
@@ -45,13 +46,33 @@ def test_fake_secrets_really_are_secret_shaped():
     )
 
 
-def test_every_registered_rule_has_docs_and_enough_cases():
+# Languages that need their own cases: a rule that claims TypeScript support must be
+# shown to work on TypeScript, not only on Python.
+CODE_LANGUAGES = ("python", "javascript")
+
+
+def language_of(path: str) -> str | None:
+    if path.endswith(".py"):
+        return "python"
+    if js_dialect(path) is not None:
+        return "javascript"
+    return None
+
+
+def test_every_registered_rule_has_docs_and_enough_cases_per_language():
     cases = load_all()
+    files = {c.id: {language_of(f.path) for f in case_files(c)} for c in cases}
+    problems: list[str] = []
     for rule in RULES:
         rid = rule.meta.id
-        assert (DOCS / f"{rid}.md").exists(), f"{rid}: missing docs/rules/{rid}.md"
-        positives = sum(any(e.rule == rid for e in c.expected) for c in cases)
-        negatives = sum(rid in c.forbidden for c in cases)
-        assert positives >= 5 and negatives >= 5, (
-            f"{rid}: {positives} positive / {negatives} negative cases"
-        )
+        if not (DOCS / f"{rid}.md").exists():
+            problems.append(f"{rid}: missing docs/rules/{rid}.md")
+        for lang in (lang for lang in CODE_LANGUAGES if lang in rule.meta.languages):
+            positives = sum(
+                any(e.rule == rid and language_of(e.path) == lang for e in c.expected)
+                for c in cases
+            )
+            negatives = sum(rid in c.forbidden and lang in files[c.id] for c in cases)
+            if positives < 5 or negatives < 5:
+                problems.append(f"{rid} [{lang}]: {positives} positive / {negatives} negative")
+    assert not problems, "\n".join(problems)

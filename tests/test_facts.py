@@ -57,3 +57,20 @@ def test_short_values_reveal_little():
     r = redact(FAKES["FAKE_AWS_KEY_ID"])  # AKIA + 16 characters
     shown = r.removeprefix("AKIA").replace("…", "")
     assert len(shown) <= 4
+
+
+def test_js_roles():
+    assert role_of("components/Button.test.tsx") is Role.TEST
+    assert role_of("src/__tests__/api.ts") is Role.TEST
+    assert role_of("e2e/login.spec.ts") is Role.TEST
+    assert role_of("app/components/Chat.tsx", "use client") is Role.CLIENT
+    assert role_of("app/actions.ts", "use server") is Role.SERVER
+    assert role_of("app/api/messages/route.ts") is Role.SERVER
+    assert role_of("middleware.ts") is Role.SERVER
+    assert role_of("pages/api/checkout.ts") is Role.SERVER
+    assert role_of("app/dashboard/page.tsx") is Role.SERVER  # server component by default
+    assert role_of("supabase/functions/notify/index.ts") is Role.SERVER
+    assert role_of("src/lib/db.server.ts") is Role.SERVER
+    assert role_of("src/App.tsx") is Role.CLIENT  # Vite / CRA
+    assert role_of("src/server/routes.ts") is Role.SERVER
+    assert role_of("server.js") is Role.UNKNOWN

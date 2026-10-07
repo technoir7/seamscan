@@ -375,7 +375,16 @@ the forms above.
 - The py-tree-sitter API changed in 0.25 and 0.26, so all tree-sitter calls
   go through `parse/javascript.py`. Upgrading means changing one file.
 - Import and alias resolution covers ES modules and CommonJS `require` within
-  a file.
+  a file. `node:` prefixes are dropped, so `import * as cp from "node:child_process"`
+  makes `cp.exec` resolve to `child_process.exec`.
+- tree-sitter never refuses a file. A file it had to recover from still gets
+  analyzed and also produces a `SC-META-002` finding, because code near the error
+  may be missed.
+- Columns are characters, not bytes, so locations line up in editors.
+- The JS taint-lite helpers (`built_from_values`, `is_inert`) mirror the Python
+  ones (§6.3): templates, `+` and `.concat` count as building. Literals, numbers
+  (`Number()`, `parseInt`, `Math.*`, `.length`) and constants are inert. TS
+  wrappers (`x as T`, `x!`, `satisfies`) are looked through.
 
 ### 6.3 Intra-procedural "taint-lite"
 
@@ -762,6 +771,10 @@ tolerance = 2                 # line match window
 [[forbidden]]                 # hard negatives: these rules must NOT fire here
 rule = "SC-SEC-002"
 ```
+
+**Per-language minimums.** A rule must have ≥5 positive and ≥5 negative cases
+in *each* code language it claims (`python`, `javascript` covering TS/JS). A
+test enforces this, so claiming TypeScript support requires TypeScript cases.
 
 **Fake secrets.** Case files never contain secret-shaped strings literally.
 They use placeholders such as `{{FAKE_STRIPE_LIVE}}`, which the runner
@@ -1182,6 +1195,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-07: M3 groundwork: `parse/javascript.py` (tree-sitter TS/TSX/JS with import resolution, char-accurate locations, taint-lite), JS file roles per §5.6, JS files in the pipeline with partial-parse reporting, `rules/web.py`, and per-language case minimums.
 - 2026-10-07: **M2 done.** 16 Python rules shipped: SEC-001/003/004, CODE-001..010 and TEST-001..003. Each has ≥5 positive and ≥5 negative cases, a rule page, and passes its budget. The corpus has 262 cases. The `seamscan` command now runs the new engine; the legacy engine was removed after recording its score. Spec changes: rule pages are authoritative for matching detail (§7); severity may be lowered per finding (§5.4); SEC-003 uses the last-word rule; SEC-004 fires only on sensitive values; §6.3 documents the helper semantics; SC-CODE-011 planned (§7.8a); test-removal detection deferred to v2 (§7.9).
 - 2026-10-07: M2 infrastructure: file roles, secret classification and redaction, taint-lite string helper, inline suppressions (SC-META-001), scan-mode benchmark cases, budget check, CI workflow with SHA-pinned actions. Added the independent-holdout requirement (§8.3).
 - 2026-10-07: M1 done. Core pipeline, policy, JSON/terminal reporters, `scan`/`audit` (via `python -m seamscan`), benchmark harness, 44-case seed corpus, SC-CODE-001 (Python) as the first rule at 6/6 recall and no false alarms. Legacy before-score recorded in §2.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from seamscan.rules import code, injection, secrets, tests_integrity
+from seamscan.rules import code, injection, secrets, tests_integrity, web
 from seamscan.rules.base import Rule
 
 RULES: tuple[Rule, ...] = (
@@ -10,4 +10,5 @@ RULES: tuple[Rule, ...] = (
     *code.RULES,
     *injection.RULES,
     *tests_integrity.RULES,
+    *web.RULES,
 )

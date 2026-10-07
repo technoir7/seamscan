@@ -41,3 +41,8 @@ def test_output_matches_schema():
 def test_parse_failure_is_reported_not_skipped():
     rules = [f["rule_id"] for f in json.loads(render(FILES))["findings"]]
     assert "SC-META-002" in rules
+
+
+def test_js_file_with_syntax_errors_is_reported():
+    findings = analyze([SourceFile("web/app.js", "function (\n")]).findings
+    assert [f.rule_id for f in findings] == ["SC-META-002"]

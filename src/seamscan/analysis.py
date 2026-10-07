@@ -6,6 +6,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 from seamscan.model import ChangeSet, Finding, Location, SourceFile, with_fingerprints
+from seamscan.parse.javascript import JsModule, js_dialect, parse_js
 from seamscan.parse.python import ParseFailure, PyModule, parse_python
 from seamscan.policy.suppress import apply_suppressions
 from seamscan.rules.base import Rule, RuleContext, finding
@@ -13,25 +14,46 @@ from seamscan.rules.meta import PARSE_FAILED, RULE_CRASHED, SUPPRESSION_WITHOUT_
 from seamscan.rules.registry import RULES
 
 
-def _parse(files: Sequence[SourceFile]) -> tuple[tuple[PyModule, ...], list[Finding]]:
-    modules: list[PyModule] = []
+@dataclass(frozen=True)
+class _Parsed:
+    python: tuple[PyModule, ...]
+    js: tuple[JsModule, ...]
+    failures: list[Finding]
+
+
+def _parse(files: Sequence[SourceFile]) -> _Parsed:
+    python: list[PyModule] = []
+    js: list[JsModule] = []
     failures: list[Finding] = []
     for f in files:
-        if not f.path.endswith(".py"):
-            continue
-        parsed = parse_python(f)
-        if isinstance(parsed, ParseFailure):
-            failures.append(
-                finding(
-                    PARSE_FAILED,
-                    Location(f.path, parsed.line, 1, parsed.line, 1),
-                    f"Not analyzed: {parsed.message}",
-                    "",
+        if f.path.endswith(".py"):
+            parsed = parse_python(f)
+            if isinstance(parsed, ParseFailure):
+                failures.append(
+                    finding(
+                        PARSE_FAILED,
+                        Location(f.path, parsed.line, 1, parsed.line, 1),
+                        f"Not analyzed: {parsed.message}",
+                        "",
+                    )
                 )
-            )
-        else:
-            modules.append(parsed)
-    return tuple(modules), failures
+            else:
+                python.append(parsed)
+        elif js_dialect(f.path) is not None:
+            module = parse_js(f)
+            js.append(module)
+            if module.has_errors:
+                # tree-sitter recovers and the rest of the file is still analyzed, but
+                # code inside the broken region may be missed: say so.
+                failures.append(
+                    finding(
+                        PARSE_FAILED,
+                        Location(f.path, 1, 1, 1, 1),
+                        "Parsed with syntax errors; code near them may not be analyzed",
+                        "",
+                    )
+                )
+    return _Parsed(tuple(python), tuple(js), failures)
 
 
 def _run(rule: Rule, ctx: RuleContext) -> list[Finding]:
@@ -71,8 +93,9 @@ def analyze(
 ) -> Analysis:
     """Run every rule over the files. With a ChangeSet, keep only findings the change touches."""
     ordered = tuple(sorted(files, key=lambda f: f.path))
-    modules, findings = _parse(ordered)
-    ctx = RuleContext(python=modules, files=ordered, change=change)
+    parsed = _parse(ordered)
+    findings = parsed.failures
+    ctx = RuleContext(python=parsed.python, js=parsed.js, files=ordered, change=change)
     for rule in rules:
         findings.extend(_run(rule, ctx))
     applied = apply_suppressions(findings, {f.path: f.text for f in ordered})

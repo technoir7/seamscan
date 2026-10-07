@@ -14,6 +14,7 @@ from seamscan.model import (
     Severity,
     SourceFile,
 )
+from seamscan.parse.javascript import JsModule
 from seamscan.parse.python import PyModule
 
 DOCS_BASE = "https://github.com/technoir7/seamscan/blob/main/docs/rules"
@@ -22,6 +23,7 @@ DOCS_BASE = "https://github.com/technoir7/seamscan/blob/main/docs/rules"
 @dataclass(frozen=True)
 class RuleContext:
     python: tuple[PyModule, ...] = ()  # every parsed .py file
+    js: tuple[JsModule, ...] = ()  # every parsed TS/TSX/JS/JSX file (see parse.javascript)
     files: tuple[SourceFile, ...] = ()  # every analyzed file, any type, sorted by path
     change: ChangeSet | None = None  # set in scan mode; rules about "this change" need it
 

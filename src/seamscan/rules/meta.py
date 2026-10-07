@@ -21,8 +21,8 @@ PARSE_FAILED = meta(
     Severity.LOW,
     Confidence.HIGH,
     (),
-    frozenset({"python"}),
-    "The file was not analyzed, so problems in it can't be reported.",
+    frozenset({"python", "javascript"}),
+    "The file was not (fully) analyzed, so problems in it can't be reported.",
 )
 
 RULE_CRASHED = meta(
