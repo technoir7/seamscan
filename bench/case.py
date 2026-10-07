@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 import hashlib
 import re
 import tomllib
@@ -10,7 +11,7 @@ from pathlib import Path
 
 from bench.fake_secrets import FAKES
 from bench.score import Expected
-from seamscan.model import SourceFile
+from seamscan.model import WHOLE_FILE, ChangeSet, SourceFile
 from seamscan.workspace.files import collect
 
 CASES_DIR = Path(__file__).resolve().parent / "cases"
@@ -43,12 +44,15 @@ def load_case(directory: Path) -> Case:
     data = tomllib.loads((directory / "case.toml").read_text())
     if data["id"] != directory.name:
         raise CaseError(f"{directory}: id {data['id']!r} does not match directory name")
-    if data.get("mode", "audit") != "audit":
-        raise CaseError(f"{directory}: only audit-mode cases are supported so far")
+    mode = data.get("mode", "audit")
+    if mode not in ("audit", "scan"):
+        raise CaseError(f"{directory}: mode must be 'audit' or 'scan'")
+    if mode == "scan" and not (directory / "base").is_dir():
+        raise CaseError(f"{directory}: scan-mode cases need a base/ tree")
     return Case(
         id=data["id"],
         description=data["description"],
-        mode=data.get("mode", "audit"),
+        mode=mode,
         split=data["split"],
         expected=tuple(
             Expected(e["rule"], e["path"], e["line"], e.get("tolerance", 2))
@@ -74,7 +78,36 @@ def _fill(text: str, path: str) -> str:
 
 
 def case_files(case: Case) -> tuple[SourceFile, ...]:
-    fileset = collect(case.root, use_git=False)
+    return _read_tree(case, case.root)
+
+
+def _read_tree(case: Case, root: Path) -> tuple[SourceFile, ...]:
+    fileset = collect(root, use_git=False)
     if fileset.skipped:
         raise CaseError(f"{case.id}: unreadable files {fileset.skipped}")
     return tuple(SourceFile(f.path, _fill(f.text, f.path)) for f in fileset.files)
+
+
+def changeset_between(base: tuple[SourceFile, ...], head: tuple[SourceFile, ...]) -> ChangeSet:
+    """What `git diff base..head` would report as added lines, computed without git."""
+    before = {f.path: f.text.splitlines() for f in base}
+    added: dict[str, tuple[tuple[int, int], ...]] = {}
+    for f in head:
+        if f.path not in before:
+            added[f.path] = (WHOLE_FILE,)
+            continue
+        matcher = difflib.SequenceMatcher(a=before[f.path], b=f.text.splitlines(), autojunk=False)
+        ranges = tuple(
+            (j1 + 1, j2)
+            for tag, _i1, _i2, j1, j2 in matcher.get_opcodes()
+            if tag in ("replace", "insert")
+        )
+        if ranges:
+            added[f.path] = ranges
+    return ChangeSet(added=added)
+
+
+def case_change(case: Case) -> ChangeSet | None:
+    if case.mode != "scan":
+        return None
+    return changeset_between(_read_tree(case, case.root.parent / "base"), case_files(case))

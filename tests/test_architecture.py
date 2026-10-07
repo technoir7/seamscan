@@ -17,7 +17,7 @@ ALLOWED = {
     "rules": {"model", "parse", "facts"},
     "policy": {"model"},
     "report": {"model", "policy"},
-    "analysis": {"model", "parse", "facts", "rules"},
+    "analysis": {"model", "parse", "facts", "rules", "policy"},
 }
 
 

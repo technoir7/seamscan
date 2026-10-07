@@ -770,6 +770,13 @@ Targets for v1.0:
    - **Semgrep registry rules and their test files are not used.** The
      Semgrep Rules License forbids reuse in a competing tool.
 
+**Independent holdout (added 2026-10-07):** cases written alongside a rule by
+the same author can't be truly held out. The author has seen them, even if
+the rule is tuned on `dev` only. So in M7 a second set, `holdout-independent`, is
+written by a different author (a separate agent session or model with no access
+to `src/seamscan/rules/`). It works from the rule pages in `docs/rules/` alone.
+Published headline numbers come from that set.
+
 **Holdout discipline:**
 - Rules are developed against `dev` only.
 - `holdout` is scored only at milestone ends and before releases.
@@ -1130,6 +1137,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-07: M2 infrastructure: file roles, secret classification and redaction, taint-lite string helper, inline suppressions (SC-META-001), scan-mode benchmark cases, budget check, CI workflow with SHA-pinned actions. Added the independent-holdout requirement (§8.3).
 - 2026-10-07: M1 done. Core pipeline, policy, JSON/terminal reporters, `scan`/`audit` (via `python -m seamscan`), benchmark harness, 44-case seed corpus, SC-CODE-001 (Python) as the first rule at 6/6 recall and no false alarms. Legacy before-score recorded in §2.
 - 2026-10-07: M1 additions: pure `analysis.py`; in-house architecture test replaces import-linter; fake-secret placeholders in cases; hash-derived splits enforced; legacy CLI stays default until the new engine beats it.
 - 2026-10-07: Renamed clogbot → seamscan; rule ID prefix CB- → SC-.

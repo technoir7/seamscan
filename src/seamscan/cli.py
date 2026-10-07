@@ -53,7 +53,7 @@ def audit(
 ) -> None:
     """Check a whole repository."""
     fileset = collect(path.resolve())
-    _emit(analyze(fileset.files), fmt, output)
+    _emit(analyze(fileset.files).findings, fmt, output)
 
 
 @app.command()
@@ -72,7 +72,7 @@ def scan(
         raise typer.Exit(code=2) from exc
     fileset = collect(root)
     changed = tuple(f for f in fileset.files if f.path in change.added)
-    _emit(analyze(changed, change=change), fmt, output)
+    _emit(analyze(changed, change=change).findings, fmt, output)
 
 
 @app.callback()

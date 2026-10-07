@@ -7,10 +7,12 @@ import json
 import sys
 from pathlib import Path
 
-from bench.case import Case, case_files, load_all
+from bench.case import Case, case_change, case_files, load_all
 from bench.legacy_adapter import legacy_findings
 from bench.score import CaseScore, Found, RuleScore, aggregate, score_case
 from seamscan.analysis import analyze
+from seamscan.model import Confidence
+from seamscan.rules.registry import RULES
 
 
 def run_case(case: Case, engine: str) -> CaseScore:
@@ -18,7 +20,8 @@ def run_case(case: Case, engine: str) -> CaseScore:
     if engine == "legacy":
         found = legacy_findings(files)
     else:
-        found = [Found(f.rule_id, f.location.path, f.location.start_line) for f in analyze(files)]
+        result = analyze(files, change=case_change(case))
+        found = [Found(f.rule_id, f.location.path, f.location.start_line) for f in result.findings]
     return score_case(case.expected, case.forbidden, found, lenient=engine == "legacy")
 
 
@@ -44,17 +47,45 @@ def table(scores: dict[str, RuleScore]) -> str:
     return "\n".join(rows)
 
 
+# Spec §8.6: per-rule minimums on the dev split, by rule confidence (precision, recall).
+BUDGETS = {
+    Confidence.HIGH: (0.95, 0.85),
+    Confidence.MEDIUM: (0.80, 0.70),
+    Confidence.LOW: (0.60, 0.50),
+}
+
+
+def budget_failures(dev: dict[str, RuleScore]) -> list[str]:
+    failures: list[str] = []
+    for rule in RULES:
+        rid = rule.meta.id
+        min_p, min_r = BUDGETS[rule.meta.confidence]
+        s = dev.get(rid)
+        if s is None or s.tp + s.fn == 0:
+            failures.append(f"{rid}: no positive dev cases")
+            continue
+        p = s.precision if s.precision is not None else 0.0
+        r = s.recall if s.recall is not None else 0.0
+        if p < min_p or r < min_r:
+            failures.append(f"{rid}: precision {p:.2f} (min {min_p}), recall {r:.2f} (min {min_r})")
+    return failures
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bench.run")
     parser.add_argument("--engine", choices=["new", "legacy"], default="new")
     parser.add_argument("--record", type=Path, help="write per-split scores as JSON")
+    parser.add_argument("--check", action="store_true", help="fail if a rule misses its budget")
     args = parser.parse_args(argv)
 
     cases = load_all()
     results: dict[str, dict[str, dict[str, int]]] = {}
+    dev_scores: dict[str, RuleScore] = {}
     for split in ("dev", "holdout"):
         chosen = [c for c in cases if c.split == split]
         scores = aggregate(run_case(c, args.engine) for c in chosen)
+        if split == "dev":
+            dev_scores = scores
         print(f"\n== {args.engine} engine · {split} split · {len(chosen)} cases ==")
         print(table(scores))
         results[split] = {r: {"tp": s.tp, "fp": s.fp, "fn": s.fn} for r, s in scores.items()}
@@ -63,6 +94,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.record:
         payload = {"engine": args.engine, "cases": len(cases), "splits": results}
         args.record.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    if args.check:
+        failures = budget_failures(dev_scores)
+        print("\nbudget: " + ("OK" if not failures else "FAILED"))
+        for line in failures:
+            print(f"  {line}")
+        return 1 if failures else 0
     return 0
 
 

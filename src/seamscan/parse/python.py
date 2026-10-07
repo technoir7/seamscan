@@ -15,6 +15,7 @@ class PyModule:
     source: str
     tree: ast.Module
     aliases: Mapping[str, str]  # local name -> qualified name ("r" -> "requests")
+    parents: Mapping[int, ast.AST]  # id(node) -> parent; valid while `tree` is alive
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,12 @@ def _aliases(tree: ast.Module) -> dict[str, str]:
     return aliases
 
 
+def _parent_map(tree: ast.Module) -> dict[int, ast.AST]:
+    return {
+        id(child): parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)
+    }
+
+
 def parse_python(file: SourceFile) -> PyModule | ParseFailure:
     try:
         tree = ast.parse(file.text, filename=file.path)
@@ -47,7 +54,7 @@ def parse_python(file: SourceFile) -> PyModule | ParseFailure:
         return ParseFailure(file.path, exc.lineno or 1, f"SyntaxError: {exc.msg}")
     except ValueError as exc:  # e.g. source containing NUL bytes
         return ParseFailure(file.path, 1, f"ValueError: {exc}")
-    return PyModule(file.path, file.text, tree, _aliases(tree))
+    return PyModule(file.path, file.text, tree, _aliases(tree), _parent_map(tree))
 
 
 def qualified_name(module: PyModule, node: ast.expr) -> str | None:
@@ -86,3 +93,69 @@ def location(module: PyModule, node: ast.expr | ast.stmt) -> Location:
 def snippet(module: PyModule, node: ast.expr | ast.stmt, limit: int = 200) -> str:
     text = ast.get_source_segment(module.source, node) or ""
     return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda
+
+
+def enclosing_function(module: PyModule, node: ast.AST) -> FunctionNode | None:
+    parents = module.parents
+    current = parents.get(id(node))
+    while current is not None:
+        if isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            return current
+        current = parents.get(id(current))
+    return None
+
+
+def _is_literal_string_expr(node: ast.expr) -> bool:
+    if isinstance(node, ast.Constant):
+        return True
+    if isinstance(node, ast.JoinedStr):
+        return not any(isinstance(v, ast.FormattedValue) for v in node.values)
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
+        return _is_literal_string_expr(node.left) and _is_literal_string_expr(node.right)
+    return False
+
+
+def _assigned_values(scope: ast.AST, name: str) -> list[ast.expr]:
+    values: list[ast.expr] = []
+    for node in ast.walk(scope):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Name) and t.id == name for t in node.targets
+        ):
+            values.append(node.value)
+        elif (
+            isinstance(node, (ast.AnnAssign, ast.AugAssign))
+            and isinstance(node.target, ast.Name)
+            and node.target.id == name
+            and node.value is not None
+        ):
+            values.append(node.value)
+    return values
+
+
+def built_from_values(module: PyModule, node: ast.expr, _depth: int = 0) -> bool:
+    """True when a string is assembled from non-literal values (spec §6.3 taint-lite).
+
+    Follows plain assignments within the same function. A bare parameter is not
+    assumed dangerous: wrappers that run a caller's query are common and usually fine.
+    """
+    if _depth > 5:
+        return False
+    if isinstance(node, ast.JoinedStr):
+        return any(isinstance(v, ast.FormattedValue) for v in node.values)
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
+        return not _is_literal_string_expr(node)
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "format"
+    ):
+        return bool(node.args or node.keywords)
+    if isinstance(node, ast.Name):
+        scope: ast.AST = enclosing_function(module, node) or module.tree
+        return any(
+            built_from_values(module, v, _depth + 1) for v in _assigned_values(scope, node.id)
+        )
+    return False

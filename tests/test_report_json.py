@@ -24,7 +24,7 @@ FILES = [
 
 
 def render(files: list[SourceFile]) -> str:
-    findings = analyze(files)
+    findings = analyze(files).findings
     return render_json(findings, decide(findings, Policy()), tool_version="test")
 
 

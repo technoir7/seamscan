@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only token; actions pinned to commit SHAs so a moved tag can't change what runs.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - run: uv sync --locked --extra dev
+      - name: Lint and format
+        run: uv run ruff check src bench tests && uv run ruff format --check src bench tests
+      - name: Types (strict)
+        run: uv run pyright
+      - name: Tests (includes architecture, determinism, schema and secret-safety tests)
+        run: uv run pytest -q
+      - name: Benchmark budgets (spec §8.6)
+        run: uv run python -m bench.run --check
+      - name: Self-scan
+        run: uv run python -m seamscan audit src

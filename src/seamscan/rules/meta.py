@@ -5,6 +5,16 @@ from __future__ import annotations
 from seamscan.model import Confidence, Severity
 from seamscan.rules.base import meta
 
+SUPPRESSION_WITHOUT_REASON = meta(
+    "SC-META-001",
+    "Suppression without a reason",
+    Severity.LOW,
+    Confidence.HIGH,
+    (),
+    frozenset(),
+    "An inline suppression was ignored because it gives no reason.",
+)
+
 PARSE_FAILED = meta(
     "SC-META-002",
     "File could not be parsed",
