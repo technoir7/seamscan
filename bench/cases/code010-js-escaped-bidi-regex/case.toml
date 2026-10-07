@@ -1,0 +1,10 @@
+id = "code010-js-escaped-bidi-regex"
+description = "sanitizer strips bidi controls written as escapes, not as the characters"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

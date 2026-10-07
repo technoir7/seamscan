@@ -1,0 +1,10 @@
+id = "code001-ts-check-server-identity-kept"
+description = "https.Agent with keep-alive and an explicit checkServerIdentity, verification left on"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

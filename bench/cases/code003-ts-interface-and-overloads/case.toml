@@ -1,0 +1,10 @@
+id = "code003-ts-interface-and-overloads"
+description = "interface methods, a type, and overload signatures have no bodies to be unfinished"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

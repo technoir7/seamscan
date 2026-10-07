@@ -1,0 +1,12 @@
+id = "code010-ts-zwsp-after-statement"
+description = "a zero-width space sits in code after a statement"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "src/limits.ts"
+line = 2

@@ -1,0 +1,12 @@
+id = "code003-js-express-export-not-yet-implemented"
+description = "Express export endpoint throws a not-yet-implemented error"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "src/server/routes/reports.js"
+line = 12

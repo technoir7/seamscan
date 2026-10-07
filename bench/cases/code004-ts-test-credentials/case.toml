@@ -1,0 +1,10 @@
+id = "code004-ts-test-credentials"
+description = "test file compares a fixture password with a literal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

@@ -1,0 +1,10 @@
+id = "code003-ts-test-mocks"
+description = "test file stubs a verifier and throws not implemented from a fake"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

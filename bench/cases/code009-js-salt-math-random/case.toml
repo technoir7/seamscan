@@ -1,0 +1,12 @@
+id = "code009-js-salt-math-random"
+description = "password hashing uses a Math.random salt"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "server/users.js"
+line = 4

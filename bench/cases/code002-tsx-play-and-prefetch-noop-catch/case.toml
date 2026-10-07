@@ -1,0 +1,10 @@
+id = "code002-tsx-play-and-prefetch-noop-catch"
+description = "audio playback and a query prefetch are fired and forgotten with .catch(() => {})"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

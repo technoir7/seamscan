@@ -1,0 +1,10 @@
+id = "code010-ts-emoji-zwj-template"
+description = "emoji sequences with zero-width joiners inside strings and a template literal"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

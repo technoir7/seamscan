@@ -1,0 +1,10 @@
+id = "code001-js-reads-tls-env-to-warn"
+description = "startup check reads NODE_TLS_REJECT_UNAUTHORIZED to warn, and removes it, without setting it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

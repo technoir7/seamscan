@@ -1,0 +1,12 @@
+id = "code003-tsx-is-authorized-arrow-true"
+description = "admin gate component uses an authorization arrow function that always returns true"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "components/admin-gate.tsx"
+line = 6

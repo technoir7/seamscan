@@ -1,0 +1,10 @@
+id = "code009-ts-test-factory"
+description = "test factory builds fake tokens with Math.random"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

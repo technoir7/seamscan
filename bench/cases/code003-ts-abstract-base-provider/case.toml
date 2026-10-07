@@ -1,0 +1,10 @@
+id = "code003-ts-abstract-base-provider"
+description = "abstract base class with default hooks and a not-implemented method meant to be overridden"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

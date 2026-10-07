@@ -1,0 +1,12 @@
+id = "code001-ts-pg-pool-ssl"
+description = "pg Pool for a hosted Postgres with certificate checks turned off"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "lib/db.ts"
+line = 14

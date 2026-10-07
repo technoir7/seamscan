@@ -1,0 +1,12 @@
+id = "code010-tsx-bidi-in-jsx-text"
+description = "JSX text holds an RLO that reverses how an amount is displayed"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/billing/summary.tsx"
+line = 5

@@ -1,0 +1,12 @@
+id = "code004-mjs-body-password-loose-equality"
+description = "demo server logs in with body.username and body.password compared to literals"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "server.mjs"
+line = 10

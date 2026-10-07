@@ -1,0 +1,12 @@
+id = "code001-js-bracket-env-number"
+description = "Express entry point sets NODE_TLS_REJECT_UNAUTHORIZED through bracket access to the number 0"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "src/server/index.js"
+line = 6

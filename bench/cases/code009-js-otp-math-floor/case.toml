@@ -1,0 +1,12 @@
+id = "code009-js-otp-math-floor"
+description = "Express sends a six-digit OTP from Math.random"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "server/routes/otp.js"
+line = 9

@@ -1,0 +1,10 @@
+id = "code002-tsx-console-error-client-read"
+description = "client component logs a failed read with console.error and keeps the loading state honest"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

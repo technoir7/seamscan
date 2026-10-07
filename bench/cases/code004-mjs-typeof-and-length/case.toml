@@ -1,0 +1,10 @@
+id = "code004-mjs-typeof-and-length"
+description = "type and shape checks on credential variables compare against type names"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

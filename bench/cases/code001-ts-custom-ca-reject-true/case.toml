@@ -1,0 +1,10 @@
+id = "code001-ts-custom-ca-reject-true"
+description = "pg Pool pinned to the provider's CA with rejectUnauthorized true"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

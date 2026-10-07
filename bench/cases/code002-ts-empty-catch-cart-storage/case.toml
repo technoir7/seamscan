@@ -1,0 +1,12 @@
+id = "code002-ts-empty-catch-cart-storage"
+description = "React hook restores the cart from localStorage and drops any parse error"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "src/hooks/useCart.ts"
+line = 12

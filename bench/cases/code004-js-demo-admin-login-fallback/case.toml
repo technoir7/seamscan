@@ -1,0 +1,12 @@
+id = "code004-js-demo-admin-login-fallback"
+description = "login controller keeps an 'emergency' admin email and password pair"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "backend/controllers/authController.js"
+line = 9

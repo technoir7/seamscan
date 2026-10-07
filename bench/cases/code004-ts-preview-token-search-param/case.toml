@@ -1,0 +1,12 @@
+id = "code004-ts-preview-token-search-param"
+description = "draft-mode route accepts a token query parameter equal to a literal"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "app/api/draft/route.ts"
+line = 8

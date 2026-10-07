@@ -1,0 +1,12 @@
+id = "code002-ts-todo-comment-catch"
+description = "an empty catch whose only comment is a TODO still swallows a failed upsert"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "src/lib/profile.ts"
+line = 6

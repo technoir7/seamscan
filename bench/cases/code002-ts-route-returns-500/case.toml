@@ -1,0 +1,10 @@
+id = "code002-ts-route-returns-500"
+description = "route handler logs a failed Prisma create and returns a 500"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

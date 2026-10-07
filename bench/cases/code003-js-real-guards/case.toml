@@ -1,0 +1,10 @@
+id = "code003-js-real-guards"
+description = "guards with real bodies, including one that returns true after its checks"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

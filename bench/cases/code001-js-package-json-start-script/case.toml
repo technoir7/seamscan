@@ -1,0 +1,12 @@
+id = "code001-js-package-json-start-script"
+description = "package.json start script disables TLS verification for the production server"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "package.json"
+line = 8

@@ -1,0 +1,12 @@
+id = "code004-js-express-api-key-header"
+description = "Express middleware checks the x-api-key header against a literal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "server/middleware/apiKey.js"
+line = 2

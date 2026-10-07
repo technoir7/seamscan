@@ -1,0 +1,10 @@
+id = "code002-tsx-promise-chain-read-console-error"
+description = "dashboard widget loads stats with a promise chain ending in .catch(console.error)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

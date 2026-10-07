@@ -1,0 +1,10 @@
+id = "code001-ts-reject-unless-production"
+description = "certificate checks depend on NODE_ENV: on in production, off only for local self-signed certs"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

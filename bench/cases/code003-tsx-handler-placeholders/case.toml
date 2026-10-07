@@ -1,0 +1,10 @@
+id = "code003-tsx-handler-placeholders"
+description = "UI event handlers left empty in a prototype are not security checks"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

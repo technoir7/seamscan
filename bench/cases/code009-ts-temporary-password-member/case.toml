@@ -1,0 +1,12 @@
+id = "code009-ts-temporary-password-member"
+description = "admin reset sets a temporary password on the user object from Math.random"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "src/server/admin/reset.ts"
+line = 4

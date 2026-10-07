@@ -1,0 +1,10 @@
+id = "code002-ts-route-console-log-only"
+description = "route handler console.logs a failed upstream read; a console-only catch around a read counts as logging"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

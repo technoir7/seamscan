@@ -1,0 +1,12 @@
+id = "code002-mjs-prisma-update-return-null"
+description = "subscription update failure becomes a silent null"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "lib/subscriptions.mjs"
+line = 9

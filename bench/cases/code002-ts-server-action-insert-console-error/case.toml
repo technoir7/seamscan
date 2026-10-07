@@ -1,0 +1,12 @@
+id = "code002-ts-server-action-insert-console-error"
+description = "server action logs a failed Supabase insert and redirects as if the order was created"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/orders/actions.ts"
+line = 19

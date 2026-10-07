@@ -1,0 +1,12 @@
+id = "code001-ts-nodemailer-tls"
+description = "nodemailer SMTP transport that accepts any certificate"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "lib/mailer.ts"
+line = 11

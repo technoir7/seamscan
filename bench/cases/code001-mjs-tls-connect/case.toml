@@ -1,0 +1,12 @@
+id = "code001-mjs-tls-connect"
+description = "Node script checks certificate expiry with tls.connect but disables verification"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "scripts/check-cert.mjs"
+line = 8

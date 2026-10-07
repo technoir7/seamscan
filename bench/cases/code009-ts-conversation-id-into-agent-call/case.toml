@@ -1,0 +1,10 @@
+id = "code009-ts-conversation-id-into-agent-call"
+description = "a random conversation id goes into an agent call; the streamed tokens that come back are not random"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

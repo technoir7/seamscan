@@ -1,0 +1,12 @@
+id = "code001-js-axios-https-agent"
+description = "Express service calls a CRM through axios with an https.Agent that skips certificate checks"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "server/services/crm.js"
+line = 5

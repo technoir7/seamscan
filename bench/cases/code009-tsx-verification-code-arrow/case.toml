@@ -1,0 +1,12 @@
+id = "code009-tsx-verification-code-arrow"
+description = "concise arrow named like a verification code returns Math.random digits"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "app/verify/actions.ts"
+line = 6
