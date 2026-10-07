@@ -1,0 +1,10 @@
+id = "code003-abc-derived-provider"
+description = "provider interface derived from ABC without @abstractmethod"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

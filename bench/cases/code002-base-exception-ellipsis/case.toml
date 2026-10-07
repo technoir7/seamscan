@@ -1,0 +1,12 @@
+id = "code002-base-exception-ellipsis"
+description = "heartbeat loop ignores everything, even KeyboardInterrupt"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "worker/heartbeat.py"
+line = 12

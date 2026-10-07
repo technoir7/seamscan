@@ -1,0 +1,12 @@
+id = "code009-helper-invite-token"
+description = "invite token from a module helper that wraps random.choices"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "teams/invites.py"
+line = 12

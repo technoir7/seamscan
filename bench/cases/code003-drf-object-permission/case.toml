@@ -1,0 +1,12 @@
+id = "code003-drf-object-permission"
+description = "DRF permission class whose object check is a docstring and return True"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "projects/permissions.py"
+line = 5

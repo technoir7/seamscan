@@ -1,0 +1,10 @@
+id = "code004-test-literals"
+description = "tests compare issued tokens to fixture literals"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

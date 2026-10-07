@@ -1,0 +1,10 @@
+id = "code002-return-false-validator"
+description = "validator maps any parse error to False, a real answer rather than silence"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

@@ -1,0 +1,10 @@
+id = "code010-smart-punctuation"
+description = "curly quotes, em dashes, NBSP and accented identifiers are visible text"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

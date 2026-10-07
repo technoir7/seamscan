@@ -1,0 +1,10 @@
+id = "code002-sentry-capture"
+description = "broad handler that reports to Sentry"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

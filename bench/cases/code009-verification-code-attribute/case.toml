@@ -1,0 +1,12 @@
+id = "code009-verification-code-attribute"
+description = "email verification code stored on a model from random.randint"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "accounts/verification.py"
+line = 10

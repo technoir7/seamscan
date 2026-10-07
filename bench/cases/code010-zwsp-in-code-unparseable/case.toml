@@ -1,0 +1,17 @@
+id = "code010-zwsp-in-code-unparseable"
+description = "zero-width space after a statement; the file no longer parses, but the rule still sees it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/policy.py"
+line = 1
+
+[[expected]]
+rule = "SC-META-002"
+path = "app/policy.py"
+line = 1

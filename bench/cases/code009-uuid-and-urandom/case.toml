@@ -1,0 +1,10 @@
+id = "code009-uuid-and-urandom"
+description = "session id from uuid4 and salt from os.urandom; random only picks a colour"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

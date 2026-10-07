@@ -1,0 +1,10 @@
+id = "code003-overload-check-access"
+description = "@overload stubs of an access check, followed by the implementation"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

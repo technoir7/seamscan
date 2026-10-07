@@ -1,0 +1,10 @@
+id = "code009-system-random"
+description = "random.SystemRandom draws from the OS CSPRNG"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

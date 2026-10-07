@@ -1,0 +1,10 @@
+id = "code004-token-type-and-status"
+description = "fields whose names mention token/password but hold a type or status"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

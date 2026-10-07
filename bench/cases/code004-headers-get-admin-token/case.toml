@@ -1,0 +1,12 @@
+id = "code004-headers-get-admin-token"
+description = "before_request guard compares a header to a literal admin token"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "app/__init__.py"
+line = 9

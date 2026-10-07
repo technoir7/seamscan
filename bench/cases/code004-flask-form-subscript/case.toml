@@ -1,0 +1,12 @@
+id = "code004-flask-form-subscript"
+description = "admin login compares the submitted form field to a literal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "app/admin.py"
+line = 9

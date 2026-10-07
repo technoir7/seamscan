@@ -1,0 +1,10 @@
+id = "code004-bearer-scheme"
+description = "auth scheme check and 'null'/'undefined' sentinels from a JS client"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

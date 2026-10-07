@@ -1,0 +1,10 @@
+id = "code009-cache-key-shard"
+description = "sharded counter key uses random to spread writes"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

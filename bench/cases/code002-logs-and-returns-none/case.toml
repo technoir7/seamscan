@@ -1,0 +1,10 @@
+id = "code002-logs-and-returns-none"
+description = "broad handler that logs before returning None is not silent"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

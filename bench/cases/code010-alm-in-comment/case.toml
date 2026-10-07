@@ -1,0 +1,12 @@
+id = "code010-alm-in-comment"
+description = "Arabic letter mark in a comment next to code"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/billing.py"
+line = 2

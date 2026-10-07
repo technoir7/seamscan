@@ -1,0 +1,12 @@
+id = "code003-concrete-gateway-method"
+description = "concrete payment gateway with an unfinished refund method"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "billing/gateway.py"
+line = 14

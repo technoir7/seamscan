@@ -1,0 +1,12 @@
+id = "code009-session-id-getrandbits"
+description = "in-memory session store keyed by random.getrandbits"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "app/session_store.py"
+line = 10

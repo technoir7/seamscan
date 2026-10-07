@@ -1,0 +1,12 @@
+id = "code003-check-permission-todo"
+description = "permission check stubbed to always allow behind a TODO"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "app/permissions.py"
+line = 6

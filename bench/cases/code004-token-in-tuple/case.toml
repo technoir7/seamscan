@@ -1,0 +1,12 @@
+id = "code004-token-in-tuple"
+description = "demo tokens accepted by membership test"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "app/sessions.py"
+line = 7
