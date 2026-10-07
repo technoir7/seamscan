@@ -1,0 +1,10 @@
+id = "code005-ts-jose-jwtverify-pinned"
+description = "route handler verifies with jose jwtVerify and pinned algorithms"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

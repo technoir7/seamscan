@@ -1,0 +1,10 @@
+id = "code006-js-mysql-in-list-placeholders"
+description = "mysql2 IN list of ? placeholders mapped from the ids; values passed separately"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

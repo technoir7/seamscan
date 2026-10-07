@@ -1,0 +1,10 @@
+id = "code008-ts-redis-eval-and-timers"
+description = "ioredis eval of a Lua constant, setTimeout with a function, new Function on a literal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

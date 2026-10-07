@@ -1,0 +1,10 @@
+id = "code008-js-escape-html-map-join"
+description = "vanilla notes list built with map/join where every value goes through escapeHtml"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

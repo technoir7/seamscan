@@ -1,0 +1,10 @@
+id = "code007-js-constant-commands"
+description = "execSync/exec with fixed commands and a module constant"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

@@ -1,0 +1,12 @@
+id = "code007-ts-execfile-shell-true-args"
+description = "execFile with shell:true, so its argv (with request values) is joined into a shell line"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "src/server/routes/thumbnail.ts"
+line = 7

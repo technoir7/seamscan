@@ -1,0 +1,12 @@
+id = "code006-ts-next-route-pg-template"
+description = "route handler interpolates a search param into a pg pool.query template"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "app/api/products/search/route.ts"
+line = 6

@@ -1,0 +1,17 @@
+id = "code008-js-innerhtml-search-results"
+description = "vanilla search page writes API results and the query itself into innerHTML"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "public/js/search.js"
+line = 8
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "public/js/search.js"
+line = 9

@@ -1,0 +1,10 @@
+id = "code008-ts-escaped-template-innerhtml"
+description = "Vite todo app escapes every value before building innerHTML"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

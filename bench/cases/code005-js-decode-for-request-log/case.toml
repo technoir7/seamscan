@@ -1,0 +1,10 @@
+id = "code005-js-decode-for-request-log"
+description = "request logger decodes the token only to log its jti"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

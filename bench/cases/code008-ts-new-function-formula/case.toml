@@ -1,0 +1,12 @@
+id = "code008-ts-new-function-formula"
+description = "spreadsheet formula compiled with new Function from user-entered text"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "lib/formula.ts"
+line = 5

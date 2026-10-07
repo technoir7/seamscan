@@ -1,0 +1,10 @@
+id = "code006-js-constant-only-query"
+description = "nightly cleanup query interpolates only module constants and a Number()"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

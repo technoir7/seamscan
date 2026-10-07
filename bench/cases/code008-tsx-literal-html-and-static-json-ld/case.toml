@@ -1,0 +1,10 @@
+id = "code008-tsx-literal-html-and-static-json-ld"
+description = "literal HTML, a constant-only JSON-LD block and an escaped JSON-LD block"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

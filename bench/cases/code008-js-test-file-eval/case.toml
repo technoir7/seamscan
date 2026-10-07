@@ -1,0 +1,10 @@
+id = "code008-js-test-file-eval"
+description = "a test evals a generated module to check its exports"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

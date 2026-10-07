@@ -1,0 +1,12 @@
+id = "code005-js-socketio-handshake-decode"
+description = "socket.io middleware admits a socket when jwt.decode returns anything"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "server/realtime.js"
+line = 8

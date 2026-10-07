@@ -1,0 +1,12 @@
+id = "code008-tsx-insert-adjacent-html"
+description = "client component appends live comments with insertAdjacentHTML"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "components/LiveComments.tsx"
+line = 14

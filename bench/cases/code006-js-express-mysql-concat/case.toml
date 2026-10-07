@@ -1,0 +1,12 @@
+id = "code006-js-express-mysql-concat"
+description = "Express route concatenates req.params.id into SQL run by mysql2 execute"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "server/routes/users.js"
+line = 8

@@ -1,0 +1,12 @@
+id = "code007-js-run-anything-wrapper"
+description = "a shell helper hands any caller's string to execSync"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "lib/shell.js"
+line = 4

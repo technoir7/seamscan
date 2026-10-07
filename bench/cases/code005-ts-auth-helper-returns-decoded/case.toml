@@ -1,0 +1,12 @@
+id = "code005-ts-auth-helper-returns-decoded"
+description = "getCurrentUser() returns jsonwebtoken's decode() of the session cookie"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "lib/auth.ts"
+line = 13

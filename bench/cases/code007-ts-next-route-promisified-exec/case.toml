@@ -1,0 +1,12 @@
+id = "code007-ts-next-route-promisified-exec"
+description = "route handler pings a host from the request body through promisify(exec)"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "app/api/tools/ping/route.ts"
+line = 8

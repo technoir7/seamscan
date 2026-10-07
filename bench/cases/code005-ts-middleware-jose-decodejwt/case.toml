@@ -1,0 +1,12 @@
+id = "code005-ts-middleware-jose-decodejwt"
+description = "Next.js middleware routes /admin on jose decodeJwt claims, never verifying"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "middleware.ts"
+line = 9

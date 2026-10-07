@@ -1,0 +1,10 @@
+id = "code007-ts-numeric-and-bun-argv"
+description = "a numeric pid in an exec string, and Bun.spawn with a plain argv"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

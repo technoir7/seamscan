@@ -1,0 +1,12 @@
+id = "code006-ts-prisma-query-raw-unsafe"
+description = "server action passes status and sort into $queryRawUnsafe via a template"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "app/orders/actions.ts"
+line = 6

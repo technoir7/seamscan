@@ -1,0 +1,12 @@
+id = "code007-js-express-execsync-concat"
+description = "Express upload converter concatenates filename and format into execSync"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "server.js"
+line = 9

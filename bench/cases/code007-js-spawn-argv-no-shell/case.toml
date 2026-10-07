@@ -1,0 +1,10 @@
+id = "code007-js-spawn-argv-no-shell"
+description = "spawn('git', [...]) with request values in the argv but no shell"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

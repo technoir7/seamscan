@@ -1,0 +1,12 @@
+id = "code007-js-pages-api-deploy-branch"
+description = "pages/api deploy hook checks out a branch named in the query string"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "pages/api/deploy.js"
+line = 5

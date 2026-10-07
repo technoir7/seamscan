@@ -1,0 +1,10 @@
+id = "code005-ts-jwks-peek-then-verify"
+description = "decode with complete:true to find the kid, then jwt.verify the same token"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

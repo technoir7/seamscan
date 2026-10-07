@@ -1,0 +1,10 @@
+id = "code006-ts-pg-parameter-array"
+description = "pg query with $1 parameters and a column list from a module constant"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

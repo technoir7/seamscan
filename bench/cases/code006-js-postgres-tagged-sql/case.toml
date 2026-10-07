@@ -1,0 +1,10 @@
+id = "code006-js-postgres-tagged-sql"
+description = "postgres.js tagged sql`` with values and a dynamic column list via sql(columns)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

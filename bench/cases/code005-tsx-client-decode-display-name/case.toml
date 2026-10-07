@@ -1,0 +1,10 @@
+id = "code005-tsx-client-decode-display-name"
+description = "client component decodes the token only to show the name and an admin link"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

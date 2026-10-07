@@ -1,0 +1,12 @@
+id = "code005-ts-billing-portal-decode-sub"
+description = "billing portal route looks up the Stripe customer for an unverified sub"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "app/api/billing/portal/route.ts"
+line = 9
