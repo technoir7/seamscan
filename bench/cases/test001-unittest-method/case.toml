@@ -1,0 +1,12 @@
+id = "test001-unittest-method"
+description = "unittest method that only calls the code under test"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_users.py"
+line = 14

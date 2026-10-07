@@ -1,0 +1,12 @@
+id = "test001-async-no-assert"
+description = "async test that fetches a response and never checks it"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_profile_api.py"
+line = 7

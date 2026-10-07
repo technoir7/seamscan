@@ -1,0 +1,12 @@
+id = "test001-swallowed-exception"
+description = "test wraps the call in try/except pass so it can never fail"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_pipeline.py"
+line = 4

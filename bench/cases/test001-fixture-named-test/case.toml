@@ -1,0 +1,10 @@
+id = "test001-fixture-named-test"
+description = "conftest fixtures named test_* are not tests"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

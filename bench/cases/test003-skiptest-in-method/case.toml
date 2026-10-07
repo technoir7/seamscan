@@ -1,0 +1,12 @@
+id = "test003-skiptest-in-method"
+description = "agent calls self.skipTest() in a failing TestCase method"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "tests/test_reports.py"
+line = 8

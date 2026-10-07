@@ -1,0 +1,10 @@
+id = "test001-named-assertion-helpers"
+description = "tests that delegate checks to assert_/check_/verify_ helpers"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

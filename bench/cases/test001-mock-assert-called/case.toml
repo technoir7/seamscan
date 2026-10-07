@@ -1,0 +1,10 @@
+id = "test001-mock-assert-called"
+description = "tests that check a mock with assert_called_* methods"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

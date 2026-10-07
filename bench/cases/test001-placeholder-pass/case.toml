@@ -1,0 +1,12 @@
+id = "test001-placeholder-pass"
+description = "test body replaced with pass and a TODO"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_ledger.py"
+line = 8

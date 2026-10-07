@@ -1,0 +1,12 @@
+id = "test001-mock-never-checked"
+description = "mock attribute read as a bare expression instead of asserted"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_welcome.py"
+line = 6

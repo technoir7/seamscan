@@ -1,0 +1,10 @@
+id = "test001-does-not-raise-by-intent"
+description = "tests whose name or docstring says they only check nothing is raised"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

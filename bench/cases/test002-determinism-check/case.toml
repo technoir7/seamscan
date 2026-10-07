@@ -1,0 +1,10 @@
+id = "test002-determinism-check"
+description = "comparing two calls with the same arguments tests determinism"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

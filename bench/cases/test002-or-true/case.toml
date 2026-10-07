@@ -1,0 +1,12 @@
+id = "test002-or-true"
+description = "assertion neutralised with `or True`"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "tests/test_invoice_total.py"
+line = 7

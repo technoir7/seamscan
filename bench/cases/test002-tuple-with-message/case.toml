@@ -1,0 +1,12 @@
+id = "test002-tuple-with-message"
+description = "assert on a (condition, message) tuple, which is always true"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "tests/test_health.py"
+line = 7

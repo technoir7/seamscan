@@ -1,0 +1,10 @@
+id = "test003-version-skipif-unittest"
+description = "a new test gated on the Python version with unittest.skipIf"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

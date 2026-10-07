@@ -1,0 +1,10 @@
+id = "test003-skip-in-non-test-helper"
+description = "a reusable skip marker defined in application tooling, not a test file"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"
