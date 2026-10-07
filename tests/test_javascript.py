@@ -11,6 +11,7 @@ from seamscan.parse.javascript import (
     js_dialect,
     location,
     parse_js,
+    qualified_name,
     string_value,
 )
 
@@ -58,6 +59,12 @@ def test_import_aliases_resolve_to_qualified_names():
         "child_process.exec",
         "fs.readFileSync",
     } <= names
+
+
+def test_import_meta_chains_have_qualified_names():
+    m = module("const k = import.meta.env.VITE_KEY;\n", "src/a.ts")
+    value = first(m, "(variable_declarator value: (_) @n)")
+    assert qualified_name(m, value) == "import.meta.env.VITE_KEY"
 
 
 def test_location_columns_count_characters_not_bytes():
