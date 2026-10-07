@@ -1,0 +1,10 @@
+id = "code003-ts-withauth-authorized-comment"
+description = "withAuth callback returns true on purpose and says so; the middleware does the check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

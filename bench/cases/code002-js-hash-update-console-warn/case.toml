@@ -1,0 +1,10 @@
+id = "code002-js-hash-update-console-warn"
+description = "a console-only catch around a hash update; feeding a hash is not a write"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

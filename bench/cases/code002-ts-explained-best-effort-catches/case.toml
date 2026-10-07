@@ -1,0 +1,10 @@
+id = "code002-ts-explained-best-effort-catches"
+description = "best-effort calls whose empty catch says why the error is ignored"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

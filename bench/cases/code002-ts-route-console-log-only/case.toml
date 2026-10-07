@@ -1,12 +1,10 @@
 id = "code002-ts-route-console-log-only"
-description = "route handler only console.logs a failed upstream fetch and returns an empty profile"
+description = "route handler console.logs a failed upstream read; a console-only catch around a read counts as logging"
 mode = "audit"
 split = "dev"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-CODE-002"
-path = "app/api/github/[user]/route.ts"
-line = 8

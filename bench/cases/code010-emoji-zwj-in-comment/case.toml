@@ -1,0 +1,10 @@
+id = "code010-emoji-zwj-in-comment"
+description = "Python comment with an emoji ZWJ sequence"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

@@ -1,0 +1,10 @@
+id = "code002-ts-null-is-an-answer"
+description = "date helpers return null on any bad input, including a parse error"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

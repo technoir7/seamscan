@@ -1,0 +1,10 @@
+id = "code002-mjs-seed-script-console-error"
+description = "a seed script reports a failed create on the console, which is how scripts report"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

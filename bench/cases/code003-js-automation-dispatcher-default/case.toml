@@ -1,0 +1,10 @@
+id = "code003-js-automation-dispatcher-default"
+description = "a dispatcher rejects unknown automation types with a 'not implemented' error naming the type"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

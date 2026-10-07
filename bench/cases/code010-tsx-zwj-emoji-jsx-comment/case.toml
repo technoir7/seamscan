@@ -1,0 +1,10 @@
+id = "code010-tsx-zwj-emoji-jsx-comment"
+description = "JSX comment heading with an emoji built from a zero-width joiner"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

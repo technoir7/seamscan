@@ -1,0 +1,10 @@
+id = "code004-ts-placeholder-key-checks"
+description = "API keys compared with placeholder values to decide whether the integration is configured"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

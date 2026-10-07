@@ -1,0 +1,10 @@
+id = "code003-ts-type-level-check-axios-option"
+description = "an exhaustive check on never and an axios validateStatus option are not stub guards"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"
