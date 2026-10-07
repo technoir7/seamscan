@@ -1,0 +1,12 @@
+id = "test001-mjs-node-test-no-assert"
+description = "node:test test that logs the result instead of asserting it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "test/currency.test.mjs"
+line = 9

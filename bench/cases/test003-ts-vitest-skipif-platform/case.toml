@@ -1,0 +1,10 @@
+id = "test003-ts-vitest-skipif-platform"
+description = "vitest skipIf/runIf gated on the platform, directly and through a constant"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

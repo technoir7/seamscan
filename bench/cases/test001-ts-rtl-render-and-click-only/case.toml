@@ -1,0 +1,12 @@
+id = "test001-ts-rtl-render-and-click-only"
+description = "Testing Library test that types and clicks but never checks the callback"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "src/components/NewsletterForm.test.tsx"
+line = 6

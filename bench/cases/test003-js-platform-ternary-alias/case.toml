@@ -1,0 +1,10 @@
+id = "test003-js-platform-ternary-alias"
+description = "`process.platform === 'win32' ? it.skip : it` alias"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

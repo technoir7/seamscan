@@ -1,0 +1,12 @@
+id = "test002-ts-chai-equal-same"
+description = "chai expect(total).to.equal(total)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "test/order-total.test.ts"
+line = 8

@@ -1,0 +1,17 @@
+id = "test003-ts-playwright-skip-in-test"
+description = "unconditional test.skip() and test.skip(true) inside Playwright tests"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "tests/onboarding.spec.ts"
+line = 4
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "tests/onboarding.spec.ts"
+line = 12

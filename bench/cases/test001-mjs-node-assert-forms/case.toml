@@ -1,0 +1,10 @@
+id = "test001-mjs-node-assert-forms"
+description = "node:assert default, named strict import, assert.throws and t.assert"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

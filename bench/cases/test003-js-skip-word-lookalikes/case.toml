@@ -1,0 +1,10 @@
+id = "test003-js-skip-word-lookalikes"
+description = "mongoose .skip(), an `// it is` comment, and titles containing skip/only"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

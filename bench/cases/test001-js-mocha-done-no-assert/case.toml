@@ -1,0 +1,12 @@
+id = "test001-js-mocha-done-no-assert"
+description = "mocha test that only calls done() once the promise settles"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "test/orders.js"
+line = 5

@@ -1,0 +1,10 @@
+id = "test003-js-audit-mode-skip"
+description = "audit mode: existing it.skip and it.only are not 'added in this change'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

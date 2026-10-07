@@ -1,0 +1,10 @@
+id = "test002-js-similar-sides"
+description = "sides that look alike but differ, and idempotence checks"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

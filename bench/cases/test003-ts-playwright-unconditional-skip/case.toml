@@ -1,0 +1,17 @@
+id = "test003-ts-playwright-unconditional-skip"
+description = "test.fixme() and an env-var test.skip added inside Playwright tests"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "e2e/settings.spec.ts"
+line = 4
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "e2e/settings.spec.ts"
+line = 12

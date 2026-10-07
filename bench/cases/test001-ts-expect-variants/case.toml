@@ -1,0 +1,10 @@
+id = "test001-ts-expect-variants"
+description = "expect.poll, expect.soft, toHaveScreenshot and page.waitForURL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

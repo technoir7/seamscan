@@ -1,0 +1,10 @@
+id = "test002-ts-nestjs-service-defined"
+description = "NestJS 'should be defined' on a service assigned in beforeEach"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

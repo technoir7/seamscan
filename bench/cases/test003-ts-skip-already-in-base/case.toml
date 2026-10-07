@@ -1,0 +1,10 @@
+id = "test003-ts-skip-already-in-base"
+description = "an unchanged it.skip next to a newly added test"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

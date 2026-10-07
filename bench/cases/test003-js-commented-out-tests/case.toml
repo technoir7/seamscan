@@ -1,0 +1,17 @@
+id = "test003-js-commented-out-tests"
+description = "two jest tests commented out in a block comment"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "__tests__/slugify.test.js"
+line = 8
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "__tests__/slugify.test.js"
+line = 12

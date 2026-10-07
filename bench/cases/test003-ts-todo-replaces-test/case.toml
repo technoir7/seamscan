@@ -1,0 +1,12 @@
+id = "test003-ts-todo-replaces-test"
+description = "a real test replaced by test.todo"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "src/lib/coupons.test.ts"
+line = 9

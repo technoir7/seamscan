@@ -1,0 +1,12 @@
+id = "test003-js-it-todo-replaces-test"
+description = "a jest test replaced by it.todo"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "src/__tests__/tax.test.js"
+line = 4

@@ -1,0 +1,12 @@
+id = "test001-js-mocha-callback-no-assert"
+description = "mocha done-callback test that reads the cache and checks nothing"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "test/cache.test.js"
+line = 5
