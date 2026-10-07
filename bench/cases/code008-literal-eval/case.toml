@@ -1,0 +1,10 @@
+id = "code008-literal-eval"
+description = "ast.literal_eval and json.loads parse data without running it"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

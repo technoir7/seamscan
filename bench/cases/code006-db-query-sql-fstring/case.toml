@@ -1,0 +1,12 @@
+id = "code006-db-query-sql-fstring"
+description = "a db wrapper's .query() given SQL with an interpolated id"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "services/billing.py"
+line = 7

@@ -1,0 +1,10 @@
+id = "code008-eval-methods-not-builtins"
+description = "model.eval(), DataFrame.eval and SQLModel session.exec are not the builtins"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

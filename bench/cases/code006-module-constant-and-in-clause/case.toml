@@ -1,0 +1,10 @@
+id = "code006-module-constant-and-in-clause"
+description = "module-level base query plus a placeholder list for IN"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

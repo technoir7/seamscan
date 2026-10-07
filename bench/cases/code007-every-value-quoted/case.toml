@@ -1,0 +1,10 @@
+id = "code007-every-value-quoted"
+description = "every interpolated value is wrapped in shlex.quote"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

@@ -1,0 +1,12 @@
+id = "code006-flask-search-query-variable"
+description = "Flask search builds the query in a variable, then executes it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "app/routes.py"
+line = 20

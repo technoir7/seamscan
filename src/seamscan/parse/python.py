@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 
 from seamscan.model import Location, SourceFile
@@ -111,19 +111,35 @@ def enclosing_function(module: PyModule, node: ast.AST) -> FunctionNode | None:
     return None
 
 
-def _is_literal_string_expr(node: ast.expr) -> bool:
-    if isinstance(node, ast.Constant):
-        return True
-    if isinstance(node, ast.JoinedStr):
-        return not any(isinstance(v, ast.FormattedValue) for v in node.values)
-    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
-        return _is_literal_string_expr(node.left) and _is_literal_string_expr(node.right)
+Sanitizer = Callable[[ast.expr], bool]
+"""A rule's judgement that a value is safe for its sink (spec §6.3), e.g. `shlex.quote(x)`."""
+
+
+def _never(_node: ast.expr) -> bool:
     return False
+
+
+_MAX_HOPS = 10  # name-to-assignment hops; deep chains are rare and get the cautious answer
+
+# Calls whose result is a number, so it can't carry attacker-chosen text into a string.
+_NUMERIC_CALLS = frozenset({"int", "float", "bool", "len"})
+_NUMERIC_TYPES = frozenset({"int", "float", "bool"})
+_LIST_GROWERS = {"append": -1, "insert": -1, "extend": 0}  # method -> index of the added value
+
+
+def _scope_nodes(scope: ast.AST) -> Iterator[ast.AST]:
+    """Nodes of one scope, without descending into nested functions or classes."""
+    stack = list(ast.iter_child_nodes(scope))
+    while stack:
+        node = stack.pop()
+        yield node
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
+            stack.extend(ast.iter_child_nodes(node))
 
 
 def _assigned_values(scope: ast.AST, name: str) -> list[ast.expr]:
     values: list[ast.expr] = []
-    for node in ast.walk(scope):
+    for node in _scope_nodes(scope):
         if isinstance(node, ast.Assign) and any(
             isinstance(t, ast.Name) and t.id == name for t in node.targets
         ):
@@ -138,27 +154,193 @@ def _assigned_values(scope: ast.AST, name: str) -> list[ast.expr]:
     return values
 
 
-def built_from_values(module: PyModule, node: ast.expr, _depth: int = 0) -> bool:
-    """True when a string is assembled from non-literal values (spec §6.3 taint-lite).
+def _parameter(module: PyModule, name: ast.Name) -> ast.arg | None:
+    fn = enclosing_function(module, name)
+    if fn is None:
+        return None
+    a = fn.args
+    for arg in (*a.posonlyargs, *a.args, *a.kwonlyargs, a.vararg, a.kwarg):
+        if arg is not None and arg.arg == name.id:
+            return arg
+    return None
 
-    Follows plain assignments within the same function. A bare parameter is not
-    assumed dangerous: wrappers that run a caller's query are common and usually fine.
-    """
-    if _depth > 5:
+
+def _scope_of(module: PyModule, name: ast.Name) -> ast.AST:
+    """The scope whose assignments bind `name`: its function, or the module for a global."""
+    fn = enclosing_function(module, name)
+    if fn is not None and (_parameter(module, name) or _assigned_values(fn, name.id)):
+        return fn
+    return module.tree
+
+
+def assigned_values(module: PyModule, name: ast.Name) -> list[ast.expr]:
+    """Values assigned to `name` in its own scope: its function, or the module for a name
+    the function never binds (a global constant). Empty for an unassigned parameter."""
+    return _assigned_values(_scope_of(module, name), name.id)
+
+
+def _numeric_annotation(module: PyModule, ann: ast.expr | None) -> bool:
+    """`int`, `int | None`, `Optional[int]`, `Annotated[int, ...]`: FastAPI and pydantic
+    reject anything else, so such a parameter can't hold text."""
+    if ann is None:
         return False
+    if isinstance(ann, ast.Constant):
+        return ann.value is None
+    if isinstance(ann, ast.Name):
+        return ann.id in _NUMERIC_TYPES
+    if isinstance(ann, ast.BinOp) and isinstance(ann.op, ast.BitOr):
+        return _numeric_annotation(module, ann.left) and _numeric_annotation(module, ann.right)
+    if isinstance(ann, ast.Subscript):
+        wrapper = (qualified_name(module, ann.value) or "").rsplit(".", 1)[-1]
+        inner = ann.slice.elts[0] if isinstance(ann.slice, ast.Tuple) else ann.slice
+        return wrapper in ("Annotated", "Optional") and _numeric_annotation(module, inner)
+    return False
+
+
+Binding = tuple[int, str]  # (id of scope, name): one variable, however many assignments
+
+
+def _growth_inert(
+    module: PyModule, scope: ast.AST, name: str, s: Sanitizer, seen: frozenset[Binding], hops: int
+) -> bool:
+    """Every `name.append(x)` / `.insert(i, x)` / `.extend(xs)` in the scope adds inert values."""
+    for node in _scope_nodes(scope):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == name
+            and node.func.attr in _LIST_GROWERS
+            and node.args
+            and not _inert(module, node.args[_LIST_GROWERS[node.func.attr]], s, seen, hops)
+        ):
+            return False
+    return True
+
+
+def _inert(
+    module: PyModule, node: ast.expr, s: Sanitizer, seen: frozenset[Binding], hops: int
+) -> bool:
+    if s(node):
+        return True
+    if isinstance(node, ast.Constant):
+        return True
     if isinstance(node, ast.JoinedStr):
-        return any(isinstance(v, ast.FormattedValue) for v in node.values)
-    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
-        return not _is_literal_string_expr(node)
-    if (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "format"
-    ):
-        return bool(node.args or node.keywords)
+        return all(
+            _inert(module, v.value, s, seen, hops)
+            for v in node.values
+            if isinstance(v, ast.FormattedValue)
+        )
+    if isinstance(node, ast.BinOp):
+        return _inert(module, node.left, s, seen, hops) and _inert(
+            module, node.right, s, seen, hops
+        )
+    if isinstance(node, ast.UnaryOp):
+        return _inert(module, node.operand, s, seen, hops)
+    if isinstance(node, ast.IfExp):
+        return _inert(module, node.body, s, seen, hops) and _inert(
+            module, node.orelse, s, seen, hops
+        )
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+        return all(_inert(module, e, s, seen, hops) for e in node.elts)
+    if isinstance(node, ast.Dict):
+        return all(_inert(module, v, s, seen, hops) for v in node.values)
+    if isinstance(node, (ast.ListComp, ast.SetComp, ast.GeneratorExp)):
+        return _inert(module, node.elt, s, seen, hops)
+    if isinstance(node, ast.Call):
+        return _inert_call(module, node, s, seen, hops)
     if isinstance(node, ast.Name):
-        scope: ast.AST = enclosing_function(module, node) or module.tree
+        return _inert_name(module, node, s, seen, hops)
+    return False
+
+
+def _inert_call(
+    module: PyModule, node: ast.Call, s: Sanitizer, seen: frozenset[Binding], hops: int
+) -> bool:
+    name = qualified_name(module, node.func)
+    if name in _NUMERIC_CALLS:
+        return True
+    if name in ("min", "max"):
+        return all(_inert(module, a, s, seen, hops) for a in node.args)
+    if isinstance(node.func, ast.Attribute) and node.func.attr in ("format", "join"):
+        parts = [node.func.value, *node.args, *(k.value for k in node.keywords)]
+        return all(_inert(module, p, s, seen, hops) for p in parts)
+    return False
+
+
+def _inert_name(
+    module: PyModule, node: ast.Name, s: Sanitizer, seen: frozenset[Binding], hops: int
+) -> bool:
+    scope = _scope_of(module, node)
+    binding = (id(scope), node.id)
+    if binding in seen:
+        # `q = q + "..."`: the earlier value is judged by the other assignments.
+        return True
+    if hops >= _MAX_HOPS:
+        return False
+    param = _parameter(module, node)
+    if param is not None and not _numeric_annotation(module, param.annotation):
+        return False
+    values = _assigned_values(scope, node.id)
+    if param is None and not values:
+        return False  # bound some other way (loop, with, import...): not known to be literal
+    inner = seen | {binding}
+    return all(_inert(module, v, s, inner, hops + 1) for v in values) and _growth_inert(
+        module, scope, node.id, s, inner, hops + 1
+    )
+
+
+def is_inert(module: PyModule, node: ast.expr, sanitized: Sanitizer | None = None) -> bool:
+    """True when the value can't carry attacker-chosen text (spec §6.3 taint-lite).
+
+    Inert: literals and compositions of them; numbers from `int()`/`len()` or numeric-annotated
+    parameters; joins of lists only ever grown with inert values; names whose every assignment
+    in their scope is inert; and anything the rule's `sanitized` accepts. Any other parameter,
+    attribute or call result is not inert.
+    """
+    return _inert(module, node, sanitized or _never, frozenset(), 0)
+
+
+def _is_composition(node: ast.expr) -> bool:
+    return (
+        isinstance(node, ast.JoinedStr)
+        or (isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)))
+        or (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "format"
+        )
+    )
+
+
+def _built(
+    module: PyModule, node: ast.expr, s: Sanitizer, seen: frozenset[Binding], hops: int
+) -> bool:
+    if s(node):
+        return False
+    if _is_composition(node):
+        return not _inert(module, node, s, frozenset(), 0)
+    if isinstance(node, ast.IfExp):
+        return _built(module, node.body, s, seen, hops) or _built(
+            module, node.orelse, s, seen, hops
+        )
+    if isinstance(node, ast.Name):
+        scope = _scope_of(module, node)
+        binding = (id(scope), node.id)
+        if binding in seen or hops >= _MAX_HOPS:
+            return False
         return any(
-            built_from_values(module, v, _depth + 1) for v in _assigned_values(scope, node.id)
+            _built(module, v, s, seen | {binding}, hops + 1)
+            for v in _assigned_values(scope, node.id)
         )
     return False
+
+
+def built_from_values(module: PyModule, node: ast.expr, sanitized: Sanitizer | None = None) -> bool:
+    """True when a string is assembled (f-string, `+`, `%`, `.format`) from at least one
+    value that isn't inert (see `is_inert`), following assignments in the name's scope.
+
+    A bare parameter is not assumed dangerous: wrappers that run a caller's query are
+    common and usually fine. `sanitized` marks values the rule considers safe for its sink.
+    """
+    return _built(module, node, sanitized or _never, frozenset(), 0)

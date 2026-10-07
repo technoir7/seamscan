@@ -1,0 +1,10 @@
+id = "code007-shlex-join-shell"
+description = "shlex.join builds a safely quoted command line"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

@@ -1,0 +1,10 @@
+id = "code006-sqlalchemy-bound-params"
+description = "SQLAlchemy text() with named bound parameters"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

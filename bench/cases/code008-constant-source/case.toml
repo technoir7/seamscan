@@ -1,0 +1,10 @@
+id = "code008-constant-source"
+description = "exec and eval of fixed strings, inline and via a constant"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

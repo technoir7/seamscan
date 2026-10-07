@@ -1,0 +1,10 @@
+id = "code005-verified-decode"
+description = "normal PyJWT decode with a key and a pinned algorithm"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

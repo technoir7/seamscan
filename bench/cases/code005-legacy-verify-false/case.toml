@@ -1,0 +1,12 @@
+id = "code005-legacy-verify-false"
+description = "old PyJWT verify=False in a Flask decorator"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "app/decorators.py"
+line = 13

@@ -1,0 +1,12 @@
+id = "code006-pandas-read-sql-fstring"
+description = "pandas read_sql with an interpolated customer id"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "reports/orders.py"
+line = 8

@@ -1,0 +1,10 @@
+id = "code006-pandas-dataframe-query"
+description = "pandas DataFrame.query is not SQL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

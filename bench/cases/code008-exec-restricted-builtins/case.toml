@@ -1,0 +1,12 @@
+id = "code008-exec-restricted-builtins"
+description = "exec of posted code with emptied builtins is still code execution"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "sandbox/run.py"
+line = 14

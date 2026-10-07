@@ -1,0 +1,10 @@
+id = "code007-shlex-split-no-shell"
+description = "shlex.split of a template without a shell"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

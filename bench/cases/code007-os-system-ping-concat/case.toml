@@ -1,0 +1,12 @@
+id = "code007-os-system-ping-concat"
+description = "Flask network tool pings a user-supplied host via os.system"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "tools/app.py"
+line = 11

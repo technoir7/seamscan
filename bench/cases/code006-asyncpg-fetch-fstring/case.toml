@@ -1,0 +1,12 @@
+id = "code006-asyncpg-fetch-fstring"
+description = "asyncpg fetch with an interpolated owner"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "app/items.py"
+line = 11

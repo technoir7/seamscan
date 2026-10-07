@@ -1,0 +1,10 @@
+id = "code007-constant-shell-true"
+description = "fixed pipelines with shell=True, inline and via a module constant"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

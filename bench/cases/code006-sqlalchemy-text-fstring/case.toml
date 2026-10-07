@@ -1,0 +1,12 @@
+id = "code006-sqlalchemy-text-fstring"
+description = "SQLAlchemy text() around an f-string in a FastAPI route"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "app/api/accounts.py"
+line = 13

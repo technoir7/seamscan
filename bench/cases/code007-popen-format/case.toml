@@ -1,0 +1,12 @@
+id = "code007-popen-format"
+description = "ffmpeg command assembled with .format and shell=True"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "media/transcode.py"
+line = 5

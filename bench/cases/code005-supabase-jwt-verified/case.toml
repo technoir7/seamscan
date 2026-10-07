@@ -1,0 +1,10 @@
+id = "code005-supabase-jwt-verified"
+description = "Supabase access token verified with the project secret and audience"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"
