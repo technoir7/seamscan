@@ -1,6 +1,6 @@
 # SC-SEC-003 — Hardcoded fallback for a secret
 
-**Severity:** HIGH · **Confidence:** HIGH · **CWE:** [CWE-1188](https://cwe.mitre.org/data/definitions/1188.html) · **Languages:** Python (TS/JS planned in M3)
+**Severity:** HIGH · **Confidence:** HIGH · **CWE:** [CWE-1188](https://cwe.mitre.org/data/definitions/1188.html) · **Languages:** Python, TS/JS
 
 ## What it finds
 
@@ -13,7 +13,22 @@ An environment lookup for a secret that falls back to a hardcoded string:
 
 Import aliases are resolved, so `from os import getenv` and `import os as _os` count.
 
-`X` must name a secret: its **last** `_`-separated word is one of `SECRET`, `KEY`,
+In TS/JS:
+
+- `process.env.X || "<literal>"` and `process.env.X ?? "<literal>"`
+- `process.env["X"]` with either operator
+- Vite's `import.meta.env.X` with either operator
+- Deno's `Deno.env.get("X")` with either operator (Supabase Edge Functions)
+- a chain such as `process.env.A ?? process.env.B ?? "<literal>"` or
+  `opts.secret ?? process.env.X ?? "<literal>"`: reported once, named after the first
+  secret-named env read
+- destructuring defaults: `const { JWT_SECRET = "dev" } = process.env`, and the renamed
+  form `const { JWT_SECRET: secret = "dev" } = process.env`, one finding per default
+
+The literal may be a string or a template literal without `${}` substitutions.
+`import { env } from "node:process"` resolves, so `env.X || "dev"` counts.
+
+In both languages, `X` must name a secret: its **last** `_`-separated word is one of `SECRET`, `KEY`,
 `TOKEN`, `PASSWORD`, `PASS`, `PWD`, `JWT`, `SALT`, `CREDENTIALS` or `APIKEY`.
 
 Not reported:
@@ -25,7 +40,9 @@ Not reported:
 - empty or whitespace-only defaults, `None` and non-string defaults
 - defaults that are file paths (`/…`, `./…`, `~/…`, or ending in `.pem`, `.key`,
   `.json`, `.p12`, `.pfx`, `.crt`), e.g. `GOOGLE_APPLICATION_CREDENTIALS`
-- test files, where planting a dummy secret is normal
+- test files, where planting a dummy secret is normal (`*.test.ts`, `__tests__/`, …)
+- in TS/JS, `&&` (not a fallback), and fallbacks on anything that isn't an env read:
+  `req.headers.get("x-api-key") ?? "anonymous"`, `config.secret || "x"`
 
 The default value is never printed, only the variable name.
 
@@ -46,6 +63,14 @@ SESSION_SECRET = os.getenv("SESSION_SECRET") or "change-this-in-production"
 os.environ.setdefault("DB_PASSWORD", "postgres")
 ```
 
+```ts
+secret: process.env.NEXTAUTH_SECRET || "supersecret-change-me",
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const API_KEY = import.meta.env.VITE_API_KEY ?? "dev-api-key-123";
+const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "whsec_local_dev";
+const { PORT = "3000", JWT_SECRET = "dev-jwt-secret" } = process.env;   // JWT_SECRET only
+```
+
 Not flagged:
 
 ```python
@@ -55,16 +80,35 @@ CERT = os.environ.get("PUBLIC_KEY_PATH", "/etc/certs/pub.pem")
 cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "secrets/sa.json")
 ```
 
+```ts
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
+const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
+const anon = import.meta.env.VITE_SUPABASE_ANON_KEY ?? "eyJ…";
+const key = fs.readFileSync(process.env.SSL_KEY ?? "/etc/ssl/private/server.key");
+const secret = process.env.JWT_SECRET ?? (() => { throw new Error("JWT_SECRET is not set"); })();
+```
+
 ## How to fix
 
-Read the secret with `os.environ["X"]`, or check for a missing value and raise at
-startup. If local development needs a value, put it in an ignored `.env`.
+Read the secret with `os.environ["X"]` (Python) or `process.env.X` with a check that
+throws when it is missing (TS/JS), or validate the environment at startup with a schema
+(zod, `@t3-oss/env-nextjs`). If local development needs a value, put it in an ignored `.env`.
 
 ## Known gaps
 
 - A default held in a variable or built at runtime (`os.getenv("X", DEFAULT)`) is missed.
 - Other config readers (pydantic `BaseSettings` defaults, `decouple.config`,
-  `environ.Env`, dict `.get`) are not checked.
+  `environ.Env`, dict `.get`) are not checked. In TS/JS: zod `.default(…)` in an env
+  schema, Cloudflare Workers' `env.X` binding, SvelteKit's `$env/dynamic/private`,
+  `Bun.env` and `Deno.env.toObject()` are not checked.
+- In TS/JS, a fallback through a ternary (`process.env.X ? process.env.X : "dev"`), a
+  read stored in a variable first (`const s = process.env.X; s || "dev"`), or a
+  defaulting assignment (`process.env.X ??= "dev"`) is missed.
+- Vite exposes only `VITE_`-prefixed variables to the browser, so a `VITE_*` value is
+  public whatever its fallback. The rule still reports a secret-named one
+  (`VITE_API_KEY ?? "dev"`): the name says it should be secret, and SC-SEC-002 (M4)
+  will report the exposure itself. `VITE_FIREBASE_API_KEY ?? "AIza…"`, a public key by
+  design, is reported too.
 - A secret name whose last word is a qualifier, such as `DB_PASSWORD_PROD` or
   `SECRET_KEY_BASE`, is missed.
 - A `KEY` name that is not a credential but ends in `KEY` (`SORT_KEY`, `S3_OBJECT_KEY`)

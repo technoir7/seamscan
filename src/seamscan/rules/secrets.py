@@ -10,9 +10,12 @@ import ast
 import re
 from collections.abc import Iterator
 
-from seamscan.facts.roles import Role, role_of
+from tree_sitter import Node
+
+from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.facts.secrets import SecretMatch, find_secrets, redact
 from seamscan.model import Confidence, Finding, Location, Severity
+from seamscan.parse import javascript as js
 from seamscan.parse.envfile import parse_env
 from seamscan.parse.python import PyModule, keyword, location, qualified_name
 from seamscan.rules.base import Rule, RuleContext, finding, meta
@@ -23,7 +26,7 @@ PROVIDER_SECRET = meta(
     Severity.CRITICAL,
     Confidence.HIGH,
     ("CWE-798",),
-    frozenset({"python", "dotenv"}),
+    frozenset({"python", "javascript", "dotenv"}),
     "A live provider credential is written into the repository, so anyone who can read "
     "the code can use it.",
 )
@@ -34,7 +37,7 @@ SECRET_FALLBACK = meta(
     Severity.HIGH,
     Confidence.HIGH,
     ("CWE-1188",),
-    frozenset({"python"}),
+    frozenset({"python", "javascript"}),
     "If the variable is unset, the app quietly runs with a secret published in the source.",
 )
 
@@ -85,7 +88,7 @@ def _reportable(m: SecretMatch) -> bool:
     return m.kind != "publishable" and not _DUMMY_SECRET.search(m.value)
 
 
-def _secret_finding(loc: Location, m: SecretMatch) -> Finding:
+def _secret_finding(loc: Location, m: SecretMatch, in_browser: bool = False) -> Finding:
     shown = redact(m.value)
     if m.kind == "test":
         return finding(
@@ -94,6 +97,13 @@ def _secret_finding(loc: Location, m: SecretMatch) -> Finding:
             f"{m.provider} test-mode key in source: {shown}",
             shown,
             severity=Severity.LOW,
+        )
+    if in_browser:
+        return finding(
+            PROVIDER_SECRET,
+            loc,
+            f"{m.provider} secret in browser code: {shown}; it ships to every visitor",
+            shown,
         )
     return finding(PROVIDER_SECRET, loc, f"{m.provider} secret in source: {shown}", shown)
 
@@ -108,6 +118,21 @@ def _literal_span(module: PyModule, node: ast.Constant, m: SecretMatch) -> Locat
     return _span(module.path, node.lineno, node.col_offset + 1, source, at, at + len(m.value))
 
 
+def _js_provider_secrets(module: js.JsModule) -> Iterator[Finding]:
+    role = js_role(module)
+    if role is Role.TEST:
+        return
+    # Fragments are the raw text between quotes or around `${}`, so offsets into them are
+    # offsets in the source, and templates with substitutions are covered too.
+    for fragment in js.captures(module, "(string_fragment) @s").get("s", []):
+        raw = js.text(module, fragment)
+        start = js.location(module, fragment)
+        for m in find_secrets(raw):
+            if _reportable(m):
+                loc = _span(module.path, start.start_line, start.start_col, raw, m.start, m.end)
+                yield _secret_finding(loc, m, in_browser=role is Role.CLIENT)
+
+
 def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
     for module in ctx.python:
         if role_of(module.path) is Role.TEST:
@@ -117,6 +142,8 @@ def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
                 for m in find_secrets(node.value):
                     if _reportable(m):
                         yield _secret_finding(_literal_span(module, node, m), m)
+    for module in ctx.js:
+        yield from _js_provider_secrets(module)
     for file in ctx.files:
         if not _is_env_file(file.path):
             continue
@@ -147,12 +174,15 @@ def _names_a_secret(name: str) -> bool:
     return not (words[-1] == "KEY" and len(words) > 1 and words[-2] in _PUBLIC_KEY_QUALIFIERS)
 
 
+def _hardcoded_value(value: str | None) -> bool:
+    return value is not None and bool(value.strip()) and not _FILE_PATH.search(value)
+
+
 def _hardcoded(node: ast.expr | None) -> bool:
     return (
         isinstance(node, ast.Constant)
         and isinstance(node.value, str)
-        and bool(node.value.strip())
-        and not _FILE_PATH.search(node.value)
+        and _hardcoded_value(node.value)
     )
 
 
@@ -172,10 +202,10 @@ def _env_lookup(module: PyModule, node: ast.expr) -> tuple[str, str, ast.expr | 
     return func, name.value, default
 
 
-def _fallback_finding(module: PyModule, node: ast.expr, name: str, shown: str) -> Finding:
+def _fallback_finding(loc: Location, name: str, shown: str) -> Finding:
     return finding(
         SECRET_FALLBACK,
-        location(module, node),
+        loc,
         f"`{name}` falls back to a hardcoded value when the variable is unset",
         shown,
     )
@@ -191,13 +221,120 @@ def _secret_fallbacks(ctx: RuleContext) -> Iterator[Finding]:
                 lookup = _env_lookup(module, node)
                 if lookup and _hardcoded(lookup[2]):
                     func, name, _ = lookup
-                    yield _fallback_finding(module, node, name, f'{func}("{name}", …)')
+                    loc = location(module, node)
+                    yield _fallback_finding(loc, name, f'{func}("{name}", …)')
             elif isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
                 # `os.getenv("X") or "dev"`: the same fallback, written another way.
                 first = _env_lookup(module, node.values[0])
                 if first and first[2] is None and _hardcoded(node.values[-1]):
                     func, name, _ = first
-                    yield _fallback_finding(module, node, name, f'{func}("{name}") or …')
+                    loc = location(module, node)
+                    yield _fallback_finding(loc, name, f'{func}("{name}") or …')
+    for module in ctx.js:
+        if js_role(module) is not Role.TEST:
+            yield from _js_secret_fallbacks(module)
+
+
+# Node's process.env, Vite's import.meta.env and Deno's Deno.env.get (Supabase Edge
+# Functions) are the places a JS app reads its environment.
+_JS_ENV_OBJECTS = frozenset({"process.env", "import.meta.env"})
+_JS_FALLBACK_OPERATORS = frozenset({"||", "??"})
+
+
+def _js_env_read(module: js.JsModule, node: Node) -> tuple[str, str] | None:
+    """(how it is read, variable name) for an env read of a secret-named variable."""
+    name: str | None = None
+    shown = ""
+    if node.type in ("member_expression", "subscript_expression"):
+        obj = node.child_by_field_name("object")
+        env = js.qualified_name(module, obj) if obj is not None else None
+        if env not in _JS_ENV_OBJECTS:
+            return None
+        if node.type == "member_expression":
+            prop = node.child_by_field_name("property")
+            name = js.text(module, prop) if prop is not None else None
+            shown = f"{env}.{name}"
+        else:
+            index = node.child_by_field_name("index")
+            name = js.string_value(module, index) if index is not None else None
+            shown = f'{env}["{name}"]'
+    elif node.type == "call_expression" and js.call_name(module, node) == "Deno.env.get":
+        args = js.arguments(node)
+        name = js.string_value(module, args[0]) if args else None
+        shown = f'Deno.env.get("{name}")'
+    if name is None or not _names_a_secret(name):
+        return None
+    return shown, name
+
+
+def _js_hardcoded(module: js.JsModule, node: Node | None) -> bool:
+    return node is not None and _hardcoded_value(js.string_value(module, node))
+
+
+def _fallback_operator(node: Node) -> str | None:
+    op = node.child_by_field_name("operator") if node.type == "binary_expression" else None
+    return op.type if op is not None and op.type in _JS_FALLBACK_OPERATORS else None
+
+
+def _fallback_chain(node: Node) -> list[Node]:
+    """`a ?? b ?? c` parses as `(a ?? b) ?? c`: the operands before the last, in order."""
+    left = node.child_by_field_name("left")
+    if left is None:
+        return []
+    if _fallback_operator(left) is None:
+        return [left]
+    right = left.child_by_field_name("right")
+    return _fallback_chain(left) + ([right] if right is not None else [])
+
+
+def _js_operator_fallbacks(module: js.JsModule) -> Iterator[Finding]:
+    for node in js.captures(module, "(binary_expression) @b").get("b", []):
+        op = _fallback_operator(node)
+        if op is None or not _js_hardcoded(module, node.child_by_field_name("right")):
+            continue
+        chain = _fallback_chain(node)
+        # `X || "a" || "b"` is reported once, where the first literal is.
+        if any(js.string_value(module, n) is not None for n in chain):
+            continue
+        read = next((r for n in chain if (r := _js_env_read(module, n))), None)
+        if read is not None:
+            shown, name = read
+            yield _fallback_finding(js.location(module, node), name, f"{shown} {op} …")
+
+
+def _js_destructured_fallbacks(module: js.JsModule) -> Iterator[Finding]:
+    """`const { JWT_SECRET = "dev" } = process.env`."""
+    for declarator in js.captures(module, "(variable_declarator) @d").get("d", []):
+        pattern = declarator.child_by_field_name("name")
+        value = declarator.child_by_field_name("value")
+        if pattern is None or pattern.type != "object_pattern" or value is None:
+            continue
+        env = js.qualified_name(module, value)
+        if env not in _JS_ENV_OBJECTS:
+            continue
+        for item in pattern.named_children:
+            if item.type == "object_assignment_pattern":
+                key = item.child_by_field_name("left")
+                default = item.child_by_field_name("right")
+            elif item.type == "pair_pattern":
+                key = item.child_by_field_name("key")
+                inner = item.child_by_field_name("value")
+                if inner is None or inner.type != "assignment_pattern":
+                    continue
+                default = inner.child_by_field_name("right")
+            else:
+                continue
+            if key is None:
+                continue
+            name = js.string_value(module, key) or js.text(module, key)
+            if _names_a_secret(name) and _js_hardcoded(module, default):
+                loc = js.location(module, item)
+                yield _fallback_finding(loc, name, f"{{ {name} = … }} = {env}")
+
+
+def _js_secret_fallbacks(module: js.JsModule) -> Iterator[Finding]:
+    yield from _js_operator_fallbacks(module)
+    yield from _js_destructured_fallbacks(module)
 
 
 # ---------------------------------------------------------------- SC-SEC-004
