@@ -1,0 +1,12 @@
+id = "test002-assert-true-with-reason"
+description = "assertion replaced by assert True with an excuse as the message"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "tests/test_webhooks.py"
+line = 7

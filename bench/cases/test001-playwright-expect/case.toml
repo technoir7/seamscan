@@ -1,0 +1,10 @@
+id = "test001-playwright-expect"
+description = "Playwright tests assert with expect(locator).to_*"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"
