@@ -132,8 +132,10 @@ def _aliases(dialect: str, source: bytes, root: Node) -> dict[str, str]:
                         alias = spec.child_by_field_name("alias") or name
                         if name is not None and alias is not None:
                             aliases[node_text(source, alias)] = f"{mod}.{node_text(source, name)}"
-    found = _captures(dialect, root, _REQUIRE)
-    for name, src in zip(found.get("name", []), found.get("src", []), strict=False):
+    # Pair names with sources per match: the per-capture lists of `captures()` don't come
+    # back in a common order, so zipping them mismatched modules.
+    for _, match in QueryCursor(_query(dialect, _REQUIRE)).matches(root):
+        name, src = match["name"][0], match["src"][0]
         raw = string_value_of(source, src)
         if raw is None:
             continue
