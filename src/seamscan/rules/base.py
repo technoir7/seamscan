@@ -5,7 +5,15 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
-from seamscan.model import Confidence, Finding, Location, RuleMeta, Severity, SourceFile
+from seamscan.model import (
+    ChangeSet,
+    Confidence,
+    Finding,
+    Location,
+    RuleMeta,
+    Severity,
+    SourceFile,
+)
 from seamscan.parse.python import PyModule
 
 DOCS_BASE = "https://github.com/technoir7/seamscan/blob/main/docs/rules"
@@ -15,6 +23,7 @@ DOCS_BASE = "https://github.com/technoir7/seamscan/blob/main/docs/rules"
 class RuleContext:
     python: tuple[PyModule, ...] = ()  # every parsed .py file
     files: tuple[SourceFile, ...] = ()  # every analyzed file, any type, sorted by path
+    change: ChangeSet | None = None  # set in scan mode; rules about "this change" need it
 
 
 @dataclass(frozen=True)

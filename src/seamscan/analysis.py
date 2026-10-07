@@ -72,7 +72,7 @@ def analyze(
     """Run every rule over the files. With a ChangeSet, keep only findings the change touches."""
     ordered = tuple(sorted(files, key=lambda f: f.path))
     modules, findings = _parse(ordered)
-    ctx = RuleContext(python=modules, files=ordered)
+    ctx = RuleContext(python=modules, files=ordered, change=change)
     for rule in rules:
         findings.extend(_run(rule, ctx))
     applied = apply_suppressions(findings, {f.path: f.text for f in ordered})
