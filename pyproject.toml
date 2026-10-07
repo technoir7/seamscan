@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clogbot"
-version = "0.2.1"
-description = "Deterministic, epistemically adversarial hardener for vibe-coded repositories"
+version = "0.2.2"
+description = "Static checks for the security and correctness failures AI coding tools ship"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "ClogBot Contributors"}
+    {name = "Aaron Fung"}
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -34,7 +34,7 @@ dev = [
 ]
 
 [project.scripts]
-clogbot = "clogbot:main"
+clogbot = "clogbot.legacy:main"
 
 [tool.ruff]
 line-length = 100

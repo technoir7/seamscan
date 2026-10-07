@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from clogbot import (
+from clogbot.legacy import (
     GitDiffMeta,
     _detect_fallback_secrets,
     _detect_new_dependency_risk,
