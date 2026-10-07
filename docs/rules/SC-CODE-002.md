@@ -1,8 +1,10 @@
 # SC-CODE-002 — Swallowed exception
 
-**Severity:** MEDIUM, raised to HIGH around writes, payments and auth · **Confidence:** HIGH · **CWE:** [CWE-390](https://cwe.mitre.org/data/definitions/390.html) · **Languages:** Python (TS/JS planned in M3)
+**Severity:** MEDIUM, raised to HIGH around writes, payments and auth · **Confidence:** HIGH · **CWE:** [CWE-390](https://cwe.mitre.org/data/definitions/390.html) · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
+
+### Python
 
 A broad `except` handler that throws the error away:
 
@@ -25,6 +27,83 @@ should never be silent. The list is short and explicit:
   `refund`
 
 Test files are skipped.
+
+### TypeScript and JavaScript
+
+Every JS `catch` is broad, so the question is only what the handler does.
+
+**A `try`/`catch` whose `catch` block does nothing:** it is empty (comments aside), or
+holds only `return`, `return null`, `return undefined` or `continue`. MEDIUM, or HIGH
+when the `try` block makes a sensitive call (below).
+
+**A `catch` block that only writes to the console** (`console.log`, `.info`, `.debug`,
+`.trace`, `.error`, `.warn`, optionally followed by one of the statements above):
+flagged **only when the `try` block makes a sensitive call**, at HIGH. Elsewhere it
+counts as logging, the way `logger.warning(...)` does in Python.
+
+**A promise `.catch(handler)`** whose handler does nothing or only logs
+(`() => {}`, `() => null`, `() => undefined`, `(e) => console.error(e)`,
+`console.error` passed directly): flagged **only when the chain makes a sensitive
+call**, at HIGH, and only when the settled value is thrown away or handed straight back
+(`p.catch(…);`, `await p.catch(…)`, `return p.catch(…)`, an arrow's body, also through
+a trailing `.finally(…)`). Assigned or passed on, `.catch(() => null)` is a fallback
+value (`const body = await req.json().catch(() => null)`), like an `except` that
+assigns one. Writing a no-op handler is an explicit choice, and away from writes it is
+nearly always a deliberate fire-and-forget (`audio.play().catch(() => {})`).
+
+**Sensitive calls** (the explicit TS/JS list):
+
+- a write method, by its last name: `insert`, `insertOne`, `insertMany`, `update`,
+  `updateOne`, `updateMany`, `upsert`, `delete`, `deleteOne`, `deleteMany`, `save`,
+  `commit`, `execute`. This covers Supabase (`supabase.from("t").insert(…)`), Prisma
+  (`prisma.user.update`), Mongo and Knex.
+- Prisma's `create`/`createMany` on a client named `prisma`, `db` or `tx`
+  (`create` alone is too common: `Object.create`, `axios.create`)
+- anything on `stripe` (`stripe.refunds.create`), or through a payment resource:
+  `charges`, `refunds`, `paymentIntents`, `payouts`, `transfers`, `subscriptions`
+- `fetch(url, { method: "POST" | "PUT" | "PATCH" | "DELETE" })` (any case) and
+  `axios.post`/`put`/`patch`
+- auth actions: a method on `*.auth.*` that isn't a read (not `get…`/`on…`, so
+  `supabase.auth.signInWithPassword` counts and `supabase.auth.getSession` doesn't);
+  a call whose name starts with `login`, `logout`, `signIn`, `signUp`, `signOut`,
+  `logIn`, `authenticate`, `authorize`, `charge` or `refund`; `verify` itself, or
+  `verify…` ending in `Token`, `Id`, `Otp`, `Signature`, `Jwt`, `Password`, `Session`,
+  `Email`, `Webhook` or `Code` (`jwt.verify`, `verifyIdToken`)
+- not a hash being fed: `createHash(…).update(x)`, or `hash.update(x)` where
+  `hash = createHash(…)` (also `createHmac`, `createCipheriv`, `createDecipheriv`)
+
+**Not flagged:**
+
+- a block whose comments give a reason: `catch { /* non-fatal: keeps the default
+  title */ }`. A comment mentioning `TODO`, `FIXME`, `XXX`, `implement`, `for now`,
+  `placeholder` or `stub` doesn't count as a reason. Python can't see comments; in JS
+  they are part of the tree and a reviewer reads them, so they work like a suppression
+  with a reason.
+- `return null` (or `undefined`) when null is already one of the function's answers:
+  its declared return type includes `null`/`undefined`, or another `return` in it can
+  produce null (`return row ?? null`). Callers must handle null anyway, like the
+  `return false` of a validator.
+- console-only catches in command-line scripts, where the console is how they report:
+  a file under a `scripts/`, `script/` or `bin/` directory, or named `test-*`,
+  `test_*` or `seed*`
+- rethrowing, returning a response or any other value, setting state, calling a
+  reporter (`Sentry.captureException`, `toast.error`): anything but the forms above
+- test files
+
+### The console decision, measured
+
+A catch that only `console.error`s is the most common error handler in AI-built JS
+apps, and it is arguably this rule's target: the program carries on as if nothing
+happened. It is also very noisy. On 24 public repositories (19 apps built with Lovable
+and 5 Vercel/Supabase starters, about 1.0M lines of TS/JS, pinned commits), treating
+every console-only catch like an empty one produced **957** MEDIUM findings; the shipped
+rule produces **8** MEDIUM and **56** HIGH. A hand check of a random 15 of the HIGH
+findings found 12 real lost writes or silently failing user actions; the misses were a
+logout during shutdown, a search API called with POST, and a root-level test script.
+The 957 are mostly console-logged failed reads in React components: a spinner that stops
+or a list that stays empty. That is a UX problem, not lost data, so the rule keeps to
+the case where it matters: a write, payment or login that failed while the code carries
+on as if it succeeded.
 
 ## Why it matters
 
@@ -69,6 +148,39 @@ except Exception:
     continue
 ```
 
+TypeScript and JavaScript, flagged:
+
+```ts
+try {
+  await supabase.from("orders").insert(order);
+} catch (error) {                 // HIGH: only logs a failed write, then redirects
+  console.error("Failed to create order:", error);
+}
+
+try { setItems(JSON.parse(saved)); } catch {}            // MEDIUM
+
+fetch("/api/checkout", { method: "POST", body }).catch(() => {});   // HIGH
+```
+
+Not flagged:
+
+```ts
+} catch (err) {
+  console.error("Failed to load posts", err);  // a read, logged
+} finally { setLoading(false); }
+
+const body = await request.json().catch(() => null);   // a fallback value
+if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+
+} catch (error) {
+  console.error(error);
+  return NextResponse.json({ error: "Failed" }, { status: 500 });
+}
+
+audio.play().catch(() => {});                  // fire-and-forget, nothing written
+} catch { /* non-fatal: the chat keeps its default title */ }
+```
+
 ## How to fix
 
 Catch the specific exception you expect. If you really mean "anything", log it
@@ -87,6 +199,25 @@ failure.
   raises severity too, and a write through a custom helper (`persist(order)`) doesn't.
 - An intentional "best effort" handler (`except Exception: pass` around removing a temp
   file) is still flagged; suppress it with a reason.
+
+TS/JS:
+
+- A console-only catch around a read is not flagged, even when the failure leaves the
+  user looking at a stale or empty page. That is the measured trade-off above.
+- Supabase and many fetch wrappers don't throw: they return `{ error }`. Ignoring that
+  `error` is the most common way AI-built Supabase apps lose writes, and it isn't a
+  `catch`, so this rule doesn't see it.
+- The sensitive list goes by name, as in Python: `map.delete(k)`, `params.delete(k)` or
+  `cache.delete(k)` raise severity, and a write through an app helper
+  (`saveVerification(...)`, `persist(order)`) doesn't. A read sent as POST (many search
+  and LLM APIs) counts as a write.
+- A `.then(onOk, () => {})` rejection handler is not checked, only `.catch`.
+- A CLI script outside the recognised directories and names reports through the
+  console like any other, so its console-only catches around writes are flagged.
+- Any comment other than a TODO-style one exempts the block, including a lazy
+  `// ignore`.
+- `return null` from a function that declares `| null` hides the difference between
+  "not found" and "the database is down".
 
 ## References
 

@@ -1,6 +1,6 @@
 # SC-CODE-009 — Predictable randomness for secrets
 
-**Severity:** MEDIUM · **Confidence:** HIGH · **CWE:** [CWE-338](https://cwe.mitre.org/data/definitions/338.html) · **Languages:** Python (TS/JS planned in M3)
+**Severity:** MEDIUM · **Confidence:** HIGH · **CWE:** [CWE-338](https://cwe.mitre.org/data/definitions/338.html) · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
 
@@ -27,6 +27,34 @@ after a qualifier such as `verification`, `reset`, `invite`, `api`, `session`,
 
 Not flagged: `secrets.*`, `os.urandom`, `uuid.uuid4` and `random.SystemRandom()`,
 which use the OS's secure source; test files.
+
+### TypeScript and JavaScript
+
+A value from `Math.random()` that ends up named like a secret (the same names as for
+Python: `resetToken`, `otp`, `sessionId`, `verificationCode`, `inviteToken`, `nonce`,
+`salt`, `temporaryPassword` …). The value can be named by:
+
+- a declaration or assignment: `const otp = …`, `user.temporaryPassword = …`,
+  `store["salt"] = …`, `token += chars.charAt(…)`
+- a `return`, or an arrow's expression body, in a function named like a secret:
+  `function generateApiKey() { return … }`, `const generateVerificationCode = () => …`
+- an object key: `{ session_token: … }`
+
+As for Python, the `Math.random()` call can sit anywhere in the value, reach it through
+a local variable in the same function, or through a helper in the same file that returns
+a random value (`function randomString(n) { … result += chars.charAt(Math.floor(
+Math.random() * n)) … return result }`). `Math.random().toString(36).slice(2)` counts.
+
+A value is followed through templates, operators and calls that keep it random:
+`String`, `Number`, `btoa`, `toString`, `slice`, `substring`, `padStart`, `charAt`,
+`join`, `map`, `Array.from`, `Buffer.from`, `Math.floor`, a hash's `update`/`digest`,
+and similar. Passed as an argument to any other call (`agent.run({ conversationId })`,
+`sleep(jitter)`), it is not followed: the call's result isn't the random value. A
+function bound to a name is a helper, not a value, so `const generateOtp = () => …` is
+reported once, at its body.
+
+Not flagged: `crypto.randomUUID()`, `crypto.getRandomValues()`, `crypto.randomBytes()`,
+`crypto.randomInt()`, `nanoid()`; test files.
 
 ## Why it matters
 
@@ -55,6 +83,24 @@ cache_key = f"views:{page_id}:{random.randrange(SHARDS)}"
 "".join(random.SystemRandom().choice(ALPHABET) for _ in range(10))
 ```
 
+TypeScript and JavaScript, flagged:
+
+```ts
+const resetToken = Math.random().toString(36).slice(2);
+const otp = Math.floor(100000 + Math.random() * 900000).toString();
+const inviteToken = randomString(32);     // helper built on Math.random
+const nonce = btoa(String(Math.random()).slice(2));
+```
+
+Not flagged:
+
+```ts
+const resetToken = crypto.randomUUID();
+const id = Math.random().toString(36).slice(2);          // a React key
+const delay = 2 ** attempt * 250 + Math.random() * 250;   // jitter
+const roomCode = Math.floor(1000 + Math.random() * 9000); // `code` needs a qualifier
+```
+
 ## How to fix
 
 Use the `secrets` module: `secrets.token_urlsafe(32)` for tokens,
@@ -72,6 +118,17 @@ numeric codes, and `os.urandom(16)` for salts.
 - A name with a secret word that isn't one (`secret_santa = random.choice(people)`) is
   a false positive.
 - `random.seed(<constant>)` is not reported separately.
+
+TS/JS:
+
+- Helpers imported from another file (`import { randomString } from "./utils"`) are not
+  followed, and neither are values that go through destructuring
+  (`const { token } = makePair()`) or class fields.
+- A random value hashed or encoded by a call outside the list above is missed.
+- Any word counts, so a name like `maxTokens` or `tokenCount` holding a random number is
+  a false positive (no case of it was seen in the wild).
+- Mock auth services that ship (``token: `mock_token_${Math.random()…}` ``) are flagged;
+  that is usually right, since the mock tends to reach production.
 
 ## References
 

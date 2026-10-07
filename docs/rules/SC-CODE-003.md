@@ -1,6 +1,6 @@
 # SC-CODE-003 — Unfinished code in a shipped path
 
-**Severity:** HIGH · **Confidence:** HIGH · **CWE:** [CWE-1164](https://cwe.mitre.org/data/definitions/1164.html) · **Languages:** Python (TS/JS planned in M3)
+**Severity:** HIGH · **Confidence:** HIGH · **CWE:** [CWE-1164](https://cwe.mitre.org/data/definitions/1164.html) · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
 
@@ -34,6 +34,42 @@ Not flagged:
 The class exemptions apply to both forms. The spec only names them for
 `NotImplementedError`, but a `return True` hook in a `Base*` class is the same
 "override me" default (DRF's own `BasePermission.has_permission` is one).
+
+### TypeScript and JavaScript
+
+- a `throw` of `new Error(…)` (or any `…Error`, with or without `new`) or a bare string
+  whose message matches `not implemented`, `not yet implemented` or `unimplemented` in
+  any case, or contains the upper-case marker `TODO`; and `throw new
+  NotImplementedError()`. "Method not implemented." is what TypeScript's "implement
+  interface" quick fix writes. `TODO` must be upper case, so a todo app's `"Todo not
+  found"` doesn't count. Anchored at the `throw`.
+- a function with a guard name (the same word list as Python) whose body is empty
+  (comments aside) or only `return true`, or an arrow whose body is `true`. The name
+  comes from a function declaration, a method (also object-literal methods such as
+  Auth.js's `callbacks: { authorized() { return true } }`), or the variable an arrow or
+  function expression is assigned to. Anchored at that name.
+
+Not flagged:
+
+- a template message with a substitution, `` `Automation type not implemented:
+  ${type}` ``: a dispatcher naming the input it rejects, after handling the supported
+  ones
+- methods of an `abstract class`, of a class whose name has the word `Base` or
+  `Abstract`, or overridden by a subclass in the same file (as for Python)
+- interface members, overload signatures, `declare function` and `.d.ts` files: they
+  have no body
+- a stub whose body has a comment giving a reason (`// Always run the middleware above,
+  which redirects itself`). A comment mentioning `TODO`, `FIXME`, `XXX`, `implement`,
+  `for now`, `placeholder` or `stub` is not a reason.
+- a function with a parameter typed `never` (`function exhaustiveCheck(x: never) {}`):
+  the type checker does that check
+- React event handlers, whose name starts with the word `handle` or `on`
+  (`const handleCheck = () => {}`): a UI placeholder, not a security check
+- an arrow under an object key (`validateStatus: () => true` in an axios config, or a
+  context's default value): usually a library option, not the app's own check
+- `return NextResponse.json({ error: "Not implemented" }, { status: 501 })`: a
+  deliberate answer, not a throw
+- test files
 
 ## Why it matters
 
@@ -74,6 +110,31 @@ def __eq__(self, other):
     return NotImplemented          # not NotImplementedError
 ```
 
+TypeScript and JavaScript, flagged:
+
+```ts
+async refund(chargeId: string): Promise<void> {
+  throw new Error("Method not implemented.");
+}
+
+function verifySignature(payload: string, signature: string | null): boolean {
+  // TODO: compare HMAC-SHA256 of payload with the X-Signature header
+  return true;
+}
+
+const isAuthorized = (user: User | null) => true;
+```
+
+Not flagged:
+
+```ts
+if (!todo) throw new Error("Todo not found");
+default: throw new Error(`Automation type not implemented: ${automation.type}`);
+export abstract class Notifier { validate(m: string) { return true; } }
+export function exhaustiveCheck(_value: never): void {}
+const handleCheck = (checked: boolean) => {};
+```
+
 ## How to fix
 
 Implement the check, or remove the route or feature until it exists. If the function
@@ -95,6 +156,17 @@ really is an interface, make that explicit with `@abstractmethod`, a `Protocol`,
 - `NotImplementedError` raised as a signal (from `__len__` to opt out of a protocol, or
   as an "unsupported" error a caller catches) is flagged.
 - `TODO`/`FIXME` comments and placeholder return values like `return {}` are out of scope.
+
+TS/JS:
+
+- Class fields (`verify = () => true`), arrows under object keys and functions passed
+  inline are not checked, so `createContext({ checkAccess: () => true })` is missed.
+- `return Promise.resolve(true)`, `return !!1` and other always-true shapes are missed.
+- A comment that explains a stub exempts it, even when the explanation is wrong.
+- A dispatcher whose message has no substitution (`throw new Error("PayPal not
+  implemented")`) is flagged, which is usually right but sometimes deliberate.
+- Names ending in a guard word that aren't guards are flagged when stubbed
+  (`function onboardingCheck() {}` is not exempt, `handleCheck` is).
 
 ## References
 

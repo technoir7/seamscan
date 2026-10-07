@@ -4,16 +4,22 @@ from __future__ import annotations
 
 import ast
 import io
+import json
 import re
 import sys
 import tokenize
 import unicodedata
 from bisect import bisect_right
 from collections.abc import Iterator
+from typing import cast
 
-from seamscan.facts.roles import Role, role_of
+from tree_sitter import Node
+
+from seamscan.facts.roles import Role, js_role, role_of
 from seamscan.facts.secrets import redact
 from seamscan.model import Confidence, Finding, Location, Severity, SourceFile
+from seamscan.parse import javascript as js
+from seamscan.parse.javascript import JsModule
 from seamscan.parse.python import (
     FunctionNode,
     PyModule,
@@ -32,14 +38,14 @@ TLS_DISABLED = meta(
     Severity.HIGH,
     Confidence.HIGH,
     ("CWE-295",),
-    frozenset({"python"}),
+    frozenset({"python", "javascript"}),
     "Certificate checks are turned off, so anyone on the network path can impersonate the server.",
 )
 
 _HTTP_CLIENT_PREFIXES = ("requests.", "httpx.")
 
 
-def _tls_disabled(ctx: RuleContext) -> Iterator[Finding]:
+def _tls_disabled_python(ctx: RuleContext) -> Iterator[Finding]:
     for module in ctx.python:
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Call):
@@ -78,6 +84,183 @@ def _tls_disabled(ctx: RuleContext) -> Iterator[Finding]:
                 )
 
 
+# ---------------------------------------------------------------- TS/JS helpers
+
+
+def _nodes(module: JsModule, types: str, within: Node | None = None) -> list[Node]:
+    """Nodes of the given types (`"pair"`, `"catch_clause throw_statement"`), in source order."""
+    query = "[" + " ".join(f"({t})" for t in types.split()) + "] @n"
+    return js.captures(module, query, within).get("n", [])
+
+
+def _bare(node: Node) -> Node:
+    """The expression inside parentheses and TS wrappers (`x as T`, `x!`, `x satisfies T`)."""
+    while (
+        node.type
+        in (
+            "parenthesized_expression",
+            "non_null_expression",
+            "as_expression",
+            "satisfies_expression",
+        )
+        and node.named_children
+    ):
+        node = node.named_children[0]
+    return node
+
+
+def _field(node: Node, name: str) -> Node | None:
+    child = node.child_by_field_name(name)
+    return _bare(child) if child is not None else None
+
+
+def _literal_text(module: JsModule, node: Node) -> str | None:
+    """The text of a string or template literal; a template's substitutions are left out."""
+    if node.type == "template_string":
+        return "".join(
+            js.text(module, c) for c in node.named_children if c.type == "string_fragment"
+        )
+    return js.string_value(module, node)
+
+
+def _key_name(module: JsModule, key: Node | None) -> str | None:
+    """`a` in `{ a: 1 }`, `{ "a": 1 }` or `a() {}`; None for a computed key."""
+    if key is None:
+        return None
+    if key.type in ("property_identifier", "identifier", "private_property_identifier"):
+        return js.text(module, key)
+    return js.string_value(module, key)
+
+
+def _property(module: JsModule, member: Node) -> str | None:
+    """`b` in `a.b`."""
+    return _key_name(module, member.child_by_field_name("property"))
+
+
+# A comment saying the code is unfinished doesn't explain it.
+_UNFINISHED_NOTE = re.compile(r"TODO|FIXME|XXX|implement|for now|placeholder|stub", re.I)
+
+
+def _explained(module: JsModule, block: Node) -> bool:
+    """The block's only content is deliberate and says why: `catch { /* non-fatal */ }`,
+    or a callback that returns true with a comment on why. Python's rules can't see
+    comments; in JS they are in the tree, so a reviewer-visible reason counts like an
+    inline suppression would."""
+    comments = [c for c in block.named_children if c.type == "comment"]
+    return bool(comments) and not any(_UNFINISHED_NOTE.search(js.text(module, c)) for c in comments)
+
+
+def _js_line(module: JsModule, node: Node) -> str:
+    return _source_line(module.source.decode("utf-8", "replace"), node.start_point[0] + 1)
+
+
+# ---------------------------------------------------------------- SC-CODE-001 (TS/JS)
+
+# Options that switch certificate checks off, with the literal that does it.
+_TLS_OFF_OPTIONS = {
+    "rejectUnauthorized": "false",  # Node's tls/https, and pg, mysql2, ioredis, nodemailer
+    "tlsAllowInvalidCertificates": "true",  # MongoDB driver
+    "tlsInsecure": "true",  # MongoDB driver
+}
+_TLS_ENV = "NODE_TLS_REJECT_UNAUTHORIZED"
+_TLS_ENV_IN_SCRIPT = re.compile(rf"\b{_TLS_ENV}=['\"]?0\b")
+
+
+def _is_zero(module: JsModule, node: Node) -> bool:
+    return (node.type == "number" and js.text(module, node) == "0") or js.string_value(
+        module, node
+    ) == "0"
+
+
+def _is_tls_env(module: JsModule, target: Node) -> bool:
+    """`process.env.NODE_TLS_REJECT_UNAUTHORIZED`, also through `process.env["…"]`."""
+    if target.type == "subscript_expression":
+        obj, index = _field(target, "object"), _field(target, "index")
+        return (
+            obj is not None
+            and index is not None
+            and js.qualified_name(module, obj) == "process.env"
+            and js.string_value(module, index) == _TLS_ENV
+        )
+    return js.qualified_name(module, target) == f"process.env.{_TLS_ENV}"
+
+
+def _tls_disabled_js(module: JsModule) -> Iterator[Finding]:
+    for node in _nodes(module, "pair assignment_expression"):
+        if node.type == "pair":
+            key, value = _key_name(module, node.child_by_field_name("key")), _field(node, "value")
+            if value is None:
+                continue
+            if key in _TLS_OFF_OPTIONS and value.type == _TLS_OFF_OPTIONS[key]:
+                message = f"TLS option `{key}: {value.type}` turns certificate checks off"
+            elif key == _TLS_ENV and _is_zero(module, value):  # an env object for a child
+                message = f"`{_TLS_ENV}: 0` turns certificate checks off for the process"
+            else:
+                continue
+        else:
+            left, right = _field(node, "left"), _field(node, "right")
+            if left is None or right is None:
+                continue
+            if _is_tls_env(module, left) and _is_zero(module, right):
+                message = f"`{_TLS_ENV}` set to 0 turns certificate checks off for the process"
+            elif (
+                left.type == "member_expression"
+                and _property(module, left) == "rejectUnauthorized"
+                and right.type == "false"
+            ):
+                message = "`rejectUnauthorized = false` turns certificate checks off"
+            else:
+                continue
+        yield finding(TLS_DISABLED, js.location(module, node), message, js.snippet(module, node))
+
+
+def _npm_scripts(file: SourceFile) -> dict[str, str]:
+    try:
+        manifest: object = json.loads(file.text)
+    except json.JSONDecodeError:
+        # npm refuses to run anything from a package.json that isn't JSON, so none of
+        # its scripts can execute.
+        return {}
+    if not isinstance(manifest, dict):
+        return {}
+    scripts = cast(dict[str, object], manifest).get("scripts")
+    if not isinstance(scripts, dict):
+        return {}
+    return {
+        str(name): command
+        for name, command in cast(dict[object, object], scripts).items()
+        if isinstance(command, str)
+    }
+
+
+def _tls_disabled_scripts(file: SourceFile) -> Iterator[Finding]:
+    lines = file.text.split("\n")
+    for name, command in _npm_scripts(file).items():
+        if not _TLS_ENV_IN_SCRIPT.search(command):
+            continue
+        # The script's own line; package.json puts one script per line.
+        key = json.dumps(name)
+        candidates = [i for i, line in enumerate(lines, 1) if _TLS_ENV_IN_SCRIPT.search(line)]
+        lineno = next(
+            (i for i in candidates if key in lines[i - 1]), candidates[0] if candidates else 1
+        )
+        yield finding(
+            TLS_DISABLED,
+            Location(file.path, lineno, 1, lineno, len(lines[lineno - 1]) + 1),
+            f"npm script `{name}` runs with {_TLS_ENV}=0, so certificate checks are off",
+            _clip(lines[lineno - 1].strip()),
+        )
+
+
+def _tls_disabled(ctx: RuleContext) -> Iterator[Finding]:
+    yield from _tls_disabled_python(ctx)
+    for module in ctx.js:
+        yield from _tls_disabled_js(module)
+    for file in ctx.files:
+        if file.path.rsplit("/", 1)[-1] == "package.json":
+            yield from _tls_disabled_scripts(file)
+
+
 # Names are compared word by word, so `author` is not `auth` and `checkbox` is not `check`.
 _WORD = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+[a-z]*")
 
@@ -91,6 +274,10 @@ def name_words(name: str) -> tuple[str, ...]:
 def _shipped(ctx: RuleContext) -> Iterator[PyModule]:
     """Modules that ship. Test files are the SC-TEST rules' concern (spec §5.6)."""
     return (m for m in ctx.python if role_of(m.path) is not Role.TEST)
+
+
+def _shipped_js(ctx: RuleContext) -> Iterator[JsModule]:
+    return (m for m in ctx.js if js_role(m) is not Role.TEST)
 
 
 def _source_line(source: str, lineno: int) -> str:
@@ -109,7 +296,7 @@ SWALLOWED_EXCEPTION = meta(
     Severity.MEDIUM,
     Confidence.HIGH,
     ("CWE-390",),
-    frozenset({"python"}),
+    frozenset({"python", "javascript"}),
     "A broad except handler throws the error away without logging or re-raising it.",
 )
 
@@ -198,7 +385,7 @@ def _sensitive_call(module: PyModule, body: list[ast.stmt]) -> str | None:
     return None
 
 
-def _swallowed_exceptions(ctx: RuleContext) -> Iterator[Finding]:
+def _swallowed_exceptions_python(ctx: RuleContext) -> Iterator[Finding]:
     for module in _shipped(ctx):
         for node in ast.walk(module.tree):
             if not isinstance(node, (ast.Try, ast.TryStar)):
@@ -233,6 +420,332 @@ def _swallowed_exceptions(ctx: RuleContext) -> Iterator[Finding]:
                     )
 
 
+# ---------------------------------------------------------------- SC-CODE-002 (TS/JS)
+
+# A catch that only writes to the console counts as logging, as `logger.warning` does in
+# Python, except around a write, payment or auth call, where the caller still carries on
+# as if it worked. Flagging every console-only catch would multiply the findings tenfold
+# on real AI-built apps; docs/rules/SC-CODE-002.md has the measurement.
+_CONSOLE = frozenset(
+    {
+        "console.log",
+        "console.info",
+        "console.debug",
+        "console.trace",
+        "console.error",
+        "console.warn",
+    }
+)
+
+_SILENT, _LOGGED = "silent", "logged"
+
+# The explicit HIGH list for TS/JS; docs/rules/SC-CODE-002.md says what it covers.
+_JS_WRITE_METHODS = frozenset(
+    {
+        "insert",
+        "insertOne",
+        "insertMany",
+        "update",
+        "updateOne",
+        "updateMany",
+        "upsert",
+        "delete",
+        "deleteOne",
+        "deleteMany",
+        "save",
+        "commit",
+        "execute",
+    }
+)
+# `create` is too common a name (`Object.create`, `axios.create`) to count on its own;
+# on a Prisma client (`prisma`, `db`, or `tx` in a transaction) it is a write.
+_PRISMA_CLIENTS = frozenset({"prisma", "db", "tx"})
+_PRISMA_CREATES = frozenset({"create", "createMany"})
+_JS_PAYMENT_RESOURCES = frozenset(
+    {"charges", "refunds", "paymentIntents", "payouts", "transfers", "subscriptions"}
+)
+# Auth calls that change or establish state. Reads such as `supabase.auth.getSession()`
+# or `getStoredAuthToken()` are excluded: a failed read leaves a page empty, it doesn't
+# make the program believe something happened that didn't.
+_AUTH_ACTIONS = frozenset(
+    {"login", "logout", "signin", "signup", "signout", "authenticate", "authorize"}
+)
+_SIGN_ACTIONS = frozenset({("sign", "in"), ("sign", "up"), ("sign", "out"), ("log", "in")})
+_VERIFIED_THINGS = frozenset(
+    {"token", "id", "otp", "signature", "jwt", "password", "session", "email", "webhook", "code"}
+)
+_WRITE_HTTP_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+# `crypto.createHash("md5").update(data)` feeds a hash; it writes nothing.
+_HASHERS = frozenset({"createHash", "createHmac", "createCipheriv", "createDecipheriv"})
+# A command-line script reports to whoever runs it through the console, so a
+# console-only catch there is its error report (seed scripts, `scripts/migrate.mjs`).
+_SCRIPT_DIRS = frozenset({"scripts", "script", "bin"})
+_SCRIPT_NAME = re.compile(r"^(?:test[-_]|seed)")
+_AXIOS_WRITES = frozenset({"axios.post", "axios.put", "axios.patch"})
+
+
+def _js_call_path(module: JsModule, call: Node) -> list[str]:
+    """Names along a call's receiver chain: `supabase.from("t").insert(r)` -> [supabase,
+    from, insert]."""
+    parts: list[str] = []
+    node = _field(call, "function")
+    while node is not None:
+        if node.type == "member_expression":
+            prop = node.child_by_field_name("property")
+            if prop is not None:
+                parts.append(js.text(module, prop))
+            node = _field(node, "object")
+        elif node.type == "call_expression":
+            node = _field(node, "function")
+        else:
+            if node.type in ("identifier", "this"):
+                parts.append(js.text(module, node))
+            break
+    return parts[::-1]
+
+
+def _writes_over_http(module: JsModule, call: Node, name: str) -> bool:
+    if name in _AXIOS_WRITES:
+        return True
+    args = js.arguments(call)
+    if name != "fetch" or len(args) < 2:
+        return False
+    method = js.object_property(_bare(args[1]), "method", module)
+    value = js.string_value(module, method) if method is not None else None
+    return value is not None and value.upper() in _WRITE_HTTP_METHODS
+
+
+def _auth_action(path: list[str]) -> bool:
+    """`supabase.auth.signInWithPassword`, `signIn("github")`, `login(...)`,
+    `jwt.verify(...)`, `verifyIdToken(...)`, `stripe…charge`, `issueRefund(...)`."""
+    words = name_words(path[-1])
+    if not words:
+        return False
+    if "auth" in path[:-1] and words[0] not in ("get", "on"):
+        return True
+    return (
+        words[0] in _AUTH_ACTIONS
+        or words[:2] in _SIGN_ACTIONS
+        or words[0] in ("charge", "refund")
+        or (words[0] == "verify" and (len(words) == 1 or words[-1] in _VERIFIED_THINGS))
+    )
+
+
+def _feeds_hash(module: JsModule, path: list[str]) -> bool:
+    """`createHash("md5").update(x)`, or `hash.update(x)` where `hash = createHash(…)`."""
+    if _HASHERS.intersection(path):
+        return True
+    for declarator in _nodes(module, "variable_declarator"):
+        name, value = declarator.child_by_field_name("name"), _field(declarator, "value")
+        if name is not None and value is not None and js.text(module, name) == path[0]:
+            if value.type == "call_expression" and _HASHERS.intersection(
+                _js_call_path(module, value)
+            ):
+                return True
+    return False
+
+
+def _js_sensitive_call(module: JsModule, within: Node) -> str | None:
+    for call in _nodes(module, "call_expression", within):
+        path = _js_call_path(module, call)
+        if not path or _feeds_hash(module, path):
+            continue
+        name = js.call_name(module, call) or ""
+        if (
+            path[0] == "stripe"
+            or name.startswith("stripe.")
+            or _JS_PAYMENT_RESOURCES.intersection(path)
+            or _auth_action(path)
+            or path[-1] in _JS_WRITE_METHODS
+            or (path[-1] in _PRISMA_CREATES and path[0] in _PRISMA_CLIENTS)
+            or _writes_over_http(module, call, name)
+        ):
+            return ".".join(path)
+    return None
+
+
+def _console_call(module: JsModule, expr: Node) -> str | None:
+    if expr.type != "call_expression":
+        return None
+    name = js.call_name(module, expr)
+    return name if name in _CONSOLE else None
+
+
+def _handler_effect(module: JsModule, statements: list[Node]) -> str | None:
+    """_SILENT when the statements do nothing with the error, _LOGGED when they only
+    write it to the console, None when they handle it (rethrow, respond, set state, …)."""
+    logged = False
+    for stmt in statements:
+        if stmt.type in ("comment", "empty_statement", "continue_statement"):
+            continue
+        if stmt.type == "return_statement":
+            value = next((c for c in stmt.named_children if c.type != "comment"), None)
+            if value is None or _bare(value).type in ("null", "undefined"):
+                continue
+            return None
+        if stmt.type == "expression_statement" and stmt.named_children:
+            if _console_call(module, _bare(stmt.named_children[0])) is not None:
+                logged = True
+                continue
+        return None
+    return _LOGGED if logged else _SILENT
+
+
+def _callback_effect(module: JsModule, handler: Node) -> str | None:
+    """What a `.catch(handler)` callback does with the error, as _handler_effect."""
+    handler = _bare(handler)
+    if handler.type == "member_expression":  # .catch(console.error)
+        return _LOGGED if js.qualified_name(module, handler) in _CONSOLE else None
+    if handler.type not in ("arrow_function", "function_expression"):
+        return None
+    body = handler.child_by_field_name("body")
+    if body is None:
+        return None
+    if body.type == "statement_block":
+        return None if _explained(module, body) else _handler_effect(module, body.named_children)
+    body = _bare(body)
+    if body.type in ("null", "undefined"):
+        return _SILENT
+    return _LOGGED if _console_call(module, body) is not None else None
+
+
+def _returns_nothing(stmt: Node) -> bool:
+    value = next((c for c in stmt.named_children if c.type != "comment"), None)
+    return value is not None and _bare(value).type in ("null", "undefined")
+
+
+_NULLISH_TYPE = re.compile(r"\b(?:null|undefined)\b")
+
+
+def _null_is_an_answer(module: JsModule, handler: Node, body: Node) -> bool:
+    """`catch { return null }` in a function whose type says it returns null, or that
+    returns null on another path (`return row ?? null`): null is one of its ordinary
+    answers, which callers must already handle, like the `return false` of a validator."""
+    if not any(s.type == "return_statement" and _returns_nothing(s) for s in body.named_children):
+        return False
+    fn = js.enclosing_function(module, handler)
+    if fn is None:
+        return False
+    declared = fn.child_by_field_name("return_type")
+    if declared is not None and _NULLISH_TYPE.search(js.text(module, declared)):
+        return True
+    return any(
+        _nodes(module, "null undefined", r)
+        and not (handler.start_byte <= r.start_byte < handler.end_byte)
+        and js.enclosing_function(module, r) == fn
+        for r in _nodes(module, "return_statement", fn)
+    )
+
+
+def _value_discarded(module: JsModule, call: Node) -> bool:
+    """The promise's settled value is thrown away or handed straight back to the caller:
+    `p.catch(() => {});`, `await p.catch(…)`, `return p.catch(…)`, `() => p.catch(…)`.
+    Assigned or passed on, `.catch(() => null)` is a fallback value instead
+    (`const body = await req.json().catch(() => null)`), like an `except` that assigns one."""
+    node = call
+    parent = node.parent
+    while parent is not None:
+        if parent.type in ("await_expression", "parenthesized_expression"):
+            node, parent = parent, parent.parent
+        elif parent.type == "member_expression" and _property(module, parent) == "finally":
+            call_parent = parent.parent
+            if call_parent is None or call_parent.type != "call_expression":
+                return False
+            node, parent = call_parent, call_parent.parent
+        else:
+            break
+    if parent is None:
+        return False
+    if parent.type in ("expression_statement", "return_statement"):
+        return True
+    return parent.type == "arrow_function" and parent.child_by_field_name("body") == node
+
+
+def _swallow_finding(
+    loc: Location, evidence: str, effect: str, sensitive: str | None
+) -> Finding | None:
+    if sensitive is not None:
+        how = "only logs" if effect == _LOGGED else "discards"
+        return finding(
+            SWALLOWED_EXCEPTION,
+            loc,
+            f"`{evidence}` {how} any error from `{sensitive}`, and the code carries on as if "
+            "it worked",
+            evidence,
+            severity=Severity.HIGH,
+        )
+    if effect == _LOGGED:
+        return None
+    return finding(
+        SWALLOWED_EXCEPTION,
+        loc,
+        f"`{evidence}` discards every error without reporting or rethrowing it",
+        evidence,
+    )
+
+
+def _is_script(path: str) -> bool:
+    parts = path.split("/")
+    return bool(_SCRIPT_DIRS.intersection(parts[:-1]) or _SCRIPT_NAME.match(parts[-1]))
+
+
+def _swallowed_exceptions_js(module: JsModule) -> Iterator[Finding]:
+    script = _is_script(module.path)
+    for node in _nodes(module, "catch_clause call_expression"):
+        if node.type == "catch_clause":
+            body, statement = node.child_by_field_name("body"), node.parent
+            tried = statement.child_by_field_name("body") if statement is not None else None
+            if body is None or tried is None:
+                continue
+            effect = _handler_effect(module, body.named_children)
+            if _explained(module, body) or _null_is_an_answer(module, node, body):
+                continue
+            loc = js.location(module, node)
+            header = module.source[node.start_byte : body.start_byte].decode("utf-8", "replace")
+            evidence = _clip(header.strip())
+        else:
+            callee = _field(node, "function")
+            args = js.arguments(node)
+            if (
+                callee is None
+                or callee.type != "member_expression"
+                or _property(module, callee) != "catch"
+                or len(args) != 1
+                or not _value_discarded(module, node)
+            ):
+                continue
+            tried = _field(callee, "object")
+            prop = callee.child_by_field_name("property")
+            if tried is None or prop is None:
+                continue
+            effect = _callback_effect(module, args[0])
+            start, end = js.location(module, prop), js.location(module, node)
+            loc = Location(
+                module.path, start.start_line, start.start_col, end.end_line, end.end_col
+            )
+            evidence = "." + _clip(
+                module.source[prop.start_byte : node.end_byte].decode("utf-8", "replace")
+            )
+        if effect is None or (effect == _LOGGED and script):
+            continue
+        sensitive = _js_sensitive_call(module, tried)
+        if node.type == "call_expression" and sensitive is None:
+            # `audio.play().catch(() => {})`, `prefetch().catch(() => {})`: writing a
+            # no-op handler on a promise is an explicit choice, and it's almost always a
+            # deliberate fire-and-forget; only a write, payment or auth call makes it a
+            # finding (docs/rules/SC-CODE-002.md).
+            continue
+        found = _swallow_finding(loc, evidence, effect, sensitive)
+        if found is not None:
+            yield found
+
+
+def _swallowed_exceptions(ctx: RuleContext) -> Iterator[Finding]:
+    yield from _swallowed_exceptions_python(ctx)
+    for module in _shipped_js(ctx):
+        yield from _swallowed_exceptions_js(module)
+
+
 # ---------------------------------------------------------------- SC-CODE-003
 
 UNFINISHED_CODE = meta(
@@ -241,7 +754,7 @@ UNFINISHED_CODE = meta(
     Severity.HIGH,
     Confidence.HIGH,
     ("CWE-1164",),
-    frozenset({"python"}),
+    frozenset({"python", "javascript"}),
     "A placeholder ships where real logic belongs: NotImplementedError, or a security "
     "check that always passes.",
 )
@@ -333,7 +846,7 @@ def _is_guard_name(name: str) -> bool:
     return name not in _GUARD_EXEMPT and any(_GUARD_WORD.fullmatch(w) for w in name_words(name))
 
 
-def _unfinished_code(ctx: RuleContext) -> Iterator[Finding]:
+def _unfinished_code_python(ctx: RuleContext) -> Iterator[Finding]:
     for module in _shipped(ctx):
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Raise) and _raises_not_implemented(node):
@@ -371,6 +884,187 @@ def _unfinished_code(ctx: RuleContext) -> Iterator[Finding]:
                 )
 
 
+# ---------------------------------------------------------------- SC-CODE-003 (TS/JS)
+
+# "Method not implemented." is what TypeScript's "implement interface" quick fix writes.
+_UNFINISHED_MESSAGE = re.compile(r"not\s+(?:yet\s+)?implemented|unimplemented", re.IGNORECASE)
+# Case-sensitive: a TODO marker is upper case, and "Todo not found" is a todo app's error.
+_TODO_MARKER = re.compile(r"\bTODO\b")
+_CLASS_TYPES = ("class_declaration", "abstract_class_declaration", "class")
+# React event handlers (`handleCheck`, `onValidate`) respond to the UI; an empty one is a
+# prototype placeholder, not a check that passes.
+_HANDLER_PREFIXES = frozenset({"handle", "on"})
+
+
+def _unfinished_throw(module: JsModule, node: Node) -> str | None:
+    """What a `throw` says when it marks unfinished code, else None."""
+    thrown = next((c for c in node.named_children if c.type != "comment"), None)
+    if thrown is None:
+        return None
+    thrown = _bare(thrown)
+    message: Node | None = thrown
+    if thrown.type in ("new_expression", "call_expression"):
+        name = _last_segment(js.call_name(module, thrown))
+        if name == "NotImplementedError":
+            return js.snippet(module, thrown)
+        args = js.arguments(thrown)
+        message = args[0] if name.endswith("Error") and args else None
+    if message is not None and any(c.type == "template_substitution" for c in message.children):
+        # `Automation type ${type} not implemented`: names the input a dispatcher doesn't
+        # support, so the supported cases are handled and the rest rejected on purpose.
+        return None
+    text = _literal_text(module, message) if message is not None else None
+    if text is not None and (_UNFINISHED_MESSAGE.search(text) or _TODO_MARKER.search(text)):
+        return js.snippet(module, thrown)
+    return None
+
+
+def _class_name(module: JsModule, cls: Node) -> str:
+    name = cls.child_by_field_name("name")
+    return js.text(module, name) if name is not None else ""
+
+
+def _base_names(module: JsModule, cls: Node) -> set[str]:
+    """Names a class extends: `class A extends B` (JS) or `extends_clause` (TS)."""
+    names: set[str] = set()
+    for heritage in (c for c in cls.named_children if c.type == "class_heritage"):
+        for part in heritage.named_children:
+            targets = part.named_children if part.type == "extends_clause" else [part]
+            for target in targets:
+                name = js.qualified_name(module, target)
+                if name:
+                    names.add(_last_segment(name))
+    return names
+
+
+def _js_method_overridden(module: JsModule, cls: Node, method: str) -> bool:
+    """A subclass in the same file overrides the method, so the class is an interface
+    whatever it's called (as for Python)."""
+    base = _class_name(module, cls)
+    for other in _nodes(module, " ".join(_CLASS_TYPES)):
+        if base and base in _base_names(module, other):
+            body = other.child_by_field_name("body")
+            if body is not None and any(
+                m.type == "method_definition"
+                and _key_name(module, m.child_by_field_name("name")) == method
+                for m in body.named_children
+            ):
+                return True
+    return False
+
+
+def _js_meant_to_be_overridden(module: JsModule, fn: Node | None) -> bool:
+    if fn is None or fn.type != "method_definition":
+        return False
+    body = fn.parent
+    cls = body.parent if body is not None else None
+    if cls is None or cls.type not in _CLASS_TYPES:
+        return False
+    words = name_words(_class_name(module, cls))
+    method = _key_name(module, fn.child_by_field_name("name")) or ""
+    return (
+        cls.type == "abstract_class_declaration"
+        or "base" in words
+        or "abstract" in words
+        or _js_method_overridden(module, cls, method)
+    )
+
+
+def _js_function_name(module: JsModule, fn: Node) -> tuple[str, Node] | None:
+    """The name a function goes by and where to report it: a declaration or method's own
+    name, or the variable or object key an arrow or function expression is bound to."""
+    if fn.type in ("function_declaration", "generator_function_declaration", "method_definition"):
+        name = _key_name(module, fn.child_by_field_name("name"))
+        return (name, fn) if name else None
+    parent = fn.parent
+    if parent is not None and parent.type == "variable_declarator":
+        target = parent.child_by_field_name("name")
+        if target is not None and target.type == "identifier":
+            return js.text(module, target), parent
+    if parent is not None and parent.type == "pair":
+        name = _key_name(module, parent.child_by_field_name("key"))
+        return (name, parent) if name else None
+    return None
+
+
+def _type_level_check(module: JsModule, fn: Node) -> bool:
+    """`function assertNever(x: never) {}`: the check happens in the type checker."""
+    params = fn.child_by_field_name("parameters")
+    if params is None:
+        return False
+    types = (p.child_by_field_name("type") for p in params.named_children)
+    return any(t is not None and js.text(module, t) == ": never" for t in types)
+
+
+def _js_placeholder(module: JsModule, fn: Node) -> str | None:
+    """How the check is stubbed out, when the function's body is a placeholder."""
+    body = fn.child_by_field_name("body")
+    if body is None or _type_level_check(module, fn):
+        return None
+    if body.type == "statement_block" and _explained(module, body):
+        return None
+    if body.type != "statement_block":
+        return (
+            "always returns true, so the check it names always passes"
+            if (_bare(body).type == "true")
+            else None
+        )
+    statements = [s for s in body.named_children if s.type not in ("comment", "empty_statement")]
+    if not statements:
+        return "has an empty body, so the check it names is never made"
+    if len(statements) == 1 and statements[0].type == "return_statement":
+        value = next((c for c in statements[0].named_children if c.type != "comment"), None)
+        if value is not None and _bare(value).type == "true":
+            return "always returns true, so the check it names always passes"
+    return None
+
+
+def _unfinished_code_js(module: JsModule) -> Iterator[Finding]:
+    for node in _nodes(module, "throw_statement " + " ".join(sorted(js.FUNCTION_TYPES))):
+        if node.type == "throw_statement":
+            thrown = _unfinished_throw(module, node)
+            fn = js.enclosing_function(module, node)
+            if thrown is None or _js_meant_to_be_overridden(module, fn):
+                continue
+            named = _js_function_name(module, fn) if fn is not None else None
+            where = f"`{named[0]}`" if named else "module code" if fn is None else "a function"
+            yield finding(
+                UNFINISHED_CODE,
+                js.location(module, node),
+                f"{where} throws `{thrown}` in shipped code",
+                js.snippet(module, node),
+            )
+            continue
+        named = _js_function_name(module, node)
+        if named is None:
+            continue
+        name, anchor = named
+        # An arrow under an object key is usually a library option or a context default
+        # (axios's `validateStatus: () => true`), not the app's own check.
+        if anchor.type == "pair" or not _is_guard_name(name):
+            continue
+        if name_words(name)[0] in _HANDLER_PREFIXES:
+            continue
+        stub = _js_placeholder(module, node)
+        if stub is None or _js_meant_to_be_overridden(module, node):
+            continue
+        start = js.location(module, anchor)
+        yield finding(
+            UNFINISHED_CODE,
+            Location(
+                module.path, start.start_line, start.start_col, start.start_line, start.start_col
+            ),
+            f"`{name}` {stub}",
+            _js_line(module, anchor),
+        )
+
+
+def _unfinished_code(ctx: RuleContext) -> Iterator[Finding]:
+    yield from _unfinished_code_python(ctx)
+    for module in _shipped_js(ctx):
+        yield from _unfinished_code_js(module)
+
+
 # ---------------------------------------------------------------- SC-CODE-004
 
 HARDCODED_CREDENTIAL = meta(
@@ -379,7 +1073,7 @@ HARDCODED_CREDENTIAL = meta(
     Severity.HIGH,
     Confidence.HIGH,
     ("CWE-798",),
-    frozenset({"python"}),
+    frozenset({"python", "javascript"}),
     "A password, token or key is checked against a literal written into the source.",
 )
 
@@ -515,7 +1209,7 @@ def _redacted_snippet(module: PyModule, node: ast.expr) -> str:
     return _clip(text)
 
 
-def _hardcoded_credentials(ctx: RuleContext) -> Iterator[Finding]:
+def _hardcoded_credentials_python(ctx: RuleContext) -> Iterator[Finding]:
     for module in _shipped(ctx):
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Compare) and not _rejects_literal(module, node):
@@ -540,6 +1234,200 @@ def _hardcoded_credentials(ctx: RuleContext) -> Iterator[Finding]:
                 )
 
 
+# ---------------------------------------------------------------- SC-CODE-004 (TS/JS)
+
+_JS_EQUALITY = frozenset({"===", "==", "!==", "!="})
+_JS_STOPS = frozenset({"process.exit", "Deno.exit"})
+
+
+def _js_credential_label(module: JsModule, node: Node) -> str | None:
+    """The name a value goes by, if it names a credential: `password`, `body.password`,
+    `req.headers["x-api-key"]`, `searchParams.get("token")`, or `form.password.value`."""
+    node = _bare(node)
+    label: str | None = None
+    if node.type == "identifier":
+        label = js.text(module, node)
+    elif node.type == "member_expression":
+        label = _property(module, node)
+        obj = _field(node, "object")
+        if label in ("value", "data") and obj is not None and obj.type == "member_expression":
+            return _js_credential_label(module, obj)
+    elif node.type == "subscript_expression":
+        index = _field(node, "index")
+        label = js.string_value(module, index) if index is not None else None
+    elif node.type == "call_expression":
+        callee = _field(node, "function")
+        args = js.arguments(node)
+        if callee is not None and callee.type == "member_expression" and args:
+            if _property(module, callee) == "get":
+                label = js.string_value(module, args[0])
+    return label if label is not None and _is_credential_name(label) else None
+
+
+def _js_secret_literal(module: JsModule, node: Node) -> str | None:
+    value = js.string_value(module, _bare(node))
+    if value is None:
+        return None
+    text = value.strip().lower()
+    if not any(c.isalnum() for c in text) or text in _NOT_A_CREDENTIAL:
+        return None
+    return value
+
+
+def _js_stops(module: JsModule, stmt: Node) -> bool:
+    if stmt.type == "throw_statement":
+        return True
+    if stmt.type != "expression_statement" or not stmt.named_children:
+        return False
+    call = _bare(stmt.named_children[0])
+    return call.type == "call_expression" and js.call_name(module, call) in _JS_STOPS
+
+
+def _js_rejects_literal(module: JsModule, cmp: Node, op: str) -> bool:
+    """`if (secret === "change-me") throw …` refuses the literal: a placeholder guard or a
+    blocklist, not a credential (as for Python)."""
+    if op not in ("===", "=="):
+        return False
+    node, parent = cmp, cmp.parent
+    while parent is not None and (
+        parent.type == "parenthesized_expression"
+        or (parent.type == "binary_expression" and _operator(parent) in ("&&", "||"))
+    ):
+        node, parent = parent, parent.parent
+    if parent is None or parent.type != "if_statement":
+        return False
+    if parent.child_by_field_name("condition") != node:
+        return False
+    then = parent.child_by_field_name("consequence")
+    if then is None:
+        return False
+    statements = then.named_children if then.type == "statement_block" else [then]
+    return any(_js_stops(module, s) for s in statements)
+
+
+def _operator(binary: Node) -> str | None:
+    op = binary.child_by_field_name("operator")
+    return op.type if op is not None else None
+
+
+def _js_loop_variable(module: JsModule, node: Node) -> bool:
+    """A loop variable called `token` holds a lexer token, not a credential."""
+    node = _bare(node)
+    if node.type != "identifier":
+        return False
+    name = js.text(module, node)
+    scope = js.enclosing_function(module, node) or module.root
+    for loop in _nodes(module, "for_in_statement", scope):
+        left = loop.child_by_field_name("left")
+        if left is not None and name in {
+            js.text(module, i) for i in _nodes(module, "identifier", left)
+        }:
+            return True
+    return False
+
+
+_CONFIG_READS = ("process.env", "import.meta.env", "Deno.env.get(")
+
+
+def _is_config(module: JsModule, side: Node) -> bool:
+    """The app's own configuration: `process.env.ADMIN_PASSWORD`, or a variable set from
+    it. Comparing it with a literal checks for a default left in place; it authenticates
+    no one."""
+    side = _bare(side)
+    if js.text(module, side).startswith(_CONFIG_READS):
+        return True
+    if side.type != "identifier":
+        return False
+    name = js.text(module, side)
+    return any(
+        (target := d.child_by_field_name("name")) is not None
+        and js.text(module, target) == name
+        and (value := d.child_by_field_name("value")) is not None
+        and js.text(module, _bare(value)).startswith(_CONFIG_READS)
+        for d in _nodes(module, "variable_declarator")
+    )
+
+
+def _logical_operands(module: JsModule, cmp: Node, op: str) -> list[Node]:
+    """The other operands of the `&&` or `||` chain the comparison sits in."""
+    top = cmp
+    while top.parent is not None and (
+        top.parent.type == "parenthesized_expression"
+        or (top.parent.type == "binary_expression" and _operator(top.parent) == op)
+    ):
+        top = top.parent
+    operands: list[Node] = []
+    stack = [top]
+    while stack:
+        node = _bare(stack.pop())
+        if node.type == "binary_expression" and _operator(node) == op:
+            stack += [
+                c
+                for c in (node.child_by_field_name("left"), node.child_by_field_name("right"))
+                if c is not None
+            ]
+        elif node != cmp:
+            operands.append(node)
+    return operands
+
+
+def _negated(module: JsModule, node: Node) -> str | None:
+    """`x` for `!x`, else None."""
+    if node.type == "unary_expression" and _operator(node) == "!":
+        arg = _field(node, "argument")
+        return js.text(module, arg) if arg is not None else None
+    return None
+
+
+def _placeholder_check(module: JsModule, cmp: Node, op: str, side: Node) -> bool:
+    """`!key || key === "test-key"` and `key && key !== "your-key-here"` treat the literal
+    like a missing value: a check that a placeholder was replaced, not a credential."""
+    name = js.text(module, _bare(side))
+    if op in ("===", "=="):
+        return any(_negated(module, o) == name for o in _logical_operands(module, cmp, "||"))
+    return any(
+        js.text(module, o) == name or _negated(module, o) == f"!{name}"
+        for o in _logical_operands(module, cmp, "&&")
+    )
+
+
+def _hardcoded_credentials_js(module: JsModule) -> Iterator[Finding]:
+    for cmp in _nodes(module, "binary_expression"):
+        op = _operator(cmp)
+        left, right = cmp.child_by_field_name("left"), cmp.child_by_field_name("right")
+        if op not in _JS_EQUALITY or left is None or right is None:
+            continue
+        for side, other in ((left, right), (right, left)):
+            label = _js_credential_label(module, side)
+            literal = _js_secret_literal(module, other)
+            if label is None or literal is None:
+                continue
+            if (
+                _js_rejects_literal(module, cmp, op)
+                or _js_loop_variable(module, side)
+                or _is_config(module, side)
+                or _placeholder_check(module, cmp, op, side)
+            ):
+                break
+            # Redact before clipping, so a long literal can't survive half-cut (spec §6.4).
+            evidence = js.text(module, cmp).replace(
+                js.text(module, _bare(other)), f'"{redact(literal)}"'
+            )
+            yield finding(
+                HARDCODED_CREDENTIAL,
+                js.location(module, cmp),
+                f"`{label}` is checked against a literal written in the source",
+                _clip(evidence),
+            )
+            break
+
+
+def _hardcoded_credentials(ctx: RuleContext) -> Iterator[Finding]:
+    yield from _hardcoded_credentials_python(ctx)
+    for module in _shipped_js(ctx):
+        yield from _hardcoded_credentials_js(module)
+
+
 # ---------------------------------------------------------------- SC-CODE-009
 
 PREDICTABLE_RANDOM = meta(
@@ -548,7 +1436,7 @@ PREDICTABLE_RANDOM = meta(
     Severity.MEDIUM,
     Confidence.HIGH,
     ("CWE-338",),
-    frozenset({"python"}),
+    frozenset({"python", "javascript"}),
     "A token, password or code comes from the `random` module, whose output can be predicted.",
 )
 
@@ -745,7 +1633,7 @@ def _random_helpers(module: PyModule, scopes: dict[int, list[ast.AST]]) -> froze
     return frozenset(helpers)
 
 
-def _predictable_random(ctx: RuleContext) -> Iterator[Finding]:
+def _predictable_random_python(ctx: RuleContext) -> Iterator[Finding]:
     for module in _shipped(ctx):
         scopes = _scope_nodes(module)
         helpers = _random_helpers(module, scopes)
@@ -767,6 +1655,247 @@ def _predictable_random(ctx: RuleContext) -> Iterator[Finding]:
                 )
 
 
+# ---------------------------------------------------------------- SC-CODE-009 (TS/JS)
+
+# crypto.randomUUID, crypto.getRandomValues, crypto.randomBytes/randomInt and nanoid use
+# the OS's secure source; only Math.random is predictable.
+_JS_RANDOM = "Math.random"
+_JS_SINK_TYPES = (
+    "variable_declarator assignment_expression augmented_assignment_expression "
+    "return_statement pair arrow_function"
+)
+JsSink = tuple[Node, str, Node]  # where to report, the name it gets, the value
+
+
+# Calls whose result is still the random value they were given: `String(r)`,
+# `chars.charAt(Math.floor(r * n))`, `Array.from({ length }, () => …)`, a hash of it.
+# Passed to any other call (`agent.run(id)`, `sleep(jitter)`), the value doesn't make
+# the result random.
+_CARRIES_VALUE = frozenset(
+    {
+        "String",
+        "Number",
+        "parseInt",
+        "parseFloat",
+        "btoa",
+        "encodeURIComponent",
+        "toString",
+        "slice",
+        "substring",
+        "substr",
+        "padStart",
+        "padEnd",
+        "charAt",
+        "at",
+        "join",
+        "map",
+        "from",
+        "fill",
+        "repeat",
+        "concat",
+        "replace",
+        "toUpperCase",
+        "toLowerCase",
+        "toFixed",
+        "floor",
+        "ceil",
+        "round",
+        "trunc",
+        "abs",
+        "update",
+        "digest",
+    }
+)
+
+
+def _carried(module: JsModule, node: Node, root: Node) -> bool:
+    """The value at `node` reaches `root` without passing through an opaque call."""
+    while node != root and node.parent is not None:
+        parent = node.parent
+        if parent.type == "arguments" and parent.parent is not None:
+            if _js_callee(module, parent.parent) not in _CARRIES_VALUE:
+                return False
+        node = parent
+    return True
+
+
+def _js_origins(
+    module: JsModule, expr: Node, tainted: dict[str, Origins], helpers: frozenset[str]
+) -> Origins:
+    found: Origins = {}
+    for node in _nodes(module, "call_expression identifier", expr):
+        if not _carried(module, node, expr):
+            continue
+        if node.type == "identifier":
+            found.update(tainted.get(js.text(module, node), {}))
+            continue
+        if js.call_name(module, node) == _JS_RANDOM:
+            found[node.id] = f"{_JS_RANDOM}()"
+            continue
+        callee = _js_callee(module, node)
+        if callee in helpers:
+            found[node.id] = f"{callee}()"
+    return found
+
+
+def _js_callee(module: JsModule, call: Node) -> str | None:
+    """`f` in `f(x)` and in `a.b().f(x)`; None for other callees."""
+    callee = _field(call, "function") or _field(call, "constructor")
+    if callee is not None and callee.type == "member_expression":
+        return _property(module, callee)
+    return js.text(module, callee) if callee is not None and callee.type == "identifier" else None
+
+
+def _js_returned(module: JsModule, node: Node) -> tuple[Node, Node] | None:
+    """(function, returned value) for a `return x` or a concise arrow body."""
+    if node.type == "return_statement":
+        fn = js.enclosing_function(module, node)
+        value = next((c for c in node.named_children if c.type != "comment"), None)
+        return (fn, value) if fn is not None and value is not None else None
+    if node.type == "arrow_function":
+        body = node.child_by_field_name("body")
+        if body is not None and body.type != "statement_block":
+            return node, body
+    return None
+
+
+def _js_scopes(module: JsModule) -> dict[int, list[Node]]:
+    """Assignment, return and key nodes grouped by the function they run in (the module
+    counts as one scope). A concise arrow's body belongs to the arrow."""
+    scopes: dict[int, list[Node]] = {}
+    for node in _nodes(module, _JS_SINK_TYPES):
+        if node.type == "arrow_function":
+            scope: Node = node
+        else:
+            scope = js.enclosing_function(module, node) or module.root
+        scopes.setdefault(scope.id, []).append(node)
+    return scopes
+
+
+def _js_assignments(module: JsModule, nodes: list[Node]) -> list[tuple[str, Node]]:
+    pairs: list[tuple[str, Node]] = []
+    for node in nodes:
+        if node.type == "variable_declarator":
+            target, value = node.child_by_field_name("name"), node.child_by_field_name("value")
+        elif node.type in ("assignment_expression", "augmented_assignment_expression"):
+            target, value = node.child_by_field_name("left"), node.child_by_field_name("right")
+        else:
+            continue
+        if target is not None and value is not None and target.type == "identifier":
+            if not _is_function(value):
+                pairs.append((js.text(module, target), value))
+    return pairs
+
+
+def _is_function(value: Node) -> bool:
+    """A function bound to a name is a helper (see _js_random_helpers), not a value."""
+    return _bare(value).type in js.FUNCTION_TYPES
+
+
+def _js_taint(
+    module: JsModule, assignments: list[tuple[str, Node]], helpers: frozenset[str]
+) -> dict[str, Origins]:
+    """Local names holding a random value, as _taint does for Python."""
+    tainted: dict[str, Origins] = {}
+    changed = True
+    while changed:
+        changed = False
+        for name, value in assignments:
+            found = _js_origins(module, value, tainted, helpers)
+            known = tainted.setdefault(name, {})
+            if not found.keys() <= known.keys():
+                known.update(found)
+                changed = True
+    return {name: o for name, o in tainted.items() if o}
+
+
+def _js_target_label(module: JsModule, target: Node) -> str | None:
+    target = _bare(target)
+    if target.type == "identifier":
+        return js.text(module, target)
+    if target.type == "member_expression":
+        return _property(module, target)
+    if target.type == "subscript_expression":
+        index = _field(target, "index")
+        return js.string_value(module, index) if index is not None else None
+    return None
+
+
+def _js_sinks(module: JsModule, nodes: list[Node]) -> list[JsSink]:
+    sinks: list[JsSink] = []
+    for node in nodes:
+        label: str | None = None
+        anchor: Node = node
+        value: Node | None = None
+        if node.type == "variable_declarator":
+            target, value = node.child_by_field_name("name"), node.child_by_field_name("value")
+            label = _js_target_label(module, target) if target is not None else None
+        elif node.type in ("assignment_expression", "augmented_assignment_expression"):
+            target, value = node.child_by_field_name("left"), node.child_by_field_name("right")
+            label = _js_target_label(module, target) if target is not None else None
+        elif node.type == "pair":
+            label = _key_name(module, node.child_by_field_name("key"))
+            value = node.child_by_field_name("value")
+            anchor = value or node
+        elif (returned := _js_returned(module, node)) is not None:
+            fn, value = returned
+            named = _js_function_name(module, fn)
+            label = named[0] if named else None
+            if node.type == "arrow_function":
+                anchor = value
+        if label is not None and value is not None and not _is_function(value):
+            if _is_secret_name(label):
+                sinks.append((anchor, label, value))
+    return sorted(sinks, key=lambda s: s[0].start_byte)
+
+
+def _js_random_helpers(module: JsModule, scopes: dict[int, list[Node]]) -> frozenset[str]:
+    """Functions in this module that return a random value, one hop deep. A helper with a
+    secret-like name is reported where it is defined, so it isn't followed into callers."""
+    helpers: set[str] = set()
+    for fn in _nodes(module, " ".join(sorted(js.FUNCTION_TYPES))):
+        named = _js_function_name(module, fn)
+        if named is None or _is_secret_name(named[0]):
+            continue
+        nodes = scopes.get(fn.id, [])
+        tainted = _js_taint(module, _js_assignments(module, nodes), frozenset())
+        for node in nodes:
+            returned = _js_returned(module, node)
+            if returned is not None and returned[0] == fn:
+                if _js_origins(module, returned[1], tainted, frozenset()):
+                    helpers.add(named[0])
+    return frozenset(helpers)
+
+
+def _predictable_random_js(module: JsModule) -> Iterator[Finding]:
+    if _JS_RANDOM.encode() not in module.source:
+        return
+    scopes = _js_scopes(module)
+    helpers = _js_random_helpers(module, scopes)
+    for nodes in scopes.values():
+        tainted = _js_taint(module, _js_assignments(module, nodes), helpers)
+        reported: set[int] = set()
+        for anchor, label, value in _js_sinks(module, nodes):
+            found = _js_origins(module, value, tainted, helpers)
+            if found.keys() <= reported:
+                continue  # the same random value, already reported where it was named
+            reported |= found.keys()
+            source = next(iter(found.values()))
+            yield finding(
+                PREDICTABLE_RANDOM,
+                js.location(module, anchor),
+                f"`{label}` comes from `{source}`, which is predictable; use "
+                "`crypto.randomUUID()`, `crypto.getRandomValues()` or `crypto.randomBytes()`",
+                js.snippet(module, anchor),
+            )
+
+
+def _predictable_random(ctx: RuleContext) -> Iterator[Finding]:
+    yield from _predictable_random_python(ctx)
+    for module in _shipped_js(ctx):
+        yield from _predictable_random_js(module)
+
+
 # ---------------------------------------------------------------- SC-CODE-010
 
 INVISIBLE_UNICODE = meta(
@@ -775,7 +1904,7 @@ INVISIBLE_UNICODE = meta(
     Severity.HIGH,
     Confidence.HIGH,
     ("CWE-1007",),
-    frozenset({"python"}),
+    frozenset({"python", "javascript"}),
     "Invisible or text-direction characters make the code a reviewer reads differ from the "
     "code that runs.",
 )
@@ -819,8 +1948,40 @@ def _string_spans(text: str) -> list[tuple[int, int]]:
     return spans
 
 
-def _invisible_in(file: SourceFile) -> Iterator[Finding]:
-    spans = _string_spans(file.text)
+# String-like literals in TS/JS. Template literals count whole, like f-strings. JSX text
+# is what the page displays, so it counts as a string too: an emoji's zero-width joiner
+# there is content, while a bidi control still changes what the reader sees.
+_JS_STRING_TYPES = "string template_string regex jsx_text"
+
+
+def _js_string_spans(module: JsModule) -> list[tuple[int, int]]:
+    """Character ranges of string-like literals, outermost only, in order."""
+    nodes = _nodes(module, _JS_STRING_TYPES)
+    # tree-sitter gives byte offsets; convert them in one pass over the source.
+    chars: dict[int, int] = {}
+    prev_byte = prev_char = 0
+    for byte in sorted({b for n in nodes for b in (n.start_byte, n.end_byte)}):
+        prev_char += len(module.source[prev_byte:byte].decode("utf-8", "replace"))
+        chars[byte], prev_byte = prev_char, byte
+    spans: list[tuple[int, int]] = []
+    for node in nodes:
+        start, end = chars[node.start_byte], chars[node.end_byte]
+        if spans and start < spans[-1][1]:
+            continue  # nested in a template literal already counted whole
+        spans.append((start, end))
+    return spans
+
+
+def _emoji_part(ch: str) -> bool:
+    """A pictographic symbol, variation selector 16 or skin-tone modifier."""
+    return ch == "\ufe0f" or "\U0001f3fb" <= ch <= "\U0001f3ff" or unicodedata.category(ch) == "So"
+
+
+def _joins_emoji(line: str, col: int) -> bool:
+    return 0 < col < len(line) - 1 and _emoji_part(line[col - 1]) and _emoji_part(line[col + 1])
+
+
+def _invisible_in(path: str, text: str, spans: list[tuple[int, int]]) -> Iterator[Finding]:
     starts = [s for s, _ in spans]
 
     def in_string(i: int) -> bool:
@@ -828,11 +1989,13 @@ def _invisible_in(file: SourceFile) -> Iterator[Finding]:
         return k >= 0 and i < spans[k][1]
 
     line_start = 0
-    for lineno, line in enumerate(file.text.split("\n"), 1):
+    for lineno, line in enumerate(text.split("\n"), 1):
         hits: list[tuple[int, str, Severity]] = []
         for col, ch in enumerate(line):
             if ch not in _INVISIBLE or (ch == "\ufeff" and line_start + col == 0):
                 continue  # a BOM at offset 0 is an encoding marker
+            if ch == "\u200d" and _joins_emoji(line, col):
+                continue  # 🧑<ZWJ>⚕️ in a comment is one emoji, not hidden code
             quoted = in_string(line_start + col)
             if ch in _BIDI:
                 hits.append((col, ch, Severity.MEDIUM if quoted else Severity.HIGH))
@@ -853,7 +2016,7 @@ def _invisible_in(file: SourceFile) -> Iterator[Finding]:
         evidence = "".join(f"<U+{ord(c):04X}>" if c in _INVISIBLE else c for c in line)
         yield finding(
             INVISIBLE_UNICODE,
-            Location(file.path, lineno, hits[0][0] + 1, lineno, hits[-1][0] + 2),
+            Location(path, lineno, hits[0][0] + 1, lineno, hits[-1][0] + 2),
             f"{names} {where}",
             _clip(evidence.strip()),
             severity=severity,
@@ -861,9 +2024,15 @@ def _invisible_in(file: SourceFile) -> Iterator[Finding]:
 
 
 def _invisible_unicode(ctx: RuleContext) -> Iterator[Finding]:
+    js_modules = {m.path: m for m in ctx.js}
     for file in ctx.files:
-        if file.path.endswith(".py") and not _INVISIBLE.isdisjoint(file.text):
-            yield from _invisible_in(file)
+        if _INVISIBLE.isdisjoint(file.text):
+            continue
+        if file.path.endswith(".py"):
+            yield from _invisible_in(file.path, file.text, _string_spans(file.text))
+        elif file.path in js_modules:
+            spans = _js_string_spans(js_modules[file.path])
+            yield from _invisible_in(file.path, file.text, spans)
 
 
 RULES: tuple[Rule, ...] = (
