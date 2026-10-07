@@ -1,8 +1,10 @@
 # SC-TEST-001 — Test with no assertion
 
-**Severity:** MEDIUM · **Confidence:** HIGH · **CWE:** none · **Languages:** Python (jest/vitest planned in M3)
+**Severity:** MEDIUM · **Confidence:** HIGH · **CWE:** none · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
+
+### Python
 
 A test that pytest or unittest would collect, in a test file, that checks nothing:
 
@@ -31,6 +33,51 @@ loses its check.
 The finding sits on the `def` line and spans the whole function. In scan mode an edit
 anywhere inside the test brings it into scope.
 
+### TypeScript and JavaScript
+
+Jest, Vitest, Mocha, node:test and Playwright Test. In a test file (`*.test.*`, `*.spec.*`,
+or anything under `tests/`, `test/`, `__tests__/`, `e2e/`, `cypress/`), a test is a call to
+`it`, `test` or `specify`, optionally with modifiers (`.only`, `.concurrent`, `.each(rows)`,
+`.skipIf(cond)`, `.failing`, …), that has a callback (arrow function or `function`). It is
+flagged when nothing in the callback is an assertion:
+
+- any call whose callee chain contains a name starting with `expect`, `assert`, `verify` or
+  `check` followed by a capital, `_`, a digit or the end (leading underscores ignored), or
+  the names `should` or `fail`. This covers `expect(x).toBe(y)`, `expect.assertions(n)`,
+  `await expect(p).rejects.toThrow()`, snapshot matchers (`toMatchSnapshot`,
+  `toMatchInlineSnapshot`), Playwright's `expect(page).toHaveURL(...)`, `expect.soft`,
+  `expect.poll`, chai's `expect` and `assert`, `assert.*` and `assert(...)`, node:test's
+  `t.assert.*`, `sinon.assert.*`, supertest's `.expect(200)`, and helpers such as
+  `expectRow()` or `checkTotals()`. Not `checkout()` or `expected`.
+- a function imported from `assert` / `assert/strict` (`import { deepStrictEqual } from
+  "node:assert/strict"`)
+- chai's `should` (`res.body.should.have.property("id")`), and `throw new AssertionError(...)`
+- a call to a function, `const` arrow function or class method in the same file that itself
+  asserts (one level deep), such as a Playwright page-object method
+- implicit checks, only when called as a statement with the result thrown away: Testing
+  Library's `getBy*` / `findBy*` queries on `screen`, on `within(...)` or destructured from
+  `render()` (they throw when nothing matches), and `waitForURL`, `waitForSelector`,
+  `waitForElementToBeRemoved` (they throw on timeout)
+
+**Decision: a bare `expect(value);` is not an assertion.** Without a matcher it checks
+nothing, so a test whose only "check" is `expect(allowed);` is flagged.
+
+**Decision: queries used to find a target are not checks.** `userEvent.click(screen.getByRole(...))`
+throws if the button is missing, but the test is about what the click does. A query only
+counts when it stands alone as a statement. Playwright's `page.getByText(...)` never
+counts: a locator is lazy and doesn't throw until it is used.
+
+**Decision: tests that don't run are not flagged.** `it.todo("...")` has no callback, and
+`it.skip`, `test.fixme`, `xit` and friends don't run. Disabling a test is SC-TEST-003's
+finding.
+
+The "doesn't raise" exemption applies to the test title: `it("renders without crashing")`
+(the Create React App default) and `it("does not throw on empty input")` are not flagged.
+
+Hooks (`beforeEach`, `test.beforeEach`), Playwright's `test.describe` and `test.step`, and
+`describe` blocks are not tests. The finding sits on the line of the `it(` / `test(` call and
+spans the whole call, so in scan mode an edit anywhere in the test brings it into scope.
+
 ## Why it matters
 
 Asked to make a failing test pass, AI agents often delete or neuter the assertion
@@ -58,6 +105,23 @@ def test_send_welcome_uses_mailer():
     mailer.send.called          # read, never asserted
 ```
 
+```ts
+it("applies the 10% bulk discount above 5 items", () => {
+  const total = applyDiscount(cartTotal(bulk), bulk);
+  console.log("bulk total", total);
+});
+
+test("lets an admin edit any post", () => {
+  const allowed = canEditPost(admin, post);
+  expect(allowed);                       // no matcher
+});
+
+test("guest can pay with a test card", async ({ page }) => {
+  await page.getByLabel("Card number").fill("4242 4242 4242 4242");
+  await page.getByRole("button", { name: "Pay now" }).click();
+});
+```
+
 Not flagged:
 
 ```python
@@ -74,6 +138,24 @@ def test_load_config_with_empty_file_does_not_raise(tmp_path):
 @pytest.fixture
 def test_user():
     return User(id=1)
+```
+
+```ts
+it("renders a sale price", () => {
+  expect(render(<PriceTag cents={1999} />).container).toMatchSnapshot();
+});
+
+test("shows the empty state", () => {
+  render(<TodoList todos={[]} />);
+  screen.getByText("Nothing to do. Enjoy your day!");   // throws if absent
+});
+
+test("member signs in", async ({ page }) => {
+  await signIn(page, "ada@example.com", "pw");
+  await landsOnDashboard(page);           // same-file helper that expects
+});
+
+it.todo("downgrades at the end of the period");
 ```
 
 ## How to fix
@@ -101,7 +183,16 @@ new behavior rather than nothing.
 - In scan mode, a change that only *deletes* lines (the `assert` line removed, nothing
   added) has no added line to scope the finding to, so it is not reported. Audit mode
   still reports it.
-- jest/vitest are not covered yet.
+- TS/JS: the same name-based gaps apply. A function under test called `verifyToken` or
+  `checkPermissions` counts as an assertion (false negative); a helper imported from another
+  file that asserts under a neutral name is not followed (false positive).
+- TS/JS: a test whose callback is defined elsewhere (`it("x", runCase)`) is not checked.
+- TS/JS: tests registered through a wrapper (`const itPosix = cond ? it.skip : it;
+  itPosix(...)`) or with `Deno.test` / `ava` / `tap` are not recognized.
+- TS/JS: nock's `scope.done()` and other library-specific checks are not recognized, so a
+  test that only calls one of them is flagged (false positive).
+- TS/JS: an implicit query is trusted as a check even when the test meant to assert
+  something else about the element.
 
 ## References
 
