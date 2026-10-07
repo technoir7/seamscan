@@ -1,0 +1,17 @@
+id = "code011-yaml-cloader-fallback-idiom"
+description = "The CLoader-or-Loader import idiom: both are the full unsafe loader"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "etl/manifest.py"
+line = 10
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "etl/manifest.py"
+line = 14

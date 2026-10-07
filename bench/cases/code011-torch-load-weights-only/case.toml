@@ -1,0 +1,10 @@
+id = "code011-torch-load-weights-only"
+description = "torch.load with weights_only=True, or with it absent (safe default since torch 2.6)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

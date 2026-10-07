@@ -1,0 +1,12 @@
+id = "code011-yaml-full-loader-upload"
+description = "FastAPI upload parsed with yaml.load and FullLoader"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "app/routes/pipelines.py"
+line = 10

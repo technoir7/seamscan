@@ -1,0 +1,10 @@
+id = "code011-restricted-unpickler"
+description = "A find_class allow-list Unpickler, plus pickle.dumps on the way out"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

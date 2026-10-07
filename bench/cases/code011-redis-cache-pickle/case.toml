@@ -1,0 +1,12 @@
+id = "code011-redis-cache-pickle"
+description = "Redis cache stores pickles and unpickles whatever it reads back"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "app/cache.py"
+line = 16

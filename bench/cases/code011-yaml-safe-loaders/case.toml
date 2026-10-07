@@ -1,0 +1,10 @@
+id = "code011-yaml-safe-loaders"
+description = "yaml.safe_load and yaml.load with SafeLoader, CSafeLoader or BaseLoader"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"

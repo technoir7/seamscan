@@ -1,0 +1,12 @@
+id = "code011-yaml-unsafe-load-remote"
+description = "Remote config fetched over HTTP and parsed with yaml.unsafe_load"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-011"
+path = "deploy/remote_config.py"
+line = 10
