@@ -1,0 +1,12 @@
+id = "sec003-environ-imported-directly"
+description = "webhook signing secret via `from os import environ` with a local default"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "webhooks.py"
+line = 8

@@ -1,0 +1,12 @@
+id = "sec001-slack-token-in-fstring"
+description = "Slack bot token inlined into an f-string Authorization header"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "scripts/notify_release.py"
+line = 11

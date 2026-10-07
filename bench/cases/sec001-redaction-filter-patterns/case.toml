@@ -1,0 +1,10 @@
+id = "sec001-redaction-filter-patterns"
+description = "a log filter whose regexes describe secret shapes without containing one"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

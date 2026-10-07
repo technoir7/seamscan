@@ -9,7 +9,8 @@ from seamscan.rules.registry import RULES
 
 DOCS = Path(__file__).resolve().parent.parent / "docs" / "rules"
 SECRET_SHAPES = re.compile(
-    r"sk_live_|rk_live_|sk-proj-|sk-ant-|ghp_[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|sb_secret_"
+    r"sk_live_|rk_live_|sk-proj-|sk-ant-|ghp_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9_]{20}|AKIA[0-9A-Z]{16}"
+    r"|sb_secret_|xox[baprs]-[0-9A-Za-z]{6}|eyJ[A-Za-z0-9_-]{10,}\.eyJ"
 )
 
 

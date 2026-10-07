@@ -1,0 +1,10 @@
+id = "sec001-anon-jwt"
+description = "Supabase anon JWT in server code: public by design, RLS does the gatekeeping"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

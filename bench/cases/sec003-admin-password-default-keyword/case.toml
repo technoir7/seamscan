@@ -1,0 +1,12 @@
+id = "sec003-admin-password-default-keyword"
+description = "bootstrap admin password via an aliased os module and a `default=` keyword"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "app/bootstrap.py"
+line = 8

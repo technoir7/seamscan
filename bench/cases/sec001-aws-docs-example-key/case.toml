@@ -1,0 +1,10 @@
+id = "sec001-aws-docs-example-key"
+description = "the AWS documentation example key id used for LocalStack"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

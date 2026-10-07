@@ -1,0 +1,10 @@
+id = "sec004-env-template"
+description = ".env.template with non-secret defaults"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-004"

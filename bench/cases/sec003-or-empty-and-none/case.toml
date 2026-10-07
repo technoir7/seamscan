@@ -1,0 +1,10 @@
+id = "sec003-or-empty-and-none"
+description = "an `or` with an empty string and a None default both fail closed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

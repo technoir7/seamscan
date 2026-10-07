@@ -1,0 +1,13 @@
+id = "sec001-placeholder-in-env-example"
+description = ".env.example with a key-shaped 'your-...-here' placeholder"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"
+
+[[forbidden]]
+rule = "SC-SEC-004"

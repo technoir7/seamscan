@@ -1,0 +1,15 @@
+id = "sec001-real-key-in-env-example"
+description = "a real OpenAI key pasted into .env.example: allowed file name, still a leaked secret"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = ".env.example"
+line = 2
+
+[[forbidden]]
+rule = "SC-SEC-004"

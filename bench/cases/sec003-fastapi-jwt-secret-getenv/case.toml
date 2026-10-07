@@ -1,0 +1,12 @@
+id = "sec003-fastapi-jwt-secret-getenv"
+description = "JWT signing secret with a default via `from os import getenv`, next to non-secret JWT settings"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "app/auth.py"
+line = 6

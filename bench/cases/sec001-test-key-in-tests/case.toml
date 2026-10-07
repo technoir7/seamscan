@@ -1,0 +1,10 @@
+id = "sec001-test-key-in-tests"
+description = "Stripe test key inside a pytest file: test files are out of scope"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

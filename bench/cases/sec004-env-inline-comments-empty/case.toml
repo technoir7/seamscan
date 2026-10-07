@@ -1,0 +1,10 @@
+id = "sec004-env-inline-comments-empty"
+description = "empty values followed by inline comments, quoted and unquoted"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-004"
