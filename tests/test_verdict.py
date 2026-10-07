@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from clogbot.legacy import (
+from seamscan.legacy import (
     CheckResult,
     HeuristicWarning,
     Severity,

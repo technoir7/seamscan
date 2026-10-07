@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ClogBot: Deterministic, epistemically adversarial hardener for vibe-coded repositories.
+seamscan: Deterministic, epistemically adversarial hardener for vibe-coded repositories.
 
 This tool runs truth-generating checks, ranks failures, and emits structured artifacts
 for LLM-assisted fixes. It is strictly deterministic with NO auto-fixing capabilities.
@@ -1083,7 +1083,7 @@ def generate_verdict_md(
     failures = [c for c in checks if not c.passed]
     failures.sort(key=lambda x: x.severity)
 
-    lines = ["# ClogBot Verdict\n", f"## {verdict.headline}\n"]
+    lines = ["# seamscan Verdict\n", f"## {verdict.headline}\n"]
 
     if not failures and not warnings:
         lines.append("No blocking failures detected.\n")
@@ -1176,7 +1176,7 @@ def generate_handoff_prompt(
     failures = [c for c in checks if not c.passed]
     failures.sort(key=lambda x: x.severity)
 
-    lines = ["# ClogBot Handoff Prompt\n\n"]
+    lines = ["# seamscan Handoff Prompt\n\n"]
 
     # Explicit instruction
     lines.append("## Instructions\n\n")
@@ -1247,13 +1247,13 @@ def generate_handoff_prompt(
 # MAIN CLI
 # =============================================================================
 
-app = typer.Typer(help="ClogBot: Deterministic hardener for vibe-coded repositories")
+app = typer.Typer(help="seamscan: Deterministic hardener for vibe-coded repositories")
 
 
 @app.command()
 def check(
     out: Path = typer.Option(
-        Path("./clogbot_output"),
+        Path("./seamscan_output"),
         "--out",
         help="Output directory for results",
     ),
@@ -1271,7 +1271,7 @@ def check(
     """Run deterministic checks and generate structured output."""
     base_path = Path.cwd()
 
-    typer.echo("🔍 ClogBot: Epistemically Adversarial Hardening")
+    typer.echo("🔍 seamscan: Epistemically Adversarial Hardening")
     typer.echo(f"📂 Working directory: {base_path}")
     typer.echo("")
 

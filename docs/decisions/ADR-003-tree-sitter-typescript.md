@@ -42,5 +42,5 @@ template literal, `dangerouslySetInnerHTML`) gave these results:
 - Upgrades are deliberate: bump the pins, run the full benchmark, and
   update `parse/javascript.py` if the API moved.
 - `tree-sitter-typescript` hasn't released since Nov 2024. If it stalls
-  against new TS syntax, the benchmark's parse-error counts (CB-META-002) will
+  against new TS syntax, the benchmark's parse-error counts (SC-META-002) will
   show it.

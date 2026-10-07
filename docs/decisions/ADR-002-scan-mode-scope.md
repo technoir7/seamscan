@@ -5,7 +5,7 @@
 ## Context
 
 `scan` reports only findings a change introduced. Some rules relate two
-places. For example, CB-SUPA-001 relates a migration (table without RLS) to a
+places. For example, SC-SUPA-001 relates a migration (table without RLS) to a
 client call site (`.from('table')`). A change might touch only one of them.
 
 ## Options
@@ -28,7 +28,7 @@ To keep scan mode fast, it does not parse every source file. It always parses
 migrations, Firebase rules, env files and manifests, plus the changed source
 files. Unchanged client files are matched to tables through a cheap lexical
 index of `.from('<name>')` call sites, built during file enumeration. A
-lexical hit in an unchanged file is enough to raise CB-SUPA-001 to CRITICAL.
+lexical hit in an unchanged file is enough to raise SC-SUPA-001 to CRITICAL.
 It is never enough on its own to create a finding.
 
 ## Consequences

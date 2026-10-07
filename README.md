@@ -1,10 +1,10 @@
-# ClogBot
+# seamscan
 
-ClogBot is a command-line checker for AI-assisted code changes. It runs a repo's own build, lint, test and audit tools, scans the uncommitted git diff with fixed rules, and writes the results to plain files.
+seamscan is a command-line checker for AI-assisted code changes. It runs a repo's own build, lint, test and audit tools, scans the uncommitted git diff with fixed rules, and writes the results to plain files.
 
 ## Why
 
-AI assistants repeat the same mistakes, like placeholder code, made-up packages and disabled TLS checks. ClogBot's approach: AI can draft code and fixes, fixed rules decide pass or fail, a person reviews anything risky, and every result is saved to disk. ClogBot never calls an LLM or edits code.
+AI assistants repeat the same mistakes, like placeholder code, made-up packages and disabled TLS checks. seamscan's approach: AI can draft code and fixes, fixed rules decide pass or fail, a person reviews anything risky, and every result is saved to disk. seamscan never calls an LLM or edits code.
 
 ## What it checks
 
@@ -29,16 +29,16 @@ Run it from the project you want to check, with that project's virtualenv active
 
 ```bash
 cd /path/to/your/project
-uvx --from git+https://github.com/technoir7/clogbot clogbot   # options: --out DIR, --fail-on-warn, --max-diff-loc N
+uvx --from git+https://github.com/technoir7/seamscan seamscan   # options: --out DIR, --fail-on-warn, --max-diff-loc N
 ```
 
-Or install it: `pip install git+https://github.com/technoir7/clogbot`. The Python checks also call `ruff`, `pytest` and `pip-audit`, so those need to be installed in the checked project's environment.
+Or install it: `pip install git+https://github.com/technoir7/seamscan`. The Python checks also call `ruff`, `pytest` and `pip-audit`, so those need to be installed in the checked project's environment.
 
-There is no `check` subcommand; `clogbot` runs the check. Exit codes: `0` nothing blocking (warnings may be listed), `1` a check failed, `2` warnings found with `--fail-on-warn`. The terminal verdict, `verdict.md` and the exit code all come from the same decision.
+There is no `check` subcommand; `seamscan` runs the check. Exit codes: `0` nothing blocking (warnings may be listed), `1` a check failed, `2` warnings found with `--fail-on-warn`. The terminal verdict, `verdict.md` and the exit code all come from the same decision.
 
 ## Example output
 
-A change with a TODO, a bare `except:`, `verify=False` and `os.getenv("API_KEY", "dev-key-1234")` exits 1 and writes this `clogbot_output/verdict.md` (trimmed):
+A change with a TODO, a bare `except:`, `verify=False` and `os.getenv("API_KEY", "dev-key-1234")` exits 1 and writes this `seamscan_output/verdict.md` (trimmed):
 
 ```
 ### Severity 5: TEST

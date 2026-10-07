@@ -1,4 +1,4 @@
-# clogbot — guidance for Claude Code
+# seamscan — guidance for Claude Code
 
 **Read `docs/SPEC.md` before any material change.** It is the source of truth
 for scope, architecture, rule definitions, the benchmark and milestones. If the

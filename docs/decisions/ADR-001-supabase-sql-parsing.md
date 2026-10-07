@@ -4,7 +4,7 @@
 
 ## Context
 
-The Supabase rules (CB-SUPA-001..004) replay migrations to learn each table's
+The Supabase rules (SC-SUPA-001..004) replay migrations to learn each table's
 final row-level-security state, its policies, and any `SECURITY DEFINER`
 functions or views. The spec asked for a spike: does `sqlglot` parse these
 statements well enough to justify the dependency?

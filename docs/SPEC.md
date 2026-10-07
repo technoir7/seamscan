@@ -1,4 +1,4 @@
-# clogbot — Technical Specification
+# seamscan — Technical Specification
 
 **Status:** Draft 1 · **Owner:** Aaron Fung · **Written:** 2026-10-07
 **This document is the source of truth.** Code, README and roadmap follow it.
@@ -10,7 +10,7 @@ at the bottom). Decisions with real trade-offs get a short record in
 
 ## 1. Summary
 
-clogbot is a deterministic, offline-first static analyzer that catches the
+seamscan is a deterministic, offline-first static analyzer that catches the
 security and correctness failures AI coding tools most often ship. Its focus is
 the stacks those tools generate: Python web apps and TypeScript/JavaScript apps,
 especially Next.js / Vite frontends on Supabase or Firebase.
@@ -41,7 +41,7 @@ What makes it worth building, and worth showing:
 
 The principle behind it is the one this whole body of work rests on:
 **AI drafts, fixed rules decide, people approve anything consequential,
-everything is recorded.** clogbot contains no LLM in its detection path.
+everything is recorded.** seamscan contains no LLM in its detection path.
 
 ---
 
@@ -49,7 +49,7 @@ everything is recorded.** clogbot contains no LLM in its detection path.
 
 Recorded so the improvement can be measured and told honestly.
 
-- One 1,370-line file (`clogbot.py`) and 20 unit tests (all pass).
+- One 1,370-line file (`seamscan.py`) and 20 unit tests (all pass).
 - Detects things by running regexes over raw diff text. Known bugs:
   `re.DOTALL` matches spill across file boundaries, `PUBLIC_KEY_PATH` is
   wrongly flagged as a secret, and one line can raise two findings (see
@@ -100,11 +100,11 @@ score.
 
 - **No LLM in detection.** LLMs may *generate* benchmark cases (recorded and
   frozen, §8.3), never judge findings.
-- **No auto-fix.** clogbot reports; the human or agent fixes.
+- **No auto-fix.** seamscan reports; the human or agent fixes.
 - **No running the target's tests, linters or type checkers.** That's CI's
   job. (v0.2.1 did this; it's removed.)
 - **No dependency CVE scanning.** OSV, Dependabot and `pip-audit` do this
-  well. clogbot only checks that packages *exist* and aren't suspiciously new
+  well. seamscan only checks that packages *exist* and aren't suspiciously new
   (§7.7).
 - **No git-history secret scanning.** gitleaks and trufflehog own this.
 - **No full interprocedural data-flow analysis.** Taint-style rules are
@@ -125,7 +125,7 @@ score.
   rendering are pure functions over in-memory data. Only `workspace/`,
   `supply/` and `cli.py` do I/O. Rules are testable with no mocks.
 - **Fail loudly.** A file that can't be parsed produces a visible
-  `CB-META-002` finding. Nothing is skipped silently.
+  `SC-META-002` finding. Nothing is skipped silently.
 - **Deterministic.** The same inputs and the same offline data give
   byte-identical JSON. Findings are sorted, with no timestamps unless asked
   for.
@@ -137,12 +137,12 @@ score.
 `src/` layout. This also fixes the packaging bug.
 
 ```
-src/clogbot/
+src/seamscan/
   __init__.py            # __version__ only
   model.py               # Finding, Location, Severity, Confidence, RuleMeta, fingerprint()
   workspace/             # I/O EDGE: what to analyze
     git.py               #   ChangeSet from `git diff` (added/modified line ranges, renames)
-    files.py             #   file enumeration: git ls-files, .clogbotignore, size/binary/vendor skips
+    files.py             #   file enumeration: git ls-files, .seamscanignore, size/binary/vendor skips
   parse/                 # pure: bytes -> syntax trees
     python.py            #   stdlib `ast` (+ comments via `tokenize` for suppressions)
     javascript.py        #   tree-sitter TS/TSX/JS/JSX
@@ -159,7 +159,7 @@ src/clogbot/
     registry.py          #   explicit list of rules (no discovery magic)
     secrets.py  supabase.py  firebase.py  web.py  code.py  deps.py  tests_integrity.py  meta.py
   policy/                # pure: Finding[] -> verdict
-    config.py            #   clogbot.toml (stdlib tomllib)
+    config.py            #   seamscan.toml (stdlib tomllib)
     suppress.py          #   inline ignores with mandatory reasons
     baseline.py          #   baseline file, ratchet comparison
     verdict.py           #   blocking vs non-blocking, exit code
@@ -174,7 +174,7 @@ bench/                   # benchmark corpus, runner, scorer (§8)
 docs/
   SPEC.md                # this file
   decisions/             # ADRs
-  rules/CB-XXX-NNN.md    # one page per rule (required, §12.2)
+  rules/SC-XXX-NNN.md    # one page per rule (required, §12.2)
 schemas/
   findings.v1.schema.json
 tests/
@@ -216,7 +216,7 @@ class Location:
 
 @dataclass(frozen=True)
 class RuleMeta:
-    id: str                     # "CB-SUPA-001"; never reused once released
+    id: str                     # "SC-SUPA-001"; never reused once released
     title: str
     severity: Severity          # default; a rule may raise it per finding with a stated reason
     confidence: Confidence
@@ -245,13 +245,13 @@ v0.2.1 mixed "which tool failed" with "how bad", and the rewrite drops that.
 and secrets redacted, and `k` is the occurrence index among identical
 `(rule, path, snippet)` triples. It survives line shifts and reformatting,
 and changes when the offending code changes. It's used by the baseline and
-emitted as SARIF `partialFingerprints["clogbot/v1"]`.
+emitted as SARIF `partialFingerprints["seamscan/v1"]`.
 
 ### 5.5 Scan pipeline
 
 ```
 workspace.files / workspace.git  ─▶  FileSet (+ ChangeSet in scan mode)
-parse.*                          ─▶  ParsedFile per file (or ParseError -> CB-META-002)
+parse.*                          ─▶  ParsedFile per file (or ParseError -> SC-META-002)
 facts.project / facts.supabase   ─▶  ProjectModel (whole-repo facts, needed even in scan mode)
 rules.registry                   ─▶  Finding[] (all findings, all files in scope)
 scope filter (scan mode only)    ─▶  keep findings whose location or any related
@@ -281,7 +281,7 @@ Several rules depend on whether code runs in the **browser** or on the
 **server**. The classification order is: first match wins, and each match
 records its reason (shown in `--explain`).
 
-1. `clogbot.toml [paths] client/server` globs (explicit override).
+1. `seamscan.toml [paths] client/server` globs (explicit override).
 2. Directive: a file starting with `"use client"` → client;
    `"use server"` → server.
 3. Next.js conventions: `app/**/route.{ts,js}`, `middleware.*`, `pages/api/**`,
@@ -292,7 +292,7 @@ records its reason (shown in `--explain`).
 5. Vite/CRA: `src/**` → client unless under `server/`, `api/`, `functions/`.
 6. Python files → server.
 7. Test files (`test_*.py`, `*_test.py`, `*.test.*`, `*.spec.*`, `tests/**`,
-   `__tests__/**`) → test (most rules skip these; the CB-TEST rules target
+   `__tests__/**`) → test (most rules skip these; the SC-TEST rules target
    them).
 8. Otherwise → unknown. Rules that need a role skip unknown files and
    count them in `--stats`.
@@ -366,7 +366,7 @@ Used by the injection, SSRF and auth rules. Within one function body:
   rule stays silent. That's a known false-negative source, and it's
   documented on each rule page and measured by the benchmark.
 
-### 6.4 Secret handling (safety of clogbot's own output)
+### 6.4 Secret handling (safety of seamscan's own output)
 
 - Secret values are **never** printed whole in any output format. They are
   redacted to `sk_live_51Hx…cE6gJ`: the provider prefix plus the first 4 and
@@ -387,7 +387,7 @@ forever.
 
 ### 7.1 Secrets and key exposure
 
-**CB-SEC-001 — Provider secret in source.**
+**SC-SEC-001 — Provider secret in source.**
 CRITICAL / HIGH / CWE-798.
 - Matches known secret prefixes in string literals of non-test files:
   - Stripe `sk_live_` / `rk_live_`
@@ -404,9 +404,9 @@ CRITICAL / HIGH / CWE-798.
 - TP: `const stripe = new Stripe("sk_live_51H…")`
 - HN: `const stripe = loadStripe("pk_live_51H…")`; `"sk_test_…"` → LOW instead.
 
-**CB-SEC-002 — Secret reachable from the browser.**
+**SC-SEC-002 — Secret reachable from the browser.**
 CRITICAL / HIGH / CWE-200, CWE-522. Fires on either:
-- (a) a CB-SEC-001-class secret literal in a client file; or
+- (a) a SC-SEC-001-class secret literal in a client file; or
 - (b) an env var with a public prefix (`NEXT_PUBLIC_`, `VITE_`,
   `EXPO_PUBLIC_`, `REACT_APP_`) whose `.env*` value classifies as secret, or
   whose *name* contains `SERVICE_ROLE`, `SECRET`, `PRIVATE` or `ADMIN`.
@@ -417,7 +417,7 @@ config are allowed. The finding links the definition (`.env`) and the use
 - TP: `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=eyJ…(role=service_role)`
 - HN: `NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ…(role=anon)`
 
-**CB-SEC-003 — Hardcoded fallback for a secret.**
+**SC-SEC-003 — Hardcoded fallback for a secret.**
 HIGH / HIGH / CWE-1188.
 - Matches `os.environ.get("X", "<lit>")`, `os.getenv("X", "<lit>")`,
   `process.env.X || "<lit>"`, `process.env.X ?? "<lit>"`, where `X`
@@ -429,16 +429,16 @@ HIGH / HIGH / CWE-1188.
 - TP: `SECRET = os.environ.get("SESSION_SECRET", "dev-secret")`
 - HN: `os.environ.get("PUBLIC_KEY_PATH", "/etc/pub.pem")`
 
-**CB-SEC-004 — Env file committed.**
+**SC-SEC-004 — Env file committed.**
 HIGH / HIGH / CWE-538.
 - Fires on a tracked `.env`, `.env.local`, `.env.production` or
   `.env.*.local` containing at least one non-placeholder value.
 - `.env.example` / `.env.sample` are allowed unless a value classifies as
-  secret, in which case it's CRITICAL via CB-SEC-001.
+  secret, in which case it's CRITICAL via SC-SEC-001.
 
 ### 7.2 Supabase
 
-**CB-SUPA-001 — Public table without row-level security.**
+**SC-SUPA-001 — Public table without row-level security.**
 HIGH → CRITICAL / HIGH / CWE-284.
 - Fires when, after replay, a table in `public` has `rls=False`.
 - Raised to CRITICAL when any client file calls `.from('<table>')` on a
@@ -449,7 +449,7 @@ HIGH → CRITICAL / HIGH / CWE-284.
 - HN: same table with `alter table public.messages enable row level security`
   in a later migration.
 
-**CB-SUPA-002 — Policy allows everyone.**
+**SC-SUPA-002 — Policy allows everyone.**
 HIGH / HIGH / CWE-284.
 - Fires on a policy with `USING (true)` or `WITH CHECK (true)` for
   `INSERT/UPDATE/DELETE/ALL`, applying to `anon` or `public`, or to
@@ -458,20 +458,20 @@ HIGH / HIGH / CWE-284.
   read tables are a legitimate design.
 - HN: `using (auth.uid() = user_id)`.
 
-**CB-SUPA-003 — Unsafe definer objects.**
+**SC-SUPA-003 — Unsafe definer objects.**
 MEDIUM / HIGH / CWE-269.
 - Fires on a `SECURITY DEFINER` function in `public` without
   `SET search_path`, or a view in `public` without `security_invoker = true`
   that selects from an RLS-protected table.
 - These are the static equivalents of splinter checks 0010 and 0011.
 
-**CB-SUPA-004 — RLS explicitly disabled.**
+**SC-SUPA-004 — RLS explicitly disabled.**
 HIGH / HIGH / CWE-284. Fires on `DISABLE ROW LEVEL SECURITY` in a migration.
 In scan mode, it fires when the change adds that statement.
 
 ### 7.3 Firebase
 
-**CB-FIRE-001 — Open security rules.**
+**SC-FIRE-001 — Open security rules.**
 CRITICAL / HIGH / CWE-284. Fires on:
 - Firestore or Storage `allow read, write: if true;`, or `allow ...: if
   request.time < timestamp.date(...)`, which is Firebase's "test mode"
@@ -481,7 +481,7 @@ CRITICAL / HIGH / CWE-284. Fires on:
 
 ### 7.4 Web and server routes
 
-**CB-WEB-001 — Server write without an auth check.**
+**SC-WEB-001 — Server write without an auth check.**
 HIGH / MEDIUM / CWE-862. Applies to:
 - a Next.js route handler exporting `POST/PUT/PATCH/DELETE`
 - a `"use server"` action
@@ -494,11 +494,11 @@ recognized auth primitive. Writes are `supabase.from(..).insert/update/upsert/de
 `.save()`. Auth primitives are `auth()`, `getServerSession`,
 `supabase.auth.getUser`, `currentUser`, `getToken`, `Depends(<name matching
 *user*|*auth*>)`, `@login_required`, plus project helpers listed in
-`clogbot.toml [auth] primitives`. Middleware-based auth makes this noisy, so
+`seamscan.toml [auth] primitives`. Middleware-based auth makes this noisy, so
 `[auth] protected_paths` globs mark routes as covered by middleware. MEDIUM
 confidence is deliberate, and the benchmark measures it.
 
-**CB-WEB-002 — Server-side request to a user-controlled URL (SSRF).**
+**SC-WEB-002 — Server-side request to a user-controlled URL (SSRF).**
 HIGH / MEDIUM / CWE-918.
 - Taint-lite (§6.3) from request input into `fetch`, `axios.*`, `got`,
   `requests.*`, `httpx.*` or `urllib.request.urlopen` as the URL.
@@ -506,7 +506,7 @@ HIGH / MEDIUM / CWE-918.
   `new URL(x).hostname` / `urlparse(x).hostname` against a literal collection.
 - TP: `const r = await fetch(searchParams.get("url"))` in a route handler.
 
-**CB-WEB-003 — Permissive debug or CORS config.**
+**SC-WEB-003 — Permissive debug or CORS config.**
 MEDIUM / HIGH / CWE-942, CWE-489. Fires on:
 - Flask `app.run(debug=True)` outside `if __name__ == "__main__"` guards
   that check an env var
@@ -516,7 +516,7 @@ MEDIUM / HIGH / CWE-942, CWE-489. Fires on:
 
 ### 7.5 Code patterns (Python and TS/JS)
 
-**CB-CODE-001 — TLS verification disabled.**
+**SC-CODE-001 — TLS verification disabled.**
 HIGH / HIGH / CWE-295. Port of v0.2.1 CLASS-12 to syntax trees. Fires on:
 - `requests.*(verify=False)`, `httpx.*(verify=False)`
 - `ssl._create_unverified_context`, `ssl.CERT_NONE`
@@ -525,7 +525,7 @@ HIGH / HIGH / CWE-295. Port of v0.2.1 CLASS-12 to syntax trees. Fires on:
 
 One finding per call site. Fixes the v0.2.1 double-report.
 
-**CB-CODE-002 — Swallowed exception.**
+**SC-CODE-002 — Swallowed exception.**
 MEDIUM / HIGH / CWE-390. Fires on:
 - Python `except:`, `except Exception:` or `except BaseException:` whose body
   is only `pass`, `...`, `continue` or `return None` (no logging, no re-raise)
@@ -534,7 +534,7 @@ MEDIUM / HIGH / CWE-390. Fires on:
 Raised to HIGH when the `try` block calls a write sink (§7.4 list) or a
 payment/auth API (`stripe.*`, `*.auth.*`).
 
-**CB-CODE-003 — Unfinished code in a shipped path.**
+**SC-CODE-003 — Unfinished code in a shipped path.**
 HIGH / HIGH / CWE-1164. In non-test, non-abstract code, fires on:
 - `raise NotImplementedError` or `throw new Error(/not implemented|todo/i)`
 - a function whose name matches
@@ -544,21 +544,21 @@ HIGH / HIGH / CWE-1164. In non-test, non-abstract code, fires on:
 Excluded: `@abstractmethod`, `Protocol` classes, and `.pyi` stubs.
 - TP: `def verify_signature(payload, sig): return True`
 
-**CB-CODE-004 — Hardcoded credential comparison.**
+**SC-CODE-004 — Hardcoded credential comparison.**
 HIGH / HIGH / CWE-798. Fires on a comparison (`==`, `===`, `in`) between an
 identifier named like password, passwd, pwd, token, secret, api_key or pin, and
 a non-empty string literal.
 - TP: `if password == "admin":`
 - HN: `if password == "":` (an emptiness check)
 
-**CB-CODE-005 — JWT accepted without verification.**
+**SC-CODE-005 — JWT accepted without verification.**
 CRITICAL / HIGH / CWE-347. Fires on:
 - PyJWT `jwt.decode(..., options={"verify_signature": False})`, or
   `algorithms` including `"none"`
 - `jsonwebtoken`'s `jwt.decode(token)` whose result is used in a conditional
   in a server file with no `jwt.verify` call in the same function
 
-**CB-CODE-006 — SQL built from strings.**
+**SC-CODE-006 — SQL built from strings.**
 HIGH / MEDIUM / CWE-89.
 - Taint-lite into `cursor.execute`, `conn.execute`, `db.query`, `sql.raw`,
   `$queryRawUnsafe` or `knex.raw`, where the query argument is an f-string,
@@ -566,47 +566,47 @@ HIGH / MEDIUM / CWE-89.
 - Safe forms: parameter tuples and tagged templates (`sql\`...\``,
   `Prisma.sql`).
 
-**CB-CODE-007 — Shell command built from strings.**
+**SC-CODE-007 — Shell command built from strings.**
 HIGH / MEDIUM / CWE-78. Fires on `subprocess.*(..., shell=True)`,
 `os.system` or `child_process.exec/execSync`, where the command contains a
 non-literal part.
 
-**CB-CODE-008 — Code or HTML evaluated from non-literals.**
+**SC-CODE-008 — Code or HTML evaluated from non-literals.**
 HIGH / MEDIUM / CWE-95, CWE-79. Fires on `eval`, `exec`, `new Function` or
 `vm.runInThisContext` with a non-literal argument, and on
 `dangerouslySetInnerHTML={{__html: x}}` where `x` isn't wrapped in a
 configured sanitizer.
 
-**CB-CODE-009 — Predictable randomness for secrets.**
+**SC-CODE-009 — Predictable randomness for secrets.**
 MEDIUM / HIGH / CWE-338. Fires when `Math.random()` or the `random.*` module
 supplies a value assigned to, or returned from, a name matching
 token, secret, password, otp, nonce, salt, code or session.
 
-**CB-CODE-010 — Invisible or bidirectional Unicode in source.**
+**SC-CODE-010 — Invisible or bidirectional Unicode in source.**
 HIGH / HIGH / CWE-1007. Fires on bidi control characters or zero-width
 characters outside string literals (Trojan Source, CVE-2021-42574). This is a
 port of v0.2.1 CLASS-5.
 
 ### 7.6 Test integrity (AI agents "make tests pass")
 
-**CB-TEST-001 — Test with no assertion.**
+**SC-TEST-001 — Test with no assertion.**
 MEDIUM / HIGH. Fires on a pytest test function, or a jest/vitest `it`/`test`
 callback, with no `assert`, `pytest.raises`, `expect`, `assert.*`,
 `mock.assert_*` or configured helper.
 
-**CB-TEST-002 — Assertion that can't fail.**
+**SC-TEST-002 — Assertion that can't fail.**
 MEDIUM / HIGH. Fires on `assert True`, `assert x == x`,
 `expect(true).toBe(true)`, or `expect(x).toEqual(x)` with the identical
 expression on both sides.
 
-**CB-TEST-003 — Test disabled in this change.**
+**SC-TEST-003 — Test disabled in this change.**
 MEDIUM / HIGH. Scan mode only. Fires on added `@pytest.mark.skip`, `xfail`,
 `it.skip`, `describe.skip`, `test.todo`, or `.only` (which disables the rest
 of the suite).
 
 ### 7.7 Dependencies (the only rules that use the network)
 
-**CB-DEP-001 — Dependency that doesn't exist.**
+**SC-DEP-001 — Dependency that doesn't exist.**
 HIGH / HIGH / CWE-1357. Fires on a package declared in a manifest that gets a
 404 from the registry:
 - PyPI: `GET https://pypi.org/pypi/<name>/json`
@@ -616,7 +616,7 @@ For npm, bare imports in source are also checked, because the import name is
 the package name. For Python, only *declared* dependencies are checked,
 because import names differ from distribution names (`yaml` vs `PyYAML`).
 
-**CB-DEP-002 — Dependency too new or obscure to trust.**
+**SC-DEP-002 — Dependency too new or obscure to trust.**
 MEDIUM / MEDIUM. Fires when:
 - the package was first published fewer than `min_age_days` (default 30) ago.
   - npm: `time.created`.
@@ -628,13 +628,13 @@ MEDIUM / MEDIUM. Fires when:
 This is the slopsquatting case: hallucinated names that someone has since
 registered (e.g. `react-codeshift`, Jan 2026).
 
-**CB-DEP-003 — New dependency runs code at install.**
+**SC-DEP-003 — New dependency runs code at install.**
 MEDIUM / HIGH / CWE-829. Fires when a dependency added in this change has
 `preinstall`, `install` or `postinstall` scripts in its registry metadata for
 the resolved version.
 
 **Network behavior:**
-- Responses are cached in `~/.cache/clogbot/registry/` (TTL 7 days for
+- Responses are cached in `~/.cache/seamscan/registry/` (TTL 7 days for
   existence, 1 day for age and downloads).
 - `--offline` uses only the cache plus a bundled snapshot of the top 10k
   PyPI and npm names.
@@ -645,11 +645,11 @@ the resolved version.
 
 ### 7.8 Meta
 
-- **CB-META-001 — Suppression without a reason.** LOW. The suppression is
+- **SC-META-001 — Suppression without a reason.** LOW. The suppression is
   ignored.
-- **CB-META-002 — File could not be parsed.** LOW, or blocking with
+- **SC-META-002 — File could not be parsed.** LOW, or blocking with
   `--strict`.
-- **CB-META-003 — Rule crashed on a file.** The rule's other files still run,
+- **SC-META-003 — Rule crashed on a file.** The rule's other files still run,
   the crash is reported with a traceback in `--debug`, and the exit code
   becomes 3.
 
@@ -666,7 +666,7 @@ These are listed so they aren't half-built now:
 
 ---
 
-## 8. Benchmark ("clogbench")
+## 8. Benchmark ("seambench")
 
 This is the part that turns "a scanner" into evidence.
 
@@ -694,13 +694,13 @@ prompt = ""                   # path under bench/prompts/
 upstream = ""                 # e.g. "CWEval task py/cwe-89-01 (Apache-2.0)"
 
 [[expected]]                  # must be found
-rule = "CB-SUPA-001"
+rule = "SC-SUPA-001"
 path = "supabase/migrations/20260101000000_init.sql"
 line = 3
 tolerance = 2                 # line match window
 
 [[forbidden]]                 # hard negatives: these rules must NOT fire here
-rule = "CB-SEC-002"
+rule = "SC-SEC-002"
 ```
 
 ### 8.2 Scoring
@@ -766,7 +766,7 @@ stated with the result.
 
 - **Comparator tools:** the same corpus is run through Bandit, gitleaks and
   eslint-plugin-security, all permissively licensed.
-- **Category mapping:** their rule ids map to clogbot categories in
+- **Category mapping:** their rule ids map to seamscan categories in
   `bench/compare/mapping.toml`.
 - **What's reported:** coverage per *category* (Supabase, secrets, code
   patterns…). It is presented as "different tools, different goals", never as
@@ -809,28 +809,28 @@ stated with the result.
 ### 9.2 Suppressions
 
 ```python
-data = requests.get(url, verify=False)  # clogbot: ignore[CB-CODE-001] reason: internal CA, pinned in INFRA-12
+data = requests.get(url, verify=False)  # seamscan: ignore[SC-CODE-001] reason: internal CA, pinned in INFRA-12
 ```
 
 ```ts
-// clogbot: ignore-next-line[CB-WEB-001] reason: auth enforced by middleware.ts matcher
+// seamscan: ignore-next-line[SC-WEB-001] reason: auth enforced by middleware.ts matcher
 ```
 
 - **A reason is mandatory.** Without one, the suppression doesn't apply, and
-  CB-META-001 is raised.
+  SC-META-001 is raised.
 - **Reporting:** all suppressions are listed in `--stats` and in the audit
   report.
 
 ### 9.3 Baseline and ratchet
 
-- `clogbot baseline create` writes `.clogbot/baseline.json`. Entries are
+- `seamscan baseline create` writes `.seamscan/baseline.json`. Entries are
   sorted, and each records `{fingerprint, rule_id, path}`. There are no
   timestamps, so diffs stay clean.
 - `scan` and `audit` treat findings in the baseline as existing debt that
   doesn't block.
-- `clogbot baseline prune` removes entries that no longer match anything.
+- `seamscan baseline prune` removes entries that no longer match anything.
 - **The ratchet:**
-  - `clogbot baseline check --against <base-ref>` fails if the baseline gained
+  - `seamscan baseline check --against <base-ref>` fails if the baseline gained
     any entries compared with the base branch.
   - Debt can only shrink, unless a commit updates the baseline on purpose. That
     shows up in the PR diff, where a reviewer sees it.
@@ -847,7 +847,7 @@ data = requests.get(url, verify=False)  # clogbot: ignore[CB-CODE-001] reason: i
 The terminal summary is generated from the same `Verdict` object as the exit
 code, so they can never disagree again (v0.2.1 bug).
 
-### 9.5 Configuration (`clogbot.toml`)
+### 9.5 Configuration (`seamscan.toml`)
 
 ```toml
 [policy]
@@ -855,8 +855,8 @@ fail_on_severity = "HIGH"
 fail_on_confidence = "MEDIUM"
 
 [rules]
-disable = ["CB-TEST-003"]
-severity = { "CB-CODE-002" = "LOW" }
+disable = ["SC-TEST-003"]
+severity = { "SC-CODE-002" = "LOW" }
 
 [paths]
 exclude = ["scripts/legacy/**"]
@@ -897,7 +897,7 @@ rules.
   severity labels. The values are CRITICAL 9.5, HIGH 8.0, MEDIUM 5.5,
   LOW 3.0.
 - Each result has `ruleId`, `message.text`, a physical location, and
-  `partialFingerprints["clogbot/v1"]`. Related locations go in
+  `partialFingerprints["seamscan/v1"]`. Related locations go in
   `relatedLocations`.
 - The output is validated against the official SARIF 2.1.0 schema in tests.
 - GitHub's limits apply: 10 MB gzipped, and 5,000 results shown. The audit
@@ -909,7 +909,7 @@ rules.
 3. Top findings, each with redacted evidence, why it matters, and how to fix it
 4. Everything else, grouped
 5. Suppressions and baseline
-6. **Method and limits**: what clogbot checks, what it can't, benchmark scores
+6. **Method and limits**: what seamscan checks, what it can't, benchmark scores
    with the version, and the files skipped and why
 
 This report is the deliverable for consulting Offer A, so it has to stand on
@@ -928,12 +928,12 @@ its own in front of a client.
 ### 11.1 CLI
 
 ```
-clogbot scan   [--base REF | --staged | --files PATH...] [--format F] [--offline] [--strict]
-clogbot audit  [PATH] [--format F] [--output FILE] [--offline]
-clogbot baseline create|prune|check [--against REF]
-clogbot rules  [--json]                 # list rules with metadata
-clogbot explain RULE-ID                 # print the rule page
-clogbot hook claude                     # Claude Code hook adapter (stdin -> stdout)
+seamscan scan   [--base REF | --staged | --files PATH...] [--format F] [--offline] [--strict]
+seamscan audit  [PATH] [--format F] [--output FILE] [--offline]
+seamscan baseline create|prune|check [--against REF]
+seamscan rules  [--json]                 # list rules with metadata
+seamscan explain RULE-ID                 # print the rule page
+seamscan hook claude                     # Claude Code hook adapter (stdin -> stdout)
 ```
 
 Global: `--config PATH`, `--stats`, `--debug`, `--version`.
@@ -942,27 +942,27 @@ Global: `--config PATH`, `--stats`, `--debug`, `--version`.
 
 The action:
 1. Installs uv.
-2. Runs `uvx clogbot@<pinned> scan --base ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --format sarif --output clogbot.sarif`.
-3. Uploads it with `github/codeql-action/upload-sarif@v4`, category `clogbot`.
+2. Runs `uvx seamscan@<pinned> scan --base ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --format sarif --output seamscan.sarif`.
+3. Uploads it with `github/codeql-action/upload-sarif@v4`, category `seamscan`.
 
 The workflow needs `permissions: security-events: write`. v3 of that action
 is deprecated in Dec 2026, so v4 only.
 
 Third-party SARIF alerts are eligible for GitHub's Copilot Autofix where the
-repo has it enabled. clogbot finds, and GitHub's own tools can propose fixes.
+repo has it enabled. seamscan finds, and GitHub's own tools can propose fixes.
 
 ### 11.3 pre-commit
 
-`.pre-commit-hooks.yaml` defines `id: clogbot`, `entry: clogbot scan --staged --offline`,
+`.pre-commit-hooks.yaml` defines `id: seamscan`, `entry: seamscan scan --staged --offline`,
 `pass_filenames: false`.
 
 ### 11.4 Claude Code hook
 
 This is an integration, **not a differentiator**. Semgrep Guardian and Snyk
-Studio already ship hooks. Its value is that clogbot's rules target AI
+Studio already ship hooks. Its value is that seamscan's rules target AI
 failure modes and the stacks AI tools build.
 
-`clogbot hook claude` reads the hook JSON on stdin and branches on
+`seamscan hook claude` reads the hook JSON on stdin and branches on
 `hook_event_name`:
 
 - **`PostToolUse`** (matcher `Edit|Write|MultiEdit`) or **`PostToolBatch`**:
@@ -984,7 +984,7 @@ The docs give a copy-paste `settings.json` snippet.
 
 ---
 
-## 12. Engineering quality gates for clogbot itself
+## 12. Engineering quality gates for seamscan itself
 
 ### 12.1 CI jobs (all required)
 
@@ -997,7 +997,7 @@ The docs give a copy-paste `settings.json` snippet.
 6. Determinism: run `audit --format json` twice on the fixture repo and check
    the outputs are byte-identical
 7. Performance (§13)
-8. Self-scan: `clogbot audit .` reports zero blocking findings
+8. Self-scan: `seamscan audit .` reports zero blocking findings
 9. Schema: JSON output validated against `findings.v1`, SARIF against SARIF
    2.1.0, with snapshot tests for both
 
@@ -1053,7 +1053,7 @@ Each milestone ends with its "done when" checks passing in CI.
 
 | # | Milestone | Done when |
 |---|---|---|
-| **M0** | **Repair and spikes** | `src/` layout; `uvx --from . clogbot --help` works from a fresh clone; MIT `LICENSE`; committed output folders removed; the verdict/exit-code contradiction fixed in v0.2.x so the public README is true. Spikes written up as ADR-001 (SQL parsing), ADR-002 (scan-mode scoping) and ADR-003 (tree-sitter 0.26 TS/TSX queries). `CLAUDE.md` points to this spec. |
+| **M0** | **Repair and spikes** | `src/` layout; `uvx --from . seamscan --help` works from a fresh clone; MIT `LICENSE`; committed output folders removed; the verdict/exit-code contradiction fixed in v0.2.x so the public README is true. Spikes written up as ADR-001 (SQL parsing), ADR-002 (scan-mode scoping) and ADR-003 (tree-sitter 0.26 TS/TSX queries). `CLAUDE.md` points to this spec. |
 | **M1** | **Core and benchmark harness** | `model`, `workspace`, `parse/python`, the rule protocol, `policy/verdict`, and the JSON and terminal reporters; bench runner and scorer; the v0.2.1 detectors run through the bench, giving a recorded **"before" score**; the determinism test passes. |
 | **M2** | **Python rules** | SEC-001/003/004, CODE-001–010 and TEST-001–003 (pytest) meet their budgets. Suppressions work. |
 | **M3** | **TS/JS** | The tree-sitter layer, the same rules for TS/JS, WEB-001–003 and file roles (§5.6). TS/JS cases make up ≥ 40% of the corpus. |
@@ -1071,9 +1071,8 @@ Order rationale:
 
 ## 15. Open questions (for Aaron)
 
-1. **Name.** Keep "clogbot"? It's memorable but doesn't say what it does. Check
-   PyPI availability before M7.
-2. **License.** MIT is assumed.
+1. ~~Name~~ Decided 2026-10-07: **seamscan**. It names the differentiator, scanning the seams between layers. It was free on PyPI and npm, with no GitHub repos using the name.
+2. ~~License~~ Decided: MIT.
 3. **LLM-generated corpus:** which models, how many cases, and what spend
    cap? A suggestion: 2–3 current models × 20 task prompts.
 4. **Comparisons with Semgrep and Opengrep.** Running them is allowed for
@@ -1107,6 +1106,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-07: Renamed clogbot → seamscan; rule ID prefix CB- → SC-.
 - 2026-10-07: M0 spikes done. ADR-001: no sqlglot (in-house SQL statement scanner). ADR-002: cross-file findings are in scan scope if either side changed. ADR-003: tree-sitter 0.26 query API confirmed on TSX.
 - 2026-10-07: Draft 1. Positioning informed by landscape research the same
   day: no open offline tool links Supabase/Firebase config to client code;

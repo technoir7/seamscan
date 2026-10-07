@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from clogbot.legacy import (
+from seamscan.legacy import (
     GitDiffMeta,
     _detect_fallback_secrets,
     _detect_new_dependency_risk,
