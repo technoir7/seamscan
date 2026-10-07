@@ -65,8 +65,18 @@ Recorded so the improvement can be measured and told honestly.
 - Mixes two jobs: running the target repo's own tests, linters and audits, and
   finding risky patterns. The rewrite keeps only the second (§4.2).
 
-**M1 runs the v0.2.1 detectors through the benchmark** to record a "before"
-score.
+**Recorded "before" score (M1, 2026-10-07).** The v0.2 detectors were run
+through the 44-case seed corpus. They're scored on rule alone, with no location
+needed, which is lenient (`bench/results/v0.2.2-legacy.json`):
+
+| Split | Precision | Recall |
+|---|---|---|
+| dev (32 cases) | 0.62 | 0.44 |
+| holdout (12 cases) | 0.75 | 0.43 |
+| all | 0.65 | 0.44 (11 of 25) |
+
+The new engine has to beat this, with exact locations, before it replaces the
+legacy CLI (end of M2).
 
 ---
 
@@ -169,6 +179,7 @@ src/seamscan/
     terminal.py  json.py  sarif.py  markdown.py  agent.py
   integrations/
     claude_hook.py       #   stdin hook JSON -> scan -> hook response JSON
+  analysis.py            # pure: SourceFile[] (+ ChangeSet) -> Finding[]; the whole pipeline, no I/O
   cli.py                 # composition root: the only place that wires I/O to the core
 bench/                   # benchmark corpus, runner, scorer (§8)
 docs/
@@ -190,7 +201,11 @@ cli ─▶ integrations ─▶ report, policy ─▶ rules ─▶ facts ─▶ p
  └──▶ workspace, supply (I/O edges) ───────┘ (pass plain data in; never imported by rules)
 ```
 
-`import-linter` contracts (dev dependency) make this a test, not a hope:
+An architecture test (`tests/test_architecture.py`) reads every module's
+imports with `ast` and fails on a violation. It makes this a test, not a hope.
+It's a small in-house test rather than `import-linter`, because it must also
+forbid stdlib modules (`subprocess`, `urllib`, `socket`), and it adds no
+dependency:
 
 - `rules`, `facts`, `parse`, `policy` and `report` must not import
   `workspace`, `supply`, `subprocess`, `urllib`, `socket` or `os.environ`.
@@ -703,6 +718,16 @@ tolerance = 2                 # line match window
 rule = "SC-SEC-002"
 ```
 
+**Fake secrets.** Case files never contain secret-shaped strings literally.
+They use placeholders such as `{{FAKE_STRIPE_LIVE}}`, which the runner
+replaces when it loads the case. The values come from `bench/fake_secrets.py`,
+which builds them by concatenation. That keeps GitHub push protection and
+secret scanning quiet without weakening the cases.
+
+**Split integrity.** A test checks that every case's `split` equals the
+hash-derived value (`sha256(id)`, the first 8 hex digits mod 10 < 3 →
+`holdout`). Cases can't be moved between splits by hand.
+
 ### 8.2 Scoring
 
 - A finding matches an expectation when the rule, path, and line (within
@@ -992,7 +1017,7 @@ The docs give a copy-paste `settings.json` snippet.
 2. `pyright --strict` on `src/`
 3. `pytest`, with coverage ≥ 90% on `rules/`, `facts/` and `policy/`. These
    are targeted floors, not a vanity global number.
-4. `lint-imports` (layer contracts, §5.3)
+4. Architecture test (layer contracts, §5.3)
 5. The bench job (§8.6), plus the README table staleness check
 6. Determinism: run `audit --format json` twice on the fixture repo and check
    the outputs are byte-identical
@@ -1019,7 +1044,6 @@ The docs give a copy-paste `settings.json` snippet.
 | `typer` | already used; the CLI layer |
 | `tree-sitter`, `tree-sitter-typescript`, `tree-sitter-javascript` | no TS/JS parser in the stdlib |
 | dev: `pytest`, `ruff`, `pyright` | standard |
-| dev: `import-linter` | enforces §5.3 mechanically |
 | dev: `jsonschema` | validates JSON/SARIF output in tests |
 
 HTTP goes through `urllib`, config through `tomllib` and JWT payloads through
@@ -1054,7 +1078,7 @@ Each milestone ends with its "done when" checks passing in CI.
 | # | Milestone | Done when |
 |---|---|---|
 | **M0** | **Repair and spikes** | `src/` layout; `uvx --from . seamscan --help` works from a fresh clone; MIT `LICENSE`; committed output folders removed; the verdict/exit-code contradiction fixed in v0.2.x so the public README is true. Spikes written up as ADR-001 (SQL parsing), ADR-002 (scan-mode scoping) and ADR-003 (tree-sitter 0.26 TS/TSX queries). `CLAUDE.md` points to this spec. |
-| **M1** | **Core and benchmark harness** | `model`, `workspace`, `parse/python`, the rule protocol, `policy/verdict`, and the JSON and terminal reporters; bench runner and scorer; the v0.2.1 detectors run through the bench, giving a recorded **"before" score**; the determinism test passes. |
+| **M1** | **Core and benchmark harness** (until the new engine beats v0.2.x on the benchmark at the end of M2, the `seamscan` command stays the legacy CLI and the new one runs as `python -m seamscan`) | `model`, `workspace`, `parse/python`, the rule protocol, `policy/verdict`, and the JSON and terminal reporters; bench runner and scorer; the v0.2.1 detectors run through the bench, giving a recorded **"before" score**; the determinism test passes. |
 | **M2** | **Python rules** | SEC-001/003/004, CODE-001–010 and TEST-001–003 (pytest) meet their budgets. Suppressions work. |
 | **M3** | **TS/JS** | The tree-sitter layer, the same rules for TS/JS, WEB-001–003 and file roles (§5.6). TS/JS cases make up ≥ 40% of the corpus. |
 | **M4** | **Supabase and Firebase** | Schema replay; SUPA-001–004, FIRE-001 and SEC-002; ≥ 60 original cases, including the CVE-2025-48757 pattern end to end. |
@@ -1106,6 +1130,8 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-07: M1 done. Core pipeline, policy, JSON/terminal reporters, `scan`/`audit` (via `python -m seamscan`), benchmark harness, 44-case seed corpus, SC-CODE-001 (Python) as the first rule at 6/6 recall and no false alarms. Legacy before-score recorded in §2.
+- 2026-10-07: M1 additions: pure `analysis.py`; in-house architecture test replaces import-linter; fake-secret placeholders in cases; hash-derived splits enforced; legacy CLI stays default until the new engine beats it.
 - 2026-10-07: Renamed clogbot → seamscan; rule ID prefix CB- → SC-.
 - 2026-10-07: M0 spikes done. ADR-001: no sqlglot (in-house SQL statement scanner). ADR-002: cross-file findings are in scan scope if either side changed. ADR-003: tree-sitter 0.26 query API confirmed on TSX.
 - 2026-10-07: Draft 1. Positioning informed by landscape research the same

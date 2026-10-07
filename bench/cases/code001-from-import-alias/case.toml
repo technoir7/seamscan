@@ -1,0 +1,12 @@
+id = "code001-from-import-alias"
+description = "verify=False through a from-import"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "sync.py"
+line = 5

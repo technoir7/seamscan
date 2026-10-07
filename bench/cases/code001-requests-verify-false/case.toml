@@ -1,0 +1,12 @@
+id = "code001-requests-verify-false"
+description = "requests call with verify=False"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "app/client.py"
+line = 5

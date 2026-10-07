@@ -1,0 +1,12 @@
+id = "sec003-getenv-api-key"
+description = "os.getenv with a default API key"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "client.py"
+line = 3

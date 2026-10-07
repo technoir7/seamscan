@@ -1,0 +1,10 @@
+id = "code006-parameterized-sql"
+description = "parameterized query is safe"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

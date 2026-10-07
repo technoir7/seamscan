@@ -1,0 +1,10 @@
+id = "code001-verify-ca-bundle"
+description = "verify pointing at a CA bundle is safe"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

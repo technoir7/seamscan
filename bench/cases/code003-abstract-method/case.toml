@@ -1,0 +1,10 @@
+id = "code003-abstract-method"
+description = "abstract method raising NotImplementedError"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

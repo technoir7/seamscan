@@ -1,0 +1,12 @@
+id = "sec003-fallback-session-secret"
+description = "session secret with a hardcoded default"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "settings.py"
+line = 3

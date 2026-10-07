@@ -1,0 +1,10 @@
+id = "code001-verify-true"
+description = "explicit verify=True is safe"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

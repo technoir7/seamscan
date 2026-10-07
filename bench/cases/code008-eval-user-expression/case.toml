@@ -1,0 +1,12 @@
+id = "code008-eval-user-expression"
+description = "eval on a caller-supplied expression"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "calc.py"
+line = 2

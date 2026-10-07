@@ -1,0 +1,2 @@
+OPENAI_API_KEY = "{{FAKE_OPENAI_PROJ}}"
+MODEL = "gpt-5"

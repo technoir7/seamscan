@@ -1,0 +1,12 @@
+id = "code003-not-implemented-refund"
+description = "refund raises NotImplementedError"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "payments.py"
+line = 2

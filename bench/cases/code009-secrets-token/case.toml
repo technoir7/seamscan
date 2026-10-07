@@ -1,0 +1,10 @@
+id = "code009-secrets-token"
+description = "secrets module is the right tool"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-009"

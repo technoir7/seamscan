@@ -1,0 +1,12 @@
+id = "test001-no-assertion"
+description = "test calls code but asserts nothing"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_math.py"
+line = 4

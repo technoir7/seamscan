@@ -1,0 +1,10 @@
+id = "sec003-empty-default"
+description = "an empty default fails closed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

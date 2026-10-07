@@ -1,0 +1,12 @@
+id = "code004-hardcoded-admin-password"
+description = "login compares to a literal password"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "auth.py"
+line = 2

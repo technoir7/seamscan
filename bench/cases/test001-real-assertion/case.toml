@@ -1,0 +1,13 @@
+id = "test001-real-assertion"
+description = "a test with a real assertion"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+
+[[forbidden]]
+rule = "SC-TEST-002"

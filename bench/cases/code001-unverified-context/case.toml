@@ -1,0 +1,12 @@
+id = "code001-unverified-context"
+description = "ssl._create_unverified_context"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "fetch.py"
+line = 4

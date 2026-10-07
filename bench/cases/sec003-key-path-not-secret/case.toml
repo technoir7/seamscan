@@ -1,0 +1,10 @@
+id = "sec003-key-path-not-secret"
+description = "a *_KEY_PATH default is a file path, not a secret"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-003"

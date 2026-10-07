@@ -1,0 +1,10 @@
+id = "code004-empty-password-check"
+description = "checking for an empty password is fine"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

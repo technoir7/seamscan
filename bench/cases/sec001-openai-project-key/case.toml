@@ -1,0 +1,12 @@
+id = "sec001-openai-project-key"
+description = "OpenAI project key in a config module"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "config.py"
+line = 1

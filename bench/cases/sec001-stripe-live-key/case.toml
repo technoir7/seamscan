@@ -1,0 +1,12 @@
+id = "sec001-stripe-live-key"
+description = "Stripe live secret key in source"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "app/payments.py"
+line = 3

@@ -1,0 +1,12 @@
+id = "code002-bare-except-return-none"
+description = "bare except returning None"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "billing.py"
+line = 4

@@ -1,0 +1,10 @@
+id = "sec001-key-from-env"
+description = "secret read from the environment"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"

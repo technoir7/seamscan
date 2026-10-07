@@ -1,0 +1,12 @@
+id = "sec004-env-committed"
+description = "a real .env file in the repo"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env"
+line = 1

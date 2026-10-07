@@ -1,0 +1,12 @@
+id = "code006-fstring-sql"
+description = "f-string into execute"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "repo.py"
+line = 2

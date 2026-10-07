@@ -1,0 +1,10 @@
+id = "code001-other-library-verify-kwarg"
+description = "a non-HTTP function with a verify kwarg"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

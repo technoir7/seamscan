@@ -1,0 +1,12 @@
+id = "sec001-github-pat"
+description = "GitHub token in a deploy script"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "deploy.py"
+line = 3

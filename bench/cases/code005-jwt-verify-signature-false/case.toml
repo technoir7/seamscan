@@ -1,0 +1,12 @@
+id = "code005-jwt-verify-signature-false"
+description = "PyJWT decode with signature check off"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "session.py"
+line = 5

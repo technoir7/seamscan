@@ -1,0 +1,10 @@
+id = "code001-comment-mentions"
+description = "a comment warning against verify=False is not code"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-001"

@@ -1,0 +1,12 @@
+id = "code003-verify-returns-true"
+description = "signature check that always passes"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "webhooks.py"
+line = 1

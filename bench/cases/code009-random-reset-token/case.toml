@@ -1,0 +1,12 @@
+id = "code009-random-reset-token"
+description = "reset token from the random module"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "tokens.py"
+line = 6
