@@ -1,0 +1,12 @@
+id = "code006-ts-better-sqlite3-prepare"
+description = "better-sqlite3 prepare() with the tag pasted in next to a real ? parameter"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "src/server/db/notes.ts"
+line = 6

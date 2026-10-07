@@ -1,0 +1,12 @@
+id = "code006-js-knex-whereraw"
+description = "knex query builder with a whereRaw template holding the search term"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "src/server/repositories/posts.js"
+line = 7

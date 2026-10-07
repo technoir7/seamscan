@@ -1,0 +1,10 @@
+id = "code006-ts-in-list-placeholders"
+description = "IN list built from $n placeholders by mapping indexes; values passed separately"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

@@ -1,0 +1,12 @@
+id = "code005-ts-server-action-decode-userid"
+description = "server action trusts userId from jwt.decode to choose whose profile to update"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "app/settings/actions.ts"
+line = 10

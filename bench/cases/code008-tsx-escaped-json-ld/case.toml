@@ -1,0 +1,10 @@
+id = "code008-tsx-escaped-json-ld"
+description = "article JSON-LD built from CMS data but with '<' escaped, as the Next.js docs show"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

@@ -1,0 +1,12 @@
+id = "code006-ts-postgres-unsafe-built-where"
+description = "postgres.js sql.unsafe() over a WHERE clause grown with += templates"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "lib/customers.ts"
+line = 9

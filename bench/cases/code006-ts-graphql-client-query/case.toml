@@ -1,0 +1,10 @@
+id = "code006-ts-graphql-client-query"
+description = "a GraphQL client's .query() given a template; the text isn't SQL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

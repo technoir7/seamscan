@@ -1,0 +1,10 @@
+id = "code008-tsx-sanitized-markdown"
+description = "markdown rendered through DOMPurify.sanitize before dangerouslySetInnerHTML"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

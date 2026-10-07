@@ -1,0 +1,12 @@
+id = "code005-js-express-middleware-req-user"
+description = "Express auth middleware sets req.user from an unverified jwt.decode"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "server/middleware/auth.js"
+line = 9

@@ -1,0 +1,10 @@
+id = "code006-ts-prisma-tagged-queryraw"
+description = "Prisma $queryRaw tagged template and Prisma.sql fragments, both parameterized"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

@@ -1,0 +1,10 @@
+id = "code007-ts-execfile-argv"
+description = "promisified execFile with an argv array and no shell"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

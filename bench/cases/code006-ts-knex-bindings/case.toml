@@ -1,0 +1,10 @@
+id = "code006-ts-knex-bindings"
+description = "knex whereRaw and raw with ? / ?? bindings"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

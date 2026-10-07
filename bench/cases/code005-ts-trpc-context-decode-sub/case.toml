@@ -1,0 +1,12 @@
+id = "code005-ts-trpc-context-decode-sub"
+description = "tRPC context builds the caller's identity from an unverified token's sub"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "server/trpc/context.ts"
+line = 7

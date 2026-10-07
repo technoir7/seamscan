@@ -1,0 +1,12 @@
+id = "code005-ts-next-route-decode-role"
+description = "Next.js route handler gates an admin endpoint on jwt.decode's role claim"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "app/api/admin/users/route.ts"
+line = 12

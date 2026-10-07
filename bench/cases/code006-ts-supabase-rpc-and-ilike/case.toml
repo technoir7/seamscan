@@ -1,0 +1,10 @@
+id = "code006-ts-supabase-rpc-and-ilike"
+description = "supabase-js rpc() and an ilike filter with a template; neither is SQL text"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-006"

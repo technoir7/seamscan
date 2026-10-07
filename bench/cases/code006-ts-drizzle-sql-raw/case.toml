@@ -1,0 +1,12 @@
+id = "code006-ts-drizzle-sql-raw"
+description = "drizzle sql.raw() with a group-by column taken from the query string"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "app/api/reports/route.ts"
+line = 8

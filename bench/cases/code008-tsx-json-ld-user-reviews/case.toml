@@ -1,0 +1,12 @@
+id = "code008-tsx-json-ld-user-reviews"
+description = "product page JSON-LD includes user reviews via JSON.stringify without escaping '<'"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "app/products/[slug]/page.tsx"
+line = 14

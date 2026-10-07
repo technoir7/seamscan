@@ -1,0 +1,12 @@
+id = "code007-ts-bun-spawn-sh-c"
+description = "Bun server runs a pg_dump pipeline through sh -c with the db name from the URL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "index.ts"
+line = 7

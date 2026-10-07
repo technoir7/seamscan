@@ -1,0 +1,10 @@
+id = "code007-mjs-zx-and-actions-exec"
+description = "zx $`` (escapes interpolations) and @actions/exec (no shell) are not child_process"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-007"

@@ -3,6 +3,7 @@ from tree_sitter import Node
 from seamscan.model import SourceFile
 from seamscan.parse.javascript import (
     JsModule,
+    assigned_values,
     built_from_values,
     call_name,
     captures,
@@ -144,3 +145,18 @@ def test_rule_sanitizer_is_respected():
     assert not built_from_values(
         m, arg, lambda n: n.type == "call_expression" and call_name(m, n) == "quote"
     )
+
+
+def test_assigned_values_follow_the_binding_scope():
+    m = module(
+        "const execAsync = promisify(exec);\n"
+        "function f(cmd) {\n  let q = 'a';\n  q = `b ${cmd}`;\n  execAsync(q);\n  run(cmd);\n}\n",
+        "a.js",
+    )
+    calls = {call_name(m, c): c for c in captures(m, "(call_expression) @c")["c"]}
+    callee = calls["execAsync"].child_by_field_name("function")
+    assert callee is not None
+    assert [n.type for n in assigned_values(m, callee)] == ["call_expression"]
+    q = call_arg(m, "execAsync")
+    assert sorted(n.type for n in assigned_values(m, q)) == ["string", "template_string"]
+    assert assigned_values(m, call_arg(m, "run")) == []  # an unassigned parameter

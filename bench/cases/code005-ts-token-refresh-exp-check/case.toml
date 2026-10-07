@@ -1,0 +1,10 @@
+id = "code005-ts-token-refresh-exp-check"
+description = "server-side API client decodes its own access token only to check exp before refreshing"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-005"

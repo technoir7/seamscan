@@ -1,0 +1,10 @@
+id = "code008-tsx-sanitize-html-server-component"
+description = "CMS HTML passed through sanitize-html in a server component"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

@@ -1,0 +1,12 @@
+id = "code008-js-settimeout-string"
+description = "legacy widget schedules a string of code built from a panel id"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "public/legacy/dashboard.js"
+line = 2

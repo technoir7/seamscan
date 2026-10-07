@@ -1,0 +1,12 @@
+id = "code007-mjs-spawn-shell-true"
+description = "spawn with shell:true runs a git clone line built from the repo URL"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "server/git.mjs"
+line = 5
