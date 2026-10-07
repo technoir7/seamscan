@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/technoir7/seamscan/schemas/findings.v1.schema.json",
+  "title": "seamscan findings, schema version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tool", "summary", "findings"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "seamscan" },
+        "version": { "type": "string" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exit_code", "headline", "blocking", "total"],
+      "properties": {
+        "exit_code": { "enum": [0, 1, 2, 3] },
+        "headline": { "type": "string" },
+        "blocking": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } }
+  },
+  "$defs": {
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "start_line", "start_col", "end_line", "end_col"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "start_col": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "end_col": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id", "severity", "confidence", "location", "related",
+        "message", "evidence", "fingerprint", "blocking"
+      ],
+      "properties": {
+        "rule_id": { "type": "string", "pattern": "^SC-[A-Z]+-[0-9]{3}$" },
+        "severity": { "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "confidence": { "enum": ["LOW", "MEDIUM", "HIGH"] },
+        "location": { "$ref": "#/$defs/location" },
+        "related": { "type": "array", "items": { "$ref": "#/$defs/location" } },
+        "message": { "type": "string" },
+        "evidence": { "type": "string" },
+        "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+        "blocking": { "type": "boolean" }
+      }
+    }
+  }
+}
