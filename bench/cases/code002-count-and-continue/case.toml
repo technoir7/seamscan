@@ -1,0 +1,10 @@
+id = "code002-count-and-continue"
+description = "broad handler that counts the failure before continuing"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

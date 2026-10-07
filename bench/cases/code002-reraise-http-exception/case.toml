@@ -1,0 +1,10 @@
+id = "code002-reraise-http-exception"
+description = "broad handler that rolls back and raises an HTTP error"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

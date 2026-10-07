@@ -1,0 +1,12 @@
+id = "code002-django-save-bare-except"
+description = "Django view saves a profile and ignores any failure"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "profiles/views.py"
+line = 13

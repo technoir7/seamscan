@@ -1,0 +1,12 @@
+id = "code002-auth-dependency-bare-return"
+description = "FastAPI auth dependency turns every verification error into 'no user'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/deps.py"
+line = 11

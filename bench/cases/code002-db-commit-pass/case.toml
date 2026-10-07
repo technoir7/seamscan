@@ -1,0 +1,12 @@
+id = "code002-db-commit-pass"
+description = "Flask view swallows every error from the session commit"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/orders.py"
+line = 14

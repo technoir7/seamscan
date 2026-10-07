@@ -1,0 +1,10 @@
+id = "code002-narrow-tuple-return-none"
+description = "narrow tuple of expected parse errors returning None"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

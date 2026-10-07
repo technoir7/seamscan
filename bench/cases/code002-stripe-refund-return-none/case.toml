@@ -1,0 +1,12 @@
+id = "code002-stripe-refund-return-none"
+description = "a failed Stripe refund is reported to the caller as None"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "billing/refunds.py"
+line = 10
