@@ -1,4 +1,4 @@
-"""Run the benchmark: `uv run python -m bench.run [--engine new|legacy] [--record FILE]`."""
+"""Run the benchmark: `uv run python -m bench.run [--check] [--record FILE]`."""
 
 from __future__ import annotations
 
@@ -8,21 +8,16 @@ import sys
 from pathlib import Path
 
 from bench.case import Case, case_change, case_files, load_all
-from bench.legacy_adapter import legacy_findings
 from bench.score import CaseScore, Found, RuleScore, aggregate, score_case
 from seamscan.analysis import analyze
 from seamscan.model import Confidence
 from seamscan.rules.registry import RULES
 
 
-def run_case(case: Case, engine: str) -> CaseScore:
-    files = case_files(case)
-    if engine == "legacy":
-        found = legacy_findings(files)
-    else:
-        result = analyze(files, change=case_change(case))
-        found = [Found(f.rule_id, f.location.path, f.location.start_line) for f in result.findings]
-    return score_case(case.expected, case.forbidden, found, lenient=engine == "legacy")
+def run_case(case: Case) -> CaseScore:
+    result = analyze(case_files(case), change=case_change(case))
+    found = [Found(f.rule_id, f.location.path, f.location.start_line) for f in result.findings]
+    return score_case(case.expected, case.forbidden, found)
 
 
 def _fmt(x: float | None) -> str:
@@ -73,7 +68,6 @@ def budget_failures(dev: dict[str, RuleScore]) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bench.run")
-    parser.add_argument("--engine", choices=["new", "legacy"], default="new")
     parser.add_argument("--record", type=Path, help="write per-split scores as JSON")
     parser.add_argument("--check", action="store_true", help="fail if a rule misses its budget")
     args = parser.parse_args(argv)
@@ -83,16 +77,14 @@ def main(argv: list[str] | None = None) -> int:
     dev_scores: dict[str, RuleScore] = {}
     for split in ("dev", "holdout"):
         chosen = [c for c in cases if c.split == split]
-        scores = aggregate(run_case(c, args.engine) for c in chosen)
+        scores = aggregate(run_case(c) for c in chosen)
         if split == "dev":
             dev_scores = scores
-        print(f"\n== {args.engine} engine · {split} split · {len(chosen)} cases ==")
+        print(f"\n== {split} split · {len(chosen)} cases ==")
         print(table(scores))
         results[split] = {r: {"tp": s.tp, "fp": s.fp, "fn": s.fn} for r, s in scores.items()}
-    if args.engine == "legacy":
-        print("\n(legacy findings carry no location, so they are scored on rule alone - lenient)")
     if args.record:
-        payload = {"engine": args.engine, "cases": len(cases), "splits": results}
+        payload = {"cases": len(cases), "splits": results}
         args.record.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     if args.check:
         failures = budget_failures(dev_scores)

@@ -38,16 +38,6 @@ def test_unlabelled_finding_is_a_false_alarm():
     assert s.fp == {"SC-CODE-002": 1}
 
 
-def test_lenient_mode_matches_on_rule_only():
-    s = score_case(
-        expected=[Expected("SC-SEC-003", "settings.py", 3, 2)],
-        forbidden=[],
-        found=[Found("SC-SEC-003", "", 0)],
-        lenient=True,
-    )
-    assert s.tp == {"SC-SEC-003": 1} and not s.fp
-
-
 def test_aggregate_precision_recall():
     a = score_case([Expected("R", "a", 1, 0)], [], [Found("R", "a", 1)])
     b = score_case([Expected("R", "a", 1, 0)], [], [])

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seamscan"
-version = "0.2.2"
+version = "0.3.0"
 description = "Static checks for the security and correctness failures AI coding tools ship"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -34,17 +34,12 @@ dev = [
 ]
 
 [project.scripts]
-seamscan = "seamscan.legacy:main"
+seamscan = "seamscan.cli:main"
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-# legacy.py is the frozen v0.2 engine, kept only until the rewrite replaces it
-# (spec §14, end of M2); it is not maintained to current lint rules.
-extend-exclude = [
-    "src/seamscan/legacy.py",
-    "bench/cases",  # deliberately flawed sample code
-]
+extend-exclude = ["bench/cases"]  # deliberately flawed sample code
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP"]
@@ -56,6 +51,6 @@ pythonpath = ["."]  # makes the bench/ package importable in tests
 
 [tool.pyright]
 include = ["src/seamscan", "bench"]
-exclude = ["src/seamscan/legacy.py", "bench/cases"]
+exclude = ["bench/cases"]
 typeCheckingMode = "strict"
 pythonVersion = "3.11"

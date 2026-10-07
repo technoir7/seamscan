@@ -1,82 +1,158 @@
 # seamscan
 
-seamscan is a command-line checker for AI-assisted code changes. It runs a repo's own build, lint, test and audit tools, scans the uncommitted git diff with fixed rules, and writes the results to plain files.
+Static checks for the security and correctness failures AI coding tools most often
+ship. Deterministic and offline: fixed rules decide, no LLM in the detection path.
 
-## Why
+AI assistants make the same mistakes again and again:
+- live keys pasted into source
+- `verify=False` added to silence an SSL error
+- `except Exception: pass`
+- SQL built with f-strings
+- a `verify_signature` that returns `True`
+- a failing test "fixed" by deleting its assertion
 
-AI assistants repeat the same mistakes, like placeholder code, made-up packages and disabled TLS checks. seamscan's approach: AI can draft code and fixes, fixed rules decide pass or fail, a person reviews anything risky, and every result is saved to disk. seamscan never calls an LLM or edits code.
+seamscan finds them. It reports each finding with an exact file and line, a severity
+and a confidence.
 
-## What it checks
-
-Tool checks. Any failure fails the run:
-
-- Python: `compileall`, `pip check` (in a virtualenv), `ruff check`, `ruff format --check`, `pytest -q`, `pip-audit`
-- Node: `npm test`, `npm run lint`, `npm run typecheck` or `tsc --noEmit`, `npm audit --audit-level=high`
-- Each new import in the diff is test-imported. One that fails may be a made-up package.
-
-Diff rules. These are regex rules that produce warnings:
-
-- Placeholders (`TODO`, `FIXME`, `: pass`, `return None`) and bare `except:`
-- Secrets: AWS, GitHub and old-format OpenAI keys, JWTs, PEM blocks, long random strings, env vars with a hardcoded fallback
-- TLS checks turned off (`verify=False`, `rejectUnauthorized: false`, `curl -k`)
-- New dependency names, floating versions, install scripts, and manifest changes with no lockfile change
-- `curl | sh`, `rm -rf`, `DROP TABLE`, `MD5(`, and `/admin` routes with no auth decorator
-- AI tool config edits, invisible Unicode, prompt-injection phrases, `.env`/`.pem` files, and auth/payment/config paths
+**Status: alpha (0.3.0).** Python is covered. TypeScript/JavaScript and the
+Supabase/Firebase cross-file checks are next; see [Roadmap](#roadmap). The design is
+in [`docs/SPEC.md`](docs/SPEC.md).
 
 ## Install and run
 
-Run it from the project you want to check, with that project's virtualenv active:
-
 ```bash
-cd /path/to/your/project
-uvx --from git+https://github.com/technoir7/seamscan seamscan   # options: --out DIR, --fail-on-warn, --max-diff-loc N
+uvx --from git+https://github.com/technoir7/seamscan seamscan audit .     # whole repository
+uvx --from git+https://github.com/technoir7/seamscan seamscan scan        # only what you changed
 ```
 
-Or install it: `pip install git+https://github.com/technoir7/seamscan`. The Python checks also call `ruff`, `pytest` and `pip-audit`, so those need to be installed in the checked project's environment.
+- `audit [PATH]` checks every file git knows about: tracked files, plus untracked
+  files that aren't ignored.
+- `scan` checks only the lines your change added. It compares the working tree with
+  `HEAD`, or uses `--base REF`, or `--staged` for a pre-commit hook. Untracked files
+  count as wholly new.
+- `--format json` gives machine-readable output (schema in
+  [`schemas/findings.v1.schema.json`](schemas/findings.v1.schema.json)). The output is
+  byte-identical for identical input.
+- Secrets are never printed in full. Output shows a redacted form such as
+  `sk_live_51Hx…L2mN4`.
 
-There is no `check` subcommand; `seamscan` runs the check. Exit codes: `0` nothing blocking (warnings may be listed), `1` a check failed, `2` warnings found with `--fail-on-warn`. The terminal verdict, `verdict.md` and the exit code all come from the same decision.
+**Exit codes:**
 
-## Example output
+| Code | Meaning |
+|---|---|
+| `0` | nothing blocking |
+| `1` | blocking findings |
+| `2` | usage error |
+| `3` | a rule crashed (results incomplete) |
 
-A change with a TODO, a bare `except:`, `verify=False` and `os.getenv("API_KEY", "dev-key-1234")` exits 1 and writes this `seamscan_output/verdict.md` (trimmed):
+A finding blocks when its severity is HIGH or above **and** its confidence is MEDIUM or
+above. Everything else is reported but doesn't fail the run. The summary line and the
+exit code come from the same decision.
 
+## Rules
+
+| Rule | What it finds | Severity | Confidence |
+|---|---|---|---|
+| [SC-SEC-001](docs/rules/SC-SEC-001.md) | Provider secret in source | CRITICAL | HIGH |
+| [SC-SEC-003](docs/rules/SC-SEC-003.md) | Hardcoded fallback for a secret | HIGH | HIGH |
+| [SC-SEC-004](docs/rules/SC-SEC-004.md) | Env file with credentials committed | HIGH | HIGH |
+| [SC-CODE-001](docs/rules/SC-CODE-001.md) | TLS verification disabled | HIGH | HIGH |
+| [SC-CODE-002](docs/rules/SC-CODE-002.md) | Swallowed exception | MEDIUM | HIGH |
+| [SC-CODE-003](docs/rules/SC-CODE-003.md) | Unfinished code in a shipped path | HIGH | HIGH |
+| [SC-CODE-004](docs/rules/SC-CODE-004.md) | Hardcoded credential comparison | HIGH | HIGH |
+| [SC-CODE-005](docs/rules/SC-CODE-005.md) | JWT accepted without verification | CRITICAL | HIGH |
+| [SC-CODE-006](docs/rules/SC-CODE-006.md) | SQL built from strings | HIGH | MEDIUM |
+| [SC-CODE-007](docs/rules/SC-CODE-007.md) | Shell command built from strings | HIGH | MEDIUM |
+| [SC-CODE-008](docs/rules/SC-CODE-008.md) | Code evaluated from non-literals | HIGH | MEDIUM |
+| [SC-CODE-009](docs/rules/SC-CODE-009.md) | Predictable randomness for secrets | MEDIUM | HIGH |
+| [SC-CODE-010](docs/rules/SC-CODE-010.md) | Invisible or bidirectional Unicode (Trojan Source) | HIGH | HIGH |
+| [SC-TEST-001](docs/rules/SC-TEST-001.md) | Test with no assertion | MEDIUM | HIGH |
+| [SC-TEST-002](docs/rules/SC-TEST-002.md) | Assertion that can't fail | MEDIUM | HIGH |
+| [SC-TEST-003](docs/rules/SC-TEST-003.md) | Test disabled in this change (`scan` only) | MEDIUM | HIGH |
+
+Each rule page covers:
+- exactly what matches
+- why it matters
+- examples of code that is and isn't flagged
+- how to fix it
+- a **Known gaps** section listing what the rule misses and where it misfires
+
+## Suppressing a finding
+
+A suppression needs a written reason. Without one it is ignored and reported as
+SC-META-001.
+
+```python
+requests.get(url, verify=False)  # seamscan: ignore[SC-CODE-001] reason: internal CA, pinned in INFRA-12
+# seamscan: ignore-next-line[SC-CODE-006] reason: table name comes from a fixed enum
+cur.execute(f"SELECT * FROM {table}")
 ```
-### Severity 5: TEST
-- **Python Tests (pytest)** (exit code: 5)
-### Severity 6: LINT_FORMAT
-- **Python Lint (ruff)** (exit code: 1)
-### Severity 7: Heuristic Warnings
-- Code comment marker found in diff: +    # TODO
-- Bare except clause detected: +    except:
-- [CLASS-12] TLS verification bypass: requests/httpx verify=False (MITM risk on this connection)
-- [CLASS-13] Insecure fallback secret: API_KEY has a hardcoded default value (...)
-```
 
-It also writes `diff_meta.json`, raw tool output in `evidence/`, and `handoff_prompt.md`, which asks an AI assistant to fix only the blocking failures.
+## How well it works
+
+Every rule is developed against a labelled benchmark in `bench/cases/`. Each rule has
+at least 5 cases it must flag and 5 close calls it must not. The cases are split into
+`dev` and `holdout` by a hash of the case id. A finding counts only if it is the right
+rule at the right file and line. CI fails if any rule drops below its precision/recall
+budget.
+
+On the current 262 cases, and with the same scoring:
+
+| | Precision | Recall |
+|---|---|---|
+| v0.2 engine (regex over diff text; given credit without a location) | 0.40 | 0.19 |
+| v0.3 engine | 1.00 | 1.00 |
+
+**Read the v0.3 numbers with care.** The cases were written alongside the rules, so
+even the holdout split isn't independent. An independently written holdout set comes
+before any published accuracy claim ([spec §8.3](docs/SPEC.md)). The rule pages list
+the misfires already found outside the benchmark.
+
+Run it yourself: `uv run python -m bench.run`.
 
 ## How it works
 
-One Python file, depending only on Typer. It runs each tool as a subprocess, applies the rules to `git diff HEAD`, and ranks failures: build, dependencies, imports, typecheck, tests, lint, warnings.
+The analysis is a pure pipeline:
+1. parse the files
+2. run the rules over syntax trees
+3. apply suppressions
+4. decide the verdict
+5. render the output
 
-## Limitations and status
+Only `workspace/` (files, git) and `cli.py` do any I/O, and an architecture test
+enforces that layering. Rules are plain functions over parsed code. They share a small
+"taint-lite" helper that tells whether a string was assembled from values that could
+carry attacker text. It follows assignments within one function, but not across
+function calls.
 
-Alpha, version 0.2.2. A rewrite is planned; see `docs/SPEC.md`.
+## Roadmap
 
-- It only sees uncommitted changes to tracked files.
-- Regex rules miss things and flag safe code. For example, `hashlib.md5(` and new `pyproject.toml` deps are missed, and `PUBLIC_KEY_PATH` is flagged as a secret.
-- A missing tool, or `pytest` finding no tests, counts as a failure.
-- Python is only recognized when the project has `pyproject.toml` or `requirements*.txt`.
-- `pip-audit` and `npm audit` need network access.
-- Planned (`NEXT.md`): typo-distance package checks, AST-based rules, test-quality checks.
+See [spec §14](docs/SPEC.md).
 
-## Tests
+- **Next: TypeScript/JavaScript** (tree-sitter). These are the same rules plus
+  web-route checks (missing auth on writes, SSRF, permissive CORS).
+- **Supabase and Firebase.** Tables without row-level security that are queried from
+  the browser, open Firebase rules, and service-role keys reachable from client code.
+  These are cross-file checks that link migrations, rules files, env files and client
+  code.
+- **Dependency checks.** Packages that don't exist or are suspiciously new
+  (slopsquatting).
+- **Integrations.** Baseline/ratchet so CI fails only on new findings, SARIF for GitHub
+  code scanning, a GitHub Action, pre-commit, and a Claude Code hook.
+
+## Development
 
 ```bash
-uv run --extra dev pytest
+uv sync --extra dev
+uv run pytest                      # unit, architecture, determinism, schema, secret-safety tests
+uv run pyright                     # strict
+uv run ruff check src bench tests
+uv run python -m bench.run --check # benchmark with per-rule budgets
 ```
 
-The 26 tests cover the TLS, fallback-secret and new-dependency rules, the verdict/exit-code logic, and that import names from scanned code can't inject commands.
+Read [`CLAUDE.md`](CLAUDE.md) and [`docs/SPEC.md`](docs/SPEC.md) before changing
+anything. New rules land test-first, as benchmark cases plus a rule page.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See [`LICENSE`](LICENSE).

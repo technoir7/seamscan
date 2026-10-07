@@ -75,13 +75,25 @@ def scan(
     _emit(analyze(changed, change=change).findings, fmt, output)
 
 
-@app.callback()
-def _root(
-    version: Annotated[bool, typer.Option("--version", help="Show version and exit")] = False,
-) -> None:
-    if version:
+def _show_version(value: bool) -> None:
+    if value:
         typer.echo(__version__)
         raise typer.Exit()
+
+
+@app.callback()
+def _root(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            help="Show version and exit",
+            callback=_show_version,
+            is_eager=True,  # runs before Typer insists on a subcommand
+        ),
+    ] = False,
+) -> None:
+    """Static checks for the failures AI coding tools ship. See docs/SPEC.md."""
 
 
 def main() -> None:

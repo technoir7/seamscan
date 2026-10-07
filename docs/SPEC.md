@@ -78,6 +78,18 @@ needed, which is lenient (`bench/results/v0.2.2-legacy.json`):
 The new engine has to beat this, with exact locations, before it replaces the
 legacy CLI (end of M2).
 
+**End of M2 (2026-10-07), same scoring, 262 cases:**
+
+| Engine | Precision | Recall |
+|---|---|---|
+| v0.2 legacy (lenient) | 0.40 | 0.19 |
+| v0.3 | 1.00 | 1.00 |
+
+Results are in `bench/results/v0.2.2-legacy-m2corpus.json` and `latest.json`. The v0.3
+numbers are optimistic: the cases were written alongside the rules (see the
+independent-holdout requirement in §8.3). The legacy engine and its adapter were
+removed after this measurement. Git keeps them.
+
 ---
 
 ## 3. Users and use cases
@@ -233,7 +245,7 @@ class Location:
 class RuleMeta:
     id: str                     # "SC-SUPA-001"; never reused once released
     title: str
-    severity: Severity          # default; a rule may raise it per finding with a stated reason
+    severity: Severity          # default; a rule may raise or lower it per finding with a stated reason
     confidence: Confidence
     cwe: tuple[str, ...]        # ("CWE-284",)
     languages: frozenset[str]
@@ -377,6 +389,13 @@ Used by the injection, SSRF and auth rules. Within one function body:
 - **Sinks:** defined per rule.
 - **Sanitizers:** defined per rule, and configurable (e.g. a URL allowlist
   check, `DOMPurify.sanitize`, parameterized query APIs).
+- In practice the shared helpers (`built_from_values`, `is_inert`) treat any
+  value that *can* carry text as tainted. That includes parameters, attributes and
+  call results, unless a rule's sanitizer accepts it. Literals, numbers and
+  values only ever built from literals are inert. `int`-annotated parameters
+  are trusted as numbers, because FastAPI and pydantic enforce them. A bare
+  parameter passed whole to a SQL sink isn't flagged, because query wrappers are
+  common.
 - No interprocedural flow. If a value passes through a helper function, the
   rule stays silent. That's a known false-negative source, and it's
   documented on each rule page and measured by the benchmark.
@@ -395,6 +414,13 @@ Used by the injection, SSRF and auth rules. Within one function body:
 
 ## 7. Rule set v1
 
+**Where the detail lives.** This section defines each rule's intent, severity,
+confidence and core detection. The exact matching decisions (which names, which
+exemptions, which test files are skipped) live on the rule's page in
+`docs/rules/<ID>.md`. Every rule must have one (§12.2), and each page includes its
+Known gaps. If this section and a rule page disagree, the rule page describes what
+ships. Fix the disagreement in the same change.
+
 The format for each rule is: **ID, title**, then severity / confidence /
 CWE, then detection logic, a true positive (TP) and a hard negative (HN).
 Every rule ships with a docs page and benchmark cases (§12.2). IDs are stable
@@ -406,7 +432,7 @@ forever.
 CRITICAL / HIGH / CWE-798.
 - Matches known secret prefixes in string literals of non-test files:
   - Stripe `sk_live_` / `rk_live_`
-  - AWS `AKIA[0-9A-Z]{16}` (with a 40-char secret nearby)
+  - AWS `AKIA[0-9A-Z]{16}`. A key id alone is flagged; the paired secret has no prefix to match.
   - GitHub `ghp_` / `github_pat_`
   - OpenAI `sk-proj-` / `sk-`
   - Anthropic `sk-ant-`
@@ -435,19 +461,28 @@ config are allowed. The finding links the definition (`.env`) and the use
 **SC-SEC-003 — Hardcoded fallback for a secret.**
 HIGH / HIGH / CWE-1188.
 - Matches `os.environ.get("X", "<lit>")`, `os.getenv("X", "<lit>")`,
-  `process.env.X || "<lit>"`, `process.env.X ?? "<lit>"`, where `X`
-  tokenizes (split on `_`) to include `SECRET`, `KEY`, `TOKEN`, `PASSWORD`,
-  `PASS`, `PWD`, `JWT` or `SALT`.
-- Excluded: `X` ending in `_PATH`, `_FILE`, `_URL`, `_ID`, `_NAME`, `_DIR`
-  (fixes the v0.2.1 `PUBLIC_KEY_PATH` false positive), and empty-string
-  defaults.
+  `os.environ.setdefault(...)`, `os.getenv("X") or "<lit>"`,
+  `process.env.X || "<lit>"` and `process.env.X ?? "<lit>"`.
+- `X` must name a secret by its **last** word (`SECRET`, `KEY`, `TOKEN`,
+  `PASSWORD`, …). `JWT_SECRET` matches, while `JWT_ALGORITHM` and
+  `ACCESS_TOKEN_EXPIRE_MINUTES` don't. The any-word version flagged 14 common
+  settings in the benchmark.
+- Excluded:
+  - public-key names (`*_PUBLIC_KEY`, `*_ANON_KEY`)
+  - defaults that are file paths
+  - empty-string defaults
+  - test files
 - TP: `SECRET = os.environ.get("SESSION_SECRET", "dev-secret")`
 - HN: `os.environ.get("PUBLIC_KEY_PATH", "/etc/pub.pem")`
 
 **SC-SEC-004 — Env file committed.**
 HIGH / HIGH / CWE-538.
-- Fires on a tracked `.env`, `.env.local`, `.env.production` or
-  `.env.*.local` containing at least one non-placeholder value.
+- Fires on a tracked `.env`, `.env.local`, `.env.production`,
+  `.env.development` or `.env.*.local` containing at least one real,
+  **sensitive** value: a secret-named key, a URL with a password, or a
+  recognized provider secret.
+- A `.env` of public build settings is not reported. Vite, Next.js and CRA
+  projects commit those on purpose.
 - `.env.example` / `.env.sample` are allowed unless a value classifies as
   secret, in which case it's CRITICAL via SC-SEC-001.
 
@@ -598,9 +633,9 @@ supplies a value assigned to, or returned from, a name matching
 token, secret, password, otp, nonce, salt, code or session.
 
 **SC-CODE-010 — Invisible or bidirectional Unicode in source.**
-HIGH / HIGH / CWE-1007. Fires on bidi control characters or zero-width
-characters outside string literals (Trojan Source, CVE-2021-42574). This is a
-port of v0.2.1 CLASS-5.
+HIGH / HIGH / CWE-1007. Fires on bidi control characters anywhere in source,
+lowered to MEDIUM inside string literals, and on zero-width characters outside
+string literals (Trojan Source, CVE-2021-42574).
 
 ### 7.6 Test integrity (AI agents "make tests pass")
 
@@ -668,6 +703,14 @@ the resolved version.
   the crash is reported with a traceback in `--debug`, and the exit code
   becomes 3.
 
+### 7.8a Planned addition
+
+**SC-CODE-011 — Unsafe deserialization.** HIGH / MEDIUM / CWE-502. Covers
+`pickle.loads`, `yaml.load` without a safe loader, and `torch.load` with
+`weights_only=False` on non-literal input. It was proposed during M2 and is kept
+separate from SC-CODE-008 because the weakness and the fix differ. It is scheduled
+with M3.
+
 ### 7.9 Deliberately deferred to v2
 
 These are listed so they aren't half-built now:
@@ -678,6 +721,8 @@ These are listed so they aren't half-built now:
 - auth checks on Supabase Edge Functions
 - cookie flags (`HttpOnly`, `Secure`, `SameSite`)
 - `npm` lockfile integrity
+- test-removal detection in scan mode (deleted test files, functions or
+  assertions). This needs `ChangeSet` to record deletions as well as additions.
 
 ---
 
@@ -1085,7 +1130,7 @@ Each milestone ends with its "done when" checks passing in CI.
 | # | Milestone | Done when |
 |---|---|---|
 | **M0** | **Repair and spikes** | `src/` layout; `uvx --from . seamscan --help` works from a fresh clone; MIT `LICENSE`; committed output folders removed; the verdict/exit-code contradiction fixed in v0.2.x so the public README is true. Spikes written up as ADR-001 (SQL parsing), ADR-002 (scan-mode scoping) and ADR-003 (tree-sitter 0.26 TS/TSX queries). `CLAUDE.md` points to this spec. |
-| **M1** | **Core and benchmark harness** (until the new engine beats v0.2.x on the benchmark at the end of M2, the `seamscan` command stays the legacy CLI and the new one runs as `python -m seamscan`) | `model`, `workspace`, `parse/python`, the rule protocol, `policy/verdict`, and the JSON and terminal reporters; bench runner and scorer; the v0.2.1 detectors run through the bench, giving a recorded **"before" score**; the determinism test passes. |
+| **M1** | **Core and benchmark harness** (the legacy CLI stayed the default until the new engine beat it at the end of M2; it has since been removed) | `model`, `workspace`, `parse/python`, the rule protocol, `policy/verdict`, and the JSON and terminal reporters; bench runner and scorer; the v0.2.1 detectors run through the bench, giving a recorded **"before" score**; the determinism test passes. |
 | **M2** | **Python rules** | SEC-001/003/004, CODE-001–010 and TEST-001–003 (pytest) meet their budgets. Suppressions work. |
 | **M3** | **TS/JS** | The tree-sitter layer, the same rules for TS/JS, WEB-001–003 and file roles (§5.6). TS/JS cases make up ≥ 40% of the corpus. |
 | **M4** | **Supabase and Firebase** | Schema replay; SUPA-001–004, FIRE-001 and SEC-002; ≥ 60 original cases, including the CVE-2025-48757 pattern end to end. |
@@ -1137,6 +1182,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-07: **M2 done.** 16 Python rules shipped: SEC-001/003/004, CODE-001..010 and TEST-001..003. Each has ≥5 positive and ≥5 negative cases, a rule page, and passes its budget. The corpus has 262 cases. The `seamscan` command now runs the new engine; the legacy engine was removed after recording its score. Spec changes: rule pages are authoritative for matching detail (§7); severity may be lowered per finding (§5.4); SEC-003 uses the last-word rule; SEC-004 fires only on sensitive values; §6.3 documents the helper semantics; SC-CODE-011 planned (§7.8a); test-removal detection deferred to v2 (§7.9).
 - 2026-10-07: M2 infrastructure: file roles, secret classification and redaction, taint-lite string helper, inline suppressions (SC-META-001), scan-mode benchmark cases, budget check, CI workflow with SHA-pinned actions. Added the independent-holdout requirement (§8.3).
 - 2026-10-07: M1 done. Core pipeline, policy, JSON/terminal reporters, `scan`/`audit` (via `python -m seamscan`), benchmark harness, 44-case seed corpus, SC-CODE-001 (Python) as the first rule at 6/6 recall and no false alarms. Legacy before-score recorded in §2.
 - 2026-10-07: M1 additions: pure `analysis.py`; in-house architecture test replaces import-linter; fake-secret placeholders in cases; hash-derived splits enforced; legacy CLI stays default until the new engine beats it.

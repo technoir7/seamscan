@@ -19,7 +19,7 @@ class Expected:
 class Found:
     rule: str
     path: str
-    line: int  # 0 when the engine doesn't report a line (legacy)
+    line: int
 
 
 @dataclass(frozen=True)
@@ -48,11 +48,10 @@ def score_case(
     expected: Sequence[Expected],
     forbidden: Sequence[str],
     found: Sequence[Found],
-    lenient: bool = False,
 ) -> CaseScore:
     """Match each expectation to at most one finding: same rule, same path, line within
     tolerance (closest wins). Unmatched findings are false alarms, including any hit on a
-    `forbidden` rule. `lenient` matches on rule alone, for engines that report no location."""
+    `forbidden` rule."""
     del forbidden  # every unmatched finding already counts; forbidden only documents intent
     unmatched = list(found)
     tp: Counter[str] = Counter()
@@ -61,8 +60,7 @@ def score_case(
         candidates = [
             f
             for f in unmatched
-            if f.rule == e.rule
-            and (lenient or (f.path == e.path and abs(f.line - e.line) <= e.tolerance))
+            if f.rule == e.rule and f.path == e.path and abs(f.line - e.line) <= e.tolerance
         ]
         if candidates:
             best = min(candidates, key=lambda f: abs(f.line - e.line))
