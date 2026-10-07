@@ -1,0 +1,12 @@
+id = "code010-lri-in-comment"
+description = "isolate controls in a comment reorder what the reviewer sees"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/settings.py"
+line = 2

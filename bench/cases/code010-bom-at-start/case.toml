@@ -1,0 +1,10 @@
+id = "code010-bom-at-start"
+description = "a UTF-8 byte-order mark at the start of the file is allowed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

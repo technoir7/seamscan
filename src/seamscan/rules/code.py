@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import ast
+import io
 import re
+import sys
+import tokenize
+import unicodedata
+from bisect import bisect_right
 from collections.abc import Iterator
 
 from seamscan.facts.roles import Role, role_of
 from seamscan.facts.secrets import redact
-from seamscan.model import Confidence, Finding, Location, Severity
+from seamscan.model import Confidence, Finding, Location, Severity, SourceFile
 from seamscan.parse.python import (
     FunctionNode,
     PyModule,
@@ -762,10 +767,110 @@ def _predictable_random(ctx: RuleContext) -> Iterator[Finding]:
                 )
 
 
+# ---------------------------------------------------------------- SC-CODE-010
+
+INVISIBLE_UNICODE = meta(
+    "SC-CODE-010",
+    "Invisible or bidirectional Unicode in source",
+    Severity.HIGH,
+    Confidence.HIGH,
+    ("CWE-1007",),
+    frozenset({"python"}),
+    "Invisible or text-direction characters make the code a reviewer reads differ from the "
+    "code that runs.",
+)
+
+_BIDI = frozenset("\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069\u200e\u200f\u061c")
+_ZERO_WIDTH = frozenset("\u200b\u200c\u200d\u2060\ufeff")
+_INVISIBLE = _BIDI | _ZERO_WIDTH
+
+if sys.version_info >= (3, 12):
+    _FSTRING_START, _FSTRING_END = tokenize.FSTRING_START, tokenize.FSTRING_END
+else:  # 3.11 yields a whole f-string as one STRING token
+    _FSTRING_START = _FSTRING_END = -1
+
+
+def _string_spans(text: str) -> list[tuple[int, int]]:
+    """Character ranges of string literals, in order; an f-string counts whole."""
+    line_starts = [0]
+    for line in text.split("\n"):
+        line_starts.append(line_starts[-1] + len(line) + 1)
+
+    def offset(pos: tuple[int, int]) -> int:
+        return line_starts[pos[0] - 1] + pos[1]
+
+    spans: list[tuple[int, int]] = []
+    open_fstrings: list[int] = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+            if tok.type == tokenize.STRING and not open_fstrings:
+                spans.append((offset(tok.start), offset(tok.end)))
+            elif tok.type == _FSTRING_START:
+                open_fstrings.append(offset(tok.start))
+            elif tok.type == _FSTRING_END and open_fstrings:
+                start = open_fstrings.pop()
+                if not open_fstrings:
+                    spans.append((start, offset(tok.end)))
+    except (tokenize.TokenError, SyntaxError):
+        # The file doesn't tokenize, which SC-META-002 already reports. What follows the
+        # failure point counts as code: that can only raise a finding's severity, never
+        # hide one.
+        return spans
+    return spans
+
+
+def _invisible_in(file: SourceFile) -> Iterator[Finding]:
+    spans = _string_spans(file.text)
+    starts = [s for s, _ in spans]
+
+    def in_string(i: int) -> bool:
+        k = bisect_right(starts, i) - 1
+        return k >= 0 and i < spans[k][1]
+
+    line_start = 0
+    for lineno, line in enumerate(file.text.split("\n"), 1):
+        hits: list[tuple[int, str, Severity]] = []
+        for col, ch in enumerate(line):
+            if ch not in _INVISIBLE or (ch == "\ufeff" and line_start + col == 0):
+                continue  # a BOM at offset 0 is an encoding marker
+            quoted = in_string(line_start + col)
+            if ch in _BIDI:
+                hits.append((col, ch, Severity.MEDIUM if quoted else Severity.HIGH))
+            elif not quoted:
+                hits.append((col, ch, Severity.HIGH))
+        line_start += len(line) + 1
+        if not hits:
+            continue
+        severity = max(s for _, _, s in hits)
+        names = ", ".join(
+            dict.fromkeys(f"U+{ord(ch):04X} {unicodedata.name(ch, '')}" for _, ch, _ in hits)
+        )
+        where = (
+            "outside string literals, so the code reads differently from how it runs"
+            if severity is Severity.HIGH
+            else "inside a string literal, so the string displays differently from its value"
+        )
+        evidence = "".join(f"<U+{ord(c):04X}>" if c in _INVISIBLE else c for c in line)
+        yield finding(
+            INVISIBLE_UNICODE,
+            Location(file.path, lineno, hits[0][0] + 1, lineno, hits[-1][0] + 2),
+            f"{names} {where}",
+            _clip(evidence.strip()),
+            severity=severity,
+        )
+
+
+def _invisible_unicode(ctx: RuleContext) -> Iterator[Finding]:
+    for file in ctx.files:
+        if file.path.endswith(".py") and not _INVISIBLE.isdisjoint(file.text):
+            yield from _invisible_in(file)
+
+
 RULES: tuple[Rule, ...] = (
     Rule(TLS_DISABLED, _tls_disabled),
     Rule(SWALLOWED_EXCEPTION, _swallowed_exceptions),
     Rule(UNFINISHED_CODE, _unfinished_code),
     Rule(HARDCODED_CREDENTIAL, _hardcoded_credentials),
     Rule(PREDICTABLE_RANDOM, _predictable_random),
+    Rule(INVISIBLE_UNICODE, _invisible_unicode),
 )

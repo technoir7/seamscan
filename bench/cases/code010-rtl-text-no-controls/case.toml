@@ -1,0 +1,10 @@
+id = "code010-rtl-text-no-controls"
+description = "Hebrew and Arabic strings and comments with no control characters"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

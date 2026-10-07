@@ -1,0 +1,17 @@
+id = "code010-zwj-identifier"
+description = "zero-width joiner makes a second, look-alike is_admin"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/roles.py"
+line = 5
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/roles.py"
+line = 10

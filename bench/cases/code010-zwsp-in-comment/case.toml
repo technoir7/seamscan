@@ -1,0 +1,12 @@
+id = "code010-zwsp-in-comment"
+description = "zero-width space pasted into a comment from a web page"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/limits.py"
+line = 1

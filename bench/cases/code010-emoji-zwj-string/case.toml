@@ -1,0 +1,10 @@
+id = "code010-emoji-zwj-string"
+description = "emoji ZWJ sequence inside a string literal is ordinary text"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

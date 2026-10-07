@@ -1,0 +1,10 @@
+id = "code010-escaped-bidi-sanitizer"
+description = "sanitizer names bidi controls with escapes, not the characters themselves"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"

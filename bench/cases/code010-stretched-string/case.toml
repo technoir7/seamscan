@@ -1,0 +1,12 @@
+id = "code010-stretched-string"
+description = "Trojan Source 'stretched string': bidi controls inside a string literal"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/access.py"
+line = 3

@@ -6,6 +6,7 @@ from seamscan.model import Finding, Severity, SourceFile
 from seamscan.rules.base import Rule
 from seamscan.rules.code import (
     HARDCODED_CREDENTIAL,
+    INVISIBLE_UNICODE,
     PREDICTABLE_RANDOM,
     RULES,
     SWALLOWED_EXCEPTION,
@@ -191,3 +192,38 @@ def test_qualified_nouns_and_system_random():
         "session_id = SystemRandom().getrandbits(64)\n"
     )
     assert lines(run(PREDICTABLE_RANDOM.id, src)) == [4]
+
+
+# ---------------------------------------------------------------- SC-CODE-010
+
+
+def test_bidi_in_string_is_medium_and_in_comment_is_high():
+    src = f's = "a{RLO}b"\nx = 1  # c{RLO}d\n'
+    found = run(INVISIBLE_UNICODE.id, src)
+    assert [(f.location.start_line, f.severity) for f in found] == [
+        (1, Severity.MEDIUM),
+        (2, Severity.HIGH),
+    ]
+    assert RLO not in found[0].evidence and "<U+202E>" in found[0].evidence
+
+
+def test_fstring_contents_count_as_string():
+    src = f'name = "x"\ns = f"{{name}}{RLO}!"\n'
+    [f] = run(INVISIBLE_UNICODE.id, src)
+    assert f.severity is Severity.MEDIUM
+
+
+def test_bom_only_exempt_at_offset_zero():
+    assert run(INVISIBLE_UNICODE.id, f"{BOM}x = 1\n") == []
+    assert lines(run(INVISIBLE_UNICODE.id, f"x = 1\ny = 2{BOM}\n")) == [2]
+
+
+def test_one_finding_per_line_at_worst_severity():
+    src = f'x = "{RLO}"  # {ZWSP}\n'
+    [f] = run(INVISIBLE_UNICODE.id, src)
+    assert f.severity is Severity.HIGH
+
+
+def test_untokenizable_file_is_still_checked():
+    src = f'x = "unterminated\n# {RLO}\n'
+    assert lines(run(INVISIBLE_UNICODE.id, src)) == [2]

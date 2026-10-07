@@ -1,0 +1,10 @@
+id = "code010-zwsp-inside-string"
+description = "zero-width space inside a string literal, being stripped from input"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-010"
