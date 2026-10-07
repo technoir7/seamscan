@@ -349,6 +349,41 @@ def _declared_values(module: JsModule, scope: Node, name: str) -> list[Node]:
     return values
 
 
+def _bound_values(module: JsModule, scope: Node, name: str) -> list[Node]:
+    """Like `_declared_values`, but a destructuring declaration that binds the name
+    contributes its whole right-hand side."""
+    values: list[Node] = []
+    for node in _scope_nodes(scope):
+        if node.type == "variable_declarator":
+            target = node.child_by_field_name("name")
+            value = node.child_by_field_name("value")
+            if target is not None and value is not None:
+                if name in set(_pattern_names(module.source, target)):
+                    values.append(value)
+        elif node.type in ("assignment_expression", "augmented_assignment_expression"):
+            left = node.child_by_field_name("left")
+            right = node.child_by_field_name("right")
+            if left is not None and right is not None and left.type == "identifier":
+                if text(module, left) == name:
+                    values.append(right)
+    return values
+
+
+def assigned_values(module: JsModule, ident: Node) -> list[Node]:
+    """Values bound to an identifier in its own scope: the nearest enclosing function that
+    declares it or takes it as a parameter, else the module. `const { url } = await
+    req.json()` binds `url` to `await req.json()`. Empty for a parameter that is never
+    reassigned, and for a name bound some other way (import, loop variable, catch)."""
+    name = text(module, ident)
+    fn = enclosing_function(module, ident)
+    while fn is not None:
+        values = _bound_values(module, fn, name)
+        if values or name in parameter_names(module, fn):
+            return values
+        fn = enclosing_function(module, fn)
+    return _bound_values(module, module.root, name)
+
+
 def _binding_scope(module: JsModule, ident: Node) -> tuple[Node, bool]:
     """(scope that binds the name, whether it's a parameter there). Module scope if unbound."""
     name = text(module, ident)
