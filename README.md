@@ -1,196 +1,82 @@
 # ClogBot
 
-**Deterministic, epistemically adversarial hardener for vibe-coded repositories.**
+ClogBot is a command-line checker for AI-assisted code changes. It runs a repo's own build, lint, test and audit tools, scans the uncommitted git diff with fixed rules, and writes the results to plain files.
 
-ClogBot detects and blocks patterned failure modes ("AI slop") and security vulnerabilities introduced by AI-assisted development. It produces evidence, not reassurance.
+## Why
 
-## What Is Vibe Coding?
+AI assistants repeat the same mistakes, like placeholder code, made-up packages and disabled TLS checks. ClogBot's approach: AI can draft code and fixes, fixed rules decide pass or fail, a person reviews anything risky, and every result is saved to disk. ClogBot never calls an LLM or edits code.
 
-Vibe coding is the practice of developing software through AI assistance (LLMs, code generation tools) without rigorous verification. The resulting code appears plausible but frequently contains:
+## What it checks
 
-*   Placeholder or partial implementations
-*   Hallucinated APIs, methods, and libraries
-*   Insecure defaults and shortcuts
-*   Swallowed errors and silent failures
-*   Tests that validate hallucinated behavior rather than actual requirements
+Tool checks. Any failure fails the run:
 
-Traditional tooling fails to catch these failures because it is optimized for style enforcement, not adversarial verification of AI-generated patterns.
+- Python: `compileall`, `pip check` (in a virtualenv), `ruff check`, `ruff format --check`, `pytest -q`, `pip-audit`
+- Node: `npm test`, `npm run lint`, `npm run typecheck` or `tsc --noEmit`, `npm audit --audit-level=high`
+- Each new import in the diff is test-imported. One that fails may be a made-up package.
 
-## What Is AI Slop?
+Diff rules. These are regex rules that produce warnings:
 
-AI slop refers to recurring, patterned defects introduced by AI code generation:
+- Placeholders (`TODO`, `FIXME`, `: pass`, `return None`) and bare `except:`
+- Secrets: AWS, GitHub and old-format OpenAI keys, JWTs, PEM blocks, long random strings, env vars with a hardcoded fallback
+- TLS checks turned off (`verify=False`, `rejectUnauthorized: false`, `curl -k`)
+- New dependency names, floating versions, install scripts, and manifest changes with no lockfile change
+- `curl | sh`, `rm -rf`, `DROP TABLE`, `MD5(`, and `/admin` routes with no auth decorator
+- AI tool config edits, invisible Unicode, prompt-injection phrases, `.env`/`.pem` files, and auth/payment/config paths
 
-*   `TODO`/`FIXME`/`pass`/`NotImplementedError` placeholders shipped to production
-*   Dead or unreachable code
-*   Empty or over-broad exception handlers
-*   Hardcoded secrets and magic values
-*   Unused variables and imports
-*   Large, unfocused diffs that exceed human review capacity
-*   Code touching high-risk domains (auth, payments, crypto, config) without specialized review
+## Install and run
 
-ClogBot treats these as deterministic failure modes, not stochastic bugs.
-
-## Doctrine
-
-> **AI-generated code is epistemically untrusted by default.**
-> **AI-generated tests are untrusted if produced by the same origin.**
-> **Vibe-coding failures are patterned, not stochastic.**
-> **Deterministic checks outperform human review for these failures.**
-
-Judgment is rule-based. LLMs are downstream labor only—never judges of correctness.
-
-## Threat Model
-
-ClogBot defends against:
-
-*   **Supply-Chain Attacks**: Dependency confusion, slopsquatting, typosquatting, hallucinated libraries (new-dependency heuristic flags unverified package names)
-*   **Insecure Defaults**: Missing input validation, missing authentication, weak cryptography, TLS/certificate verification bypass, insecure fallback secrets
-*   **Install-Time Execution**: postinstall hooks, setup.py side effects
-*   **Command Injection**: Clipboard poisoning, pipe-to-shell patterns
-*   **Configuration Poisoning**: AI tool config backdoors, invisible Unicode
-*   **Prompt Injection**: README/comment hijacking of agent behavior
-*   **Secret Exposure**: Hardcoded keys, high-entropy literals, committed credentials
-*   **Silent Failures**: Swallowed exceptions, fail-open authentication
-*   **Weak Tests**: Happy-path bias, no negative test cases
-*   **Concurrency Races**: Shared mutable state in async, check-then-act patterns
-*   **Production Credential Exposure**: Agent/tool access to prod environments
-
-## System Constraints
-
-*   ClogBot does NOT generate code
-*   ClogBot does NOT refactor code
-*   ClogBot does NOT rely on LLMs
-*   Zero network access (except local package managers)
-*   Local execution only
-*   Deterministic behavior only
-
-## Installation
+Run it from the project you want to check, with that project's virtualenv active:
 
 ```bash
-cd clogbot
-pip install -e .
+cd /path/to/your/project
+uvx --from git+https://github.com/technoir7/clogbot clogbot   # options: --out DIR, --fail-on-warn, --max-diff-loc N
 ```
 
-## Usage
+Or install it: `pip install git+https://github.com/technoir7/clogbot`. The Python checks also call `ruff`, `pytest` and `pip-audit`, so those need to be installed in the checked project's environment.
+
+There is no `check` subcommand; `clogbot` runs the check. Exit codes: `0` nothing blocking (warnings may be listed), `1` a check failed, `2` warnings found with `--fail-on-warn`. The terminal verdict, `verdict.md` and the exit code all come from the same decision.
+
+## Example output
+
+A change with a TODO, a bare `except:`, `verify=False` and `os.getenv("API_KEY", "dev-key-1234")` exits 1 and writes this `clogbot_output/verdict.md` (trimmed):
+
+```
+### Severity 5: TEST
+- **Python Tests (pytest)** (exit code: 5)
+### Severity 6: LINT_FORMAT
+- **Python Lint (ruff)** (exit code: 1)
+### Severity 7: Heuristic Warnings
+- Code comment marker found in diff: +    # TODO
+- Bare except clause detected: +    except:
+- [CLASS-12] TLS verification bypass: requests/httpx verify=False (MITM risk on this connection)
+- [CLASS-13] Insecure fallback secret: API_KEY has a hardcoded default value (...)
+```
+
+It also writes `diff_meta.json`, raw tool output in `evidence/`, and `handoff_prompt.md`, which asks an AI assistant to fix only the blocking failures.
+
+## How it works
+
+One Python file, depending only on Typer. It runs each tool as a subprocess, applies the rules to `git diff HEAD`, and ranks failures: build, dependencies, imports, typecheck, tests, lint, warnings.
+
+## Limitations and status
+
+Alpha, version 0.2.2. A rewrite is planned; see `docs/SPEC.md`.
+
+- It only sees uncommitted changes to tracked files.
+- Regex rules miss things and flag safe code. For example, `hashlib.md5(` and new `pyproject.toml` deps are missed, and `PUBLIC_KEY_PATH` is flagged as a secret.
+- A missing tool, or `pytest` finding no tests, counts as a failure.
+- Python is only recognized when the project has `pyproject.toml` or `requirements*.txt`.
+- `pip-audit` and `npm audit` need network access.
+- Planned (`NEXT.md`): typo-distance package checks, AST-based rules, test-quality checks.
+
+## Tests
 
 ```bash
-clogbot check
-
-# Configuration
-clogbot check --out ./results
-clogbot check --fail-on-warn
-clogbot check --max-diff-loc 500
+uv run --extra dev pytest
 ```
 
-## Check Suite
-
-### 1. Deterministic Correctness Checks
-
-**Python:**
-*   `python -m compileall .` — Bytecode compilation verification
-*   `pip check` — Dependency graph integrity
-*   `ruff check .` — Static analysis
-*   `ruff format --check .` — Formatting consistency
-*   `pytest -q` — Behavior proofs
-
-**JavaScript/TypeScript:**
-*   `npm test` — Behavior proofs
-*   `npm run lint` — Static analysis
-*   `npm run typecheck` / `npx tsc --noEmit` — Type safety verification
-
-### 2. Security & Supply-Chain Checks
-
-**Python:**
-*   `pip-audit` — Vulnerability scanning
-*   Import validation — Detects hallucinated libraries by attempting local resolution
-
-**Node:**
-*   `npm audit --audit-level=high` — Vulnerability scanning
-*   Import validation — Detects hallucinated requires by attempting local resolution
-
-**General:**
-*   Lockfile enforcement when dependencies change
-*   New dependencies treated as HIGH RISK
-
-### 3. AI Slop / Vibe-Coding Pattern Detection
-
-Deterministic detection of:
-*   Placeholder markers (TODO, FIXME, XXX, pass, NotImplementedError)
-*   Bare except clauses and swallowed errors
-*   High-entropy literals (potential secrets)
-*   Token patterns (AWS keys, JWTs, PEM blocks, GitHub PATs, OpenAI keys)
-*   Forbidden files (.env, .pem, id_rsa, credentials, kubeconfig)
-*   Weak cryptographic primitives (MD5, SHA1, DES, RC4, ECB)
-*   Missing auth decorators on sensitive routes
-*   Floating dependency versions (`*`, `latest`, `^0.x`, `~0.x`)
-*   Install-time script execution (preinstall, postinstall)
-*   Pipe-to-shell patterns (`curl|bash`)
-*   AI tool configuration changes (.cursor/rules, .cursorrules)
-*   Unicode control characters (obfuscation)
-*   Prompt injection patterns ("ignore previous", "system prompt", "exfiltrate")
-*   Production endpoints in dev configs
-*   Destructive commands (DROP, DELETE, rm -rf, terraform destroy)
-*   Async global state mutations
-*   Large, unfocused diffs
-*   High-risk path edits (auth, payments, crypto, config)
-*   TLS/certificate verification bypass, with elevated warning when duplicated across files (Node `rejectUnauthorized: false`, Python `verify=False`/`ssl.CERT_NONE`, `curl --insecure`)
-*   Insecure fallback secrets (`process.env.SECRET || 'default'`, `os.getenv('SECRET', 'default')`)
-*   Newly-added dependencies in `package.json`/`requirements.txt`/`pyproject.toml` (slopsquatting/typosquatting risk)
-
-### 4. Failure Ranking (Strict)
-
-1.  **Build / Syntax Errors** — Direct corruption
-2.  **Dependency Integrity or Audit Failures** — Supply-chain compromise
-3.  **Hallucinated or Unresolved Imports** — Missing or fabricated libraries
-4.  **Typecheck Failures** — Broken API contracts
-5.  **Test Failures** — Failed behavior proofs
-6.  **Lint / Format Failures** — Static analysis violations
-7.  **Heuristic Warnings** — AI slop patterns
-
-Critical or High failures result in FAIL.
-
-## Output Artifacts
-
-```
-clogbot_output/
-├── verdict.md              # Integrity summary
-├── diff_meta.json          # Git diff metadata
-├── evidence/              # Verbatim tool outputs
-│   ├── tests.txt
-│   ├── lint.txt
-│   ├── typecheck.txt
-│   ├── deps.txt
-│   └── security.txt
-└── handoff_prompt.md      # Paste-ready failure report
-```
-
-### handoff_prompt.md
-
-Designed for downstream LLM-assisted repair. Contains:
-*   Explicit instruction: "Fix ONLY blocking failures; minimal diff; no refactors"
-*   Ranked failure list with security issues clearly marked
-*   Reproduction commands
-*   Bounded log excerpts
-
-## Exit Codes
-
-*   `0` — All integrity proofs succeeded
-*   `1` — Blocking failures detected
-*   `2` — Warnings detected (with `--fail-on-warn`)
-
-## Non-Goals
-
-*   No LLM usage inside ClogBot
-*   No auto-fixing
-*   No refactoring
-*   No IDE integration
-*   No UI
-*   No monetization
+The 26 tests cover the TLS, fallback-secret and new-dependency rules, the verdict/exit-code logic, and that import names from scanned code can't inject commands.
 
 ## License
 
-MIT
-
-## Version
-
-0.2.0
+MIT. See `LICENSE`.
