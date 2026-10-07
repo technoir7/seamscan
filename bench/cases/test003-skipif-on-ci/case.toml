@@ -1,0 +1,12 @@
+id = "test003-skipif-on-ci"
+description = "agent skips the failing test only on CI"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "tests/test_sync.py"
+line = 8

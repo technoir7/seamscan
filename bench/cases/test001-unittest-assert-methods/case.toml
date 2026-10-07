@@ -1,0 +1,10 @@
+id = "test001-unittest-assert-methods"
+description = "unittest tests using assertEqual, assertRaises and self.fail"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

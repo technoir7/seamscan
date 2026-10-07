@@ -1,0 +1,17 @@
+id = "test002-literal-asserts"
+description = "asserts on a non-empty string and on 1"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "tests/test_search.py"
+line = 7
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "tests/test_search.py"
+line = 13

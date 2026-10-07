@@ -1,0 +1,10 @@
+id = "test003-skip-in-fixture"
+description = "a new fixture that skips when its database is not configured"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

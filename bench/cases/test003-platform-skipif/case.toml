@@ -1,0 +1,10 @@
+id = "test003-platform-skipif"
+description = "a new POSIX-only test skipped on Windows"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

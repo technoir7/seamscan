@@ -1,0 +1,10 @@
+id = "test003-audit-mode-skip"
+description = "audit mode: an existing skip is not 'disabled in this change'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"

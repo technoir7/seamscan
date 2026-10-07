@@ -1,0 +1,10 @@
+id = "test001-not-a-test-file"
+description = "a test_* function in application code is not a test"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

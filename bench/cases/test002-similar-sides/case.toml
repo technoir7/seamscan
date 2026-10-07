@@ -1,0 +1,10 @@
+id = "test002-similar-sides"
+description = "sides that look alike but differ, and a tuple compared to a tuple"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-002"

@@ -1,0 +1,12 @@
+id = "test001-pytest-class-method"
+description = "method in a pytest Test class whose assertion was dropped"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_coupons.py"
+line = 8

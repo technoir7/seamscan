@@ -1,0 +1,12 @@
+id = "test001-assertion-replaced-by-print"
+description = "agent swapped the failing assertion for a print"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_cart.py"
+line = 4

@@ -1,0 +1,12 @@
+id = "test001-parametrize-no-assert"
+description = "parametrized test that never checks the parsed value"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_dates.py"
+line = 10

@@ -1,0 +1,10 @@
+id = "test001-local-helper-asserts"
+description = "tests that call a same-module helper which holds the assertion"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

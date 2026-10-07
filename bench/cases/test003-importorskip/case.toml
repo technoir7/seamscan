@@ -1,0 +1,10 @@
+id = "test003-importorskip"
+description = "a new test module that needs an optional dependency"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-003"
