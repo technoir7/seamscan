@@ -1,0 +1,10 @@
+id = "code004-weak-password-blocklist"
+description = "password policy rejects a few common passwords"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

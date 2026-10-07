@@ -1,0 +1,10 @@
+id = "code004-masked-password-placeholder"
+description = "settings form keeps the stored password when the mask comes back unchanged"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

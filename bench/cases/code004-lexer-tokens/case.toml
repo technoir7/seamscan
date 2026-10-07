@@ -1,0 +1,10 @@
+id = "code004-lexer-tokens"
+description = "shunting-yard parser compares lexical tokens to operator literals"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

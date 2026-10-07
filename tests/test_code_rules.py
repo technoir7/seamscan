@@ -5,6 +5,7 @@ from seamscan.analysis import analyze
 from seamscan.model import Finding, Severity, SourceFile
 from seamscan.rules.base import Rule
 from seamscan.rules.code import (
+    HARDCODED_CREDENTIAL,
     RULES,
     SWALLOWED_EXCEPTION,
     UNFINISHED_CODE,
@@ -100,3 +101,51 @@ def test_guard_names_match_whole_words_only():
 def test_guard_with_real_logic_or_return_false_is_fine():
     src = "def verify(sig):\n    return False\ndef check(x):\n    return x > 0\n"
     assert run(UNFINISHED_CODE.id, src) == []
+
+
+# ---------------------------------------------------------------- SC-CODE-004
+
+
+def test_literal_is_redacted_in_evidence():
+    src = 'def login(password):\n    return password == "correct-horse-battery"\n'
+    [f] = run(HARDCODED_CREDENTIAL.id, src)
+    assert "correct-horse-battery" not in f.evidence
+    assert "password ==" in f.evidence
+
+
+def test_is_and_bytes_and_from_imported_compare_digest():
+    src = (
+        "from secrets import compare_digest\n"
+        "def a(token):\n"
+        "    return token is 'abc123'\n"
+        "def b(secret):\n"
+        "    return secret != b'k3y'\n"
+        "def c(sig):\n"
+        "    return compare_digest(sig, 'deadbeef')\n"
+    )
+    assert lines(run(HARDCODED_CREDENTIAL.id, src)) == [3, 5, 7]
+
+
+def test_rejection_polarity():
+    src = (
+        "def a(api_key):\n"
+        "    if api_key == 'change-me':\n"
+        "        raise SystemExit('set API_KEY')\n"
+        "def b(api_key):\n"
+        "    if api_key != 'change-me':\n"
+        "        raise PermissionError\n"
+        "def c(api_key):\n"
+        "    if api_key == 'change-me':\n"
+        "        return grant()\n"
+    )
+    assert lines(run(HARDCODED_CREDENTIAL.id, src)) == [5, 8]
+
+
+def test_only_a_loop_variable_named_token_is_exempt():
+    src = (
+        "def parse(tokens, token):\n"
+        "    for t in tokens:\n"
+        "        pass\n"
+        "    return token == 'letmein'\n"
+    )
+    assert lines(run(HARDCODED_CREDENTIAL.id, src)) == [4]

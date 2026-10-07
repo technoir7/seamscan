@@ -7,6 +7,7 @@ import re
 from collections.abc import Iterator
 
 from seamscan.facts.roles import Role, role_of
+from seamscan.facts.secrets import redact
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse.python import (
     FunctionNode,
@@ -89,6 +90,10 @@ def _shipped(ctx: RuleContext) -> Iterator[PyModule]:
 
 def _source_line(source: str, lineno: int) -> str:
     return source.split("\n")[lineno - 1].strip()
+
+
+def _clip(text: str, limit: int = 200) -> str:
+    return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
 # ---------------------------------------------------------------- SC-CODE-002
@@ -361,8 +366,178 @@ def _unfinished_code(ctx: RuleContext) -> Iterator[Finding]:
                 )
 
 
+# ---------------------------------------------------------------- SC-CODE-004
+
+HARDCODED_CREDENTIAL = meta(
+    "SC-CODE-004",
+    "Hardcoded credential comparison",
+    Severity.HIGH,
+    Confidence.HIGH,
+    ("CWE-798",),
+    frozenset({"python"}),
+    "A password, token or key is checked against a literal written into the source.",
+)
+
+_CREDENTIAL_WORDS = frozenset(
+    {"password", "passwd", "pwd", "token", "secret", "pin", "passcode", "apikey"}
+)
+_CREDENTIAL_PAIRS = frozenset({("api", "key"), ("secret", "key")})
+# Literals a credential is legitimately compared with: auth scheme names, and the strings
+# a JS client sends when it has no value.
+_NOT_A_CREDENTIAL = frozenset(
+    {"bearer", "basic", "digest", "token", "jwt", "null", "none", "undefined", "true", "false"}
+)
+_COMPARE_DIGEST = frozenset({"hmac.compare_digest", "secrets.compare_digest"})
+_STOPS = frozenset({"sys.exit", "exit", "quit", "abort", "flask.abort"})
+
+
+def _is_credential_name(name: str) -> bool:
+    """The name ends in a credential noun: `password`, `x_api_key`, `jwt_secret`, but not
+    `token_type` or `password_reset_status`."""
+    words = name_words(name)
+    return bool(words) and (words[-1] in _CREDENTIAL_WORDS or words[-2:] in _CREDENTIAL_PAIRS)
+
+
+def _credential_label(node: ast.expr) -> str | None:
+    """The name a value goes by, if it names a credential: `password`, `user.pin`,
+    `form["password"]`, `headers.get("X-Api-Key")`, or WTForms' `form.password.data`."""
+    label: str | None = None
+    if isinstance(node, ast.Name):
+        label = node.id
+    elif isinstance(node, ast.Attribute):
+        if node.attr in ("data", "value") and isinstance(node.value, ast.Name | ast.Attribute):
+            return _credential_label(node.value)
+        label = node.attr
+    elif isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant):
+        label = node.slice.value if isinstance(node.slice.value, str) else None
+    elif (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "get"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    ):
+        label = node.args[0].value
+    return label if label is not None and _is_credential_name(label) else None
+
+
+def _secret_literal(node: ast.expr) -> str | None:
+    if not isinstance(node, ast.Constant):
+        return None
+    value = node.value
+    if isinstance(value, bytes):
+        value = value.decode("latin-1")
+    if not isinstance(value, str):
+        return None
+    text = value.strip().lower()
+    # `"********"` is a masked display value, not a password.
+    if not any(c.isalnum() for c in text) or text in _NOT_A_CREDENTIAL:
+        return None
+    return value
+
+
+def _stops(module: PyModule, stmt: ast.stmt) -> bool:
+    if isinstance(stmt, ast.Raise):
+        return True
+    return (
+        isinstance(stmt, ast.Expr)
+        and isinstance(stmt.value, ast.Call)
+        and qualified_name(module, stmt.value.func) in _STOPS
+    )
+
+
+def _rejects_literal(module: PyModule, cmp: ast.Compare) -> bool:
+    """`if secret == "change-me": raise ...` and `assert secret != "change-me"` refuse the
+    literal: a placeholder guard or a blocklist, not a credential."""
+    if len(cmp.ops) != 1:
+        return False
+    op = cmp.ops[0]
+    node: ast.AST = cmp
+    parent = module.parents.get(id(node))
+    while isinstance(parent, ast.BoolOp):
+        node, parent = parent, module.parents.get(id(parent))
+    if isinstance(parent, ast.If) and parent.test is node:
+        return isinstance(op, ast.Eq | ast.Is | ast.In) and any(
+            _stops(module, s) for s in parent.body
+        )
+    if isinstance(parent, ast.Assert) and parent.test is node:
+        return isinstance(op, ast.NotEq | ast.IsNot | ast.NotIn)
+    return False
+
+
+def _loop_variable(module: PyModule, node: ast.expr) -> bool:
+    """A loop variable called `token` holds a lexer token, not a credential."""
+    if not isinstance(node, ast.Name):
+        return False
+    scope = enclosing_function(module, node) or module.tree
+    return any(
+        isinstance(n, ast.For | ast.AsyncFor | ast.comprehension)
+        and any(isinstance(t, ast.Name) and t.id == node.id for t in ast.walk(n.target))
+        for n in ast.walk(scope)
+    )
+
+
+def _compared_credential(module: PyModule, cmp: ast.Compare) -> str | None:
+    operands = [cmp.left, *cmp.comparators]
+    for op, left, right in zip(cmp.ops, operands[:-1], operands[1:], strict=True):
+        pairs: list[tuple[ast.expr, list[ast.expr]]] = []
+        if isinstance(op, ast.Eq | ast.NotEq | ast.Is | ast.IsNot):
+            pairs = [(left, [right]), (right, [left])]
+        elif isinstance(op, ast.In | ast.NotIn) and isinstance(
+            right, ast.Tuple | ast.List | ast.Set
+        ):
+            pairs = [(left, right.elts)]
+        for side, literals in pairs:
+            label = _credential_label(side)
+            if (
+                label
+                and any(_secret_literal(lit) is not None for lit in literals)
+                and not _loop_variable(module, side)
+            ):
+                return label
+    return None
+
+
+def _redacted_snippet(module: PyModule, node: ast.expr) -> str:
+    # Redact before clipping, so a long literal can't survive half-cut (spec §6.4).
+    text = ast.get_source_segment(module.source, node) or ""
+    for const in ast.walk(node):
+        if isinstance(const, ast.Constant) and (value := _secret_literal(const)) is not None:
+            segment = ast.get_source_segment(module.source, const)
+            if segment:
+                text = text.replace(segment, f'"{redact(value)}"')
+    return _clip(text)
+
+
+def _hardcoded_credentials(ctx: RuleContext) -> Iterator[Finding]:
+    for module in _shipped(ctx):
+        for node in ast.walk(module.tree):
+            if isinstance(node, ast.Compare) and not _rejects_literal(module, node):
+                label = _compared_credential(module, node)
+                if label:
+                    yield finding(
+                        HARDCODED_CREDENTIAL,
+                        location(module, node),
+                        f"`{label}` is checked against a literal written in the source",
+                        _redacted_snippet(module, node),
+                    )
+            elif (
+                isinstance(node, ast.Call)
+                and qualified_name(module, node.func) in _COMPARE_DIGEST
+                and any(_secret_literal(a) is not None for a in node.args)
+            ):
+                yield finding(
+                    HARDCODED_CREDENTIAL,
+                    location(module, node),
+                    "constant-time comparison against a literal written in the source",
+                    _redacted_snippet(module, node),
+                )
+
+
 RULES: tuple[Rule, ...] = (
     Rule(TLS_DISABLED, _tls_disabled),
     Rule(SWALLOWED_EXCEPTION, _swallowed_exceptions),
     Rule(UNFINISHED_CODE, _unfinished_code),
+    Rule(HARDCODED_CREDENTIAL, _hardcoded_credentials),
 )

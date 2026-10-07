@@ -1,0 +1,10 @@
+id = "code004-assert-not-placeholder"
+description = "import-time assert that the token was changed from the template value"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"

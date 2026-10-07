@@ -1,0 +1,12 @@
+id = "code004-fastapi-header-not-equal"
+description = "internal endpoint accepts exactly one hardcoded API key"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "app/internal.py"
+line = 8
