@@ -1,0 +1,10 @@
+id = "code011-yaml-custom-safe-loader"
+description = "yaml.load with a SafeLoader subclass and the getattr CSafeLoader idiom"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-011"
