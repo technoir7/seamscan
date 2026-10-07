@@ -63,3 +63,9 @@ def test_enclosing_function():
     call = first_call_arg(m, "execute")
     fn = enclosing_function(m, call)
     assert isinstance(fn, ast.FunctionDef) and fn.name == "inner"
+
+
+def test_a_leading_byte_order_mark_still_parses():
+    m = parse_python(SourceFile("m.py", "\ufeffimport os\n"))
+    assert isinstance(m, PyModule)
+    assert m.aliases["os"] == "os"

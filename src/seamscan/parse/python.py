@@ -48,13 +48,16 @@ def _parent_map(tree: ast.Module) -> dict[int, ast.AST]:
 
 
 def parse_python(file: SourceFile) -> PyModule | ParseFailure:
+    # A leading UTF-8 BOM is legal in a .py file, but compile() rejects it once the
+    # bytes are decoded to str.
+    text = file.text.removeprefix("\ufeff")
     try:
-        tree = ast.parse(file.text, filename=file.path)
+        tree = ast.parse(text, filename=file.path)
     except SyntaxError as exc:
         return ParseFailure(file.path, exc.lineno or 1, f"SyntaxError: {exc.msg}")
     except ValueError as exc:  # e.g. source containing NUL bytes
         return ParseFailure(file.path, 1, f"ValueError: {exc}")
-    return PyModule(file.path, file.text, tree, _aliases(tree), _parent_map(tree))
+    return PyModule(file.path, text, tree, _aliases(tree), _parent_map(tree))
 
 
 def qualified_name(module: PyModule, node: ast.expr) -> str | None:
