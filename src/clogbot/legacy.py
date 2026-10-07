@@ -16,7 +16,7 @@ import sys
 from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import typer
 
@@ -78,6 +78,28 @@ class StackInfo:
     has_npm_test: bool = False
     has_npm_lint: bool = False
     has_npm_typecheck: bool = False
+
+
+@dataclass(frozen=True)
+class Verdict:
+    """The single decision that the terminal, verdict.md and the exit code all report."""
+
+    blocking: bool
+    exit_code: int
+    headline: str
+
+
+def compute_verdict(
+    checks: List[CheckResult], warnings: List[HeuristicWarning], fail_on_warn: bool
+) -> Verdict:
+    """Decide the run's outcome from every check, including import validation."""
+    if any(not c.passed for c in checks):
+        return Verdict(blocking=True, exit_code=1, headline="BLOCKING FAILURES DETECTED")
+    if warnings and fail_on_warn:
+        return Verdict(blocking=True, exit_code=2, headline="WARNINGS DETECTED (--fail-on-warn)")
+    if warnings:
+        return Verdict(blocking=False, exit_code=0, headline="PASSED WITH WARNINGS (not blocking)")
+    return Verdict(blocking=False, exit_code=0, headline="ALL CHECKS PASSED")
 
 
 @dataclass
@@ -357,60 +379,47 @@ def extract_node_imports_from_diff(diff_content: str) -> List[str]:
     return list(imports)
 
 
-def validate_python_imports(
-    imports: List[str], base_path: Path
+def _validate_imports(
+    imports: List[str], base_path: Path, command_for: Callable[[str], List[str]], label: str
 ) -> List[CheckResult]:
-    """Validate that Python imports can be resolved."""
+    """Try to resolve each import; report failures, including timeouts and a missing runtime."""
     checks = []
     for module in imports:
-        result = subprocess.run(
-            [sys.executable, "-c", f"import {module}"],
-            capture_output=True,
-            text=True,
-            cwd=base_path,
+        check = run_check(
+            command_for(module),
+            f"{label} Import Validation ({module})",
+            Severity.SUSPICIOUS_IMPORT,
+            base_path,
             timeout=5,
         )
-        if result.returncode != 0:
-            checks.append(
-                CheckResult(
-                    name=f"Python Import Validation ({module})",
-                    passed=False,
-                    severity=Severity.SUSPICIOUS_IMPORT,
-                    stdout=result.stdout,
-                    stderr=result.stderr,
-                    exit_code=result.returncode,
-                    command=f"python -c 'import {module}'",
-                    error_message=f"Suspicious import: '{module}' cannot be resolved (possible hallucinated library)",
-                )
+        if not check.passed:
+            check.error_message = check.error_message or (
+                f"Suspicious import: '{module}' cannot be resolved (possible hallucinated library)"
             )
+            checks.append(check)
     return checks
+
+
+_PY_IMPORT_PROBE = "import importlib, sys; importlib.import_module(sys.argv[1])"
+
+
+def validate_python_imports(imports: List[str], base_path: Path) -> List[CheckResult]:
+    """Validate that Python imports can be resolved."""
+    # The module name comes from the scanned code, so it is passed as an
+    # argument, never spliced into the program text.
+    return _validate_imports(
+        imports,
+        base_path,
+        lambda m: [sys.executable, "-c", _PY_IMPORT_PROBE, m],
+        "Python",
+    )
 
 
 def validate_node_imports(imports: List[str], base_path: Path) -> List[CheckResult]:
     """Validate that Node imports can be resolved."""
-    checks = []
-    for module in imports:
-        result = subprocess.run(
-            ["node", "-e", f"require('{module}')"],
-            capture_output=True,
-            text=True,
-            cwd=base_path,
-            timeout=5,
-        )
-        if result.returncode != 0:
-            checks.append(
-                CheckResult(
-                    name=f"Node Import Validation ({module})",
-                    passed=False,
-                    severity=Severity.SUSPICIOUS_IMPORT,
-                    stdout=result.stdout,
-                    stderr=result.stderr,
-                    exit_code=result.returncode,
-                    command=f"node -e \"require('{module}')\"",
-                    error_message=f"Suspicious import: '{module}' cannot be resolved (possible hallucinated library)",
-                )
-            )
-    return checks
+    return _validate_imports(
+        imports, base_path, lambda m: ["node", "-e", "require(process.argv[1])", m], "Node"
+    )
 
 
 # =============================================================================
@@ -1067,20 +1076,18 @@ def detect_heuristic_warnings(
 def generate_verdict_md(
     checks: List[CheckResult],
     warnings: List[HeuristicWarning],
+    verdict: Verdict,
     output_dir: Path,
 ) -> None:
     """Generate verdict.md with ranked failures."""
     failures = [c for c in checks if not c.passed]
     failures.sort(key=lambda x: x.severity)
 
-    lines = ["# ClogBot Verdict\n"]
+    lines = ["# ClogBot Verdict\n", f"## {verdict.headline}\n"]
 
     if not failures and not warnings:
-        lines.append("## ✅ All Checks Passed\n")
         lines.append("No blocking failures detected.\n")
     else:
-        lines.append("## ❌ Failures Detected\n")
-
         # Group by severity
         for severity in Severity:
             severity_failures = [f for f in failures if f.severity == severity]
@@ -1303,19 +1310,13 @@ def check(
         python_imports = extract_python_imports_from_diff(diff_content)
         if python_imports:
             typer.echo(f"  Checking {len(python_imports)} Python imports...")
-            try:
-                import_checks.extend(validate_python_imports(python_imports, base_path))
-            except Exception:
-                pass  # Don't crash on validation errors
+            import_checks.extend(validate_python_imports(python_imports, base_path))
     if stack.has_node and diff_content:
         node_imports = extract_node_imports_from_diff(diff_content)
         if node_imports:
             typer.echo(f"  Checking {len(node_imports)} Node imports...")
-            try:
-                import_checks.extend(validate_node_imports(node_imports, base_path))
-            except Exception:
-                pass  # Don't crash on validation errors
-    
+            import_checks.extend(validate_node_imports(node_imports, base_path))
+
     all_checks.extend(import_checks)
     suspicious_import_count = len([c for c in import_checks if not c.passed])
     if suspicious_import_count > 0:
@@ -1334,7 +1335,8 @@ def check(
     typer.echo(f"📝 Generating output in {out}...")
     out.mkdir(parents=True, exist_ok=True)
 
-    generate_verdict_md(all_checks, warnings, out)
+    verdict = compute_verdict(all_checks, warnings, fail_on_warn)
+    generate_verdict_md(all_checks, warnings, verdict, out)
     generate_diff_meta_json(diff_meta, out)
     generate_evidence_files(all_checks, out)
     generate_handoff_prompt(all_checks, warnings, diff_meta, out)
@@ -1347,18 +1349,8 @@ def check(
     typer.echo("")
 
     # 6. Exit code
-    has_failures = failed_count > 0
-    has_warnings = len(warnings) > 0
-
-    if has_failures:
-        typer.echo("❌ VERDICT: BLOCKING FAILURES DETECTED", err=True)
-        raise typer.Exit(code=1)
-    elif has_warnings and fail_on_warn:
-        typer.echo("⚠️  VERDICT: WARNINGS DETECTED (--fail-on-warn)", err=True)
-        raise typer.Exit(code=2)
-    else:
-        typer.echo("✅ VERDICT: ALL CHECKS PASSED")
-        raise typer.Exit(code=0)
+    typer.echo(f"VERDICT: {verdict.headline}", err=verdict.blocking)
+    raise typer.Exit(code=verdict.exit_code)
 
 
 def main() -> None:
