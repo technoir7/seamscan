@@ -1,0 +1,10 @@
+id = "web002-ts-relative-url-own-origin"
+description = "Route calls its own internal API through new URL('/api/...', req.url); the path is fixed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

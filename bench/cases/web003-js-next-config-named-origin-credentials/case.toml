@@ -1,0 +1,10 @@
+id = "web003-js-next-config-named-origin-credentials"
+description = "next.config.js sends Allow-Credentials with one named origin, not a wildcard"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

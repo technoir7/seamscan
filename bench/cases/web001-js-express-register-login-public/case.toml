@@ -1,0 +1,10 @@
+id = "web001-js-express-register-login-public"
+description = "Register and login routes create users and sessions before anyone is logged in, by design"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"

@@ -1,0 +1,12 @@
+id = "web001-ts-auth-profile-update-no-session"
+description = "Route under app/api/auth/ updates any profile by id; 'auth' in the path is not a check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/api/auth/profile/route.ts"
+line = 6

@@ -1,0 +1,10 @@
+id = "web002-tsx-vite-component-fetch"
+description = "Vite React component fetches a URL from the page's query string; that runs in the browser"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-002"

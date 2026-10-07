@@ -10,3 +10,8 @@ source = "original"
 rule = "SC-CODE-009"
 path = "app/routes/admin_users.py"
 line = 17
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/routes/admin_users.py"
+line = 19

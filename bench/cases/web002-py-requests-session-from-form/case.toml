@@ -1,0 +1,12 @@
+id = "web002-py-requests-session-from-form"
+description = "Flask view posts to a webhook URL from the form with a shared requests.Session"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "integrations/views.py"
+line = 12

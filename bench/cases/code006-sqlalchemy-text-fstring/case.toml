@@ -10,3 +10,8 @@ source = "original"
 rule = "SC-CODE-006"
 path = "app/api/accounts.py"
 line = 13
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/api/accounts.py"
+line = 12

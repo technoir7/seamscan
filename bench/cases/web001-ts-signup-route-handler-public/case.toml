@@ -1,0 +1,10 @@
+id = "web001-ts-signup-route-handler-public"
+description = "Next.js sign-up route handler creates the user row; it can't require a session"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-001"
