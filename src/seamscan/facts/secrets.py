@@ -100,4 +100,8 @@ def redact(value: str) -> str:
     rest = value[len(prefix) :]
     if len(rest) <= 12:
         return prefix + "…"
-    return f"{prefix}{rest[:4]}…{rest[-5:]}"
+    # Show at most a quarter of the random part, so short values (an AWS key id is 16
+    # characters) stay recognizable without giving away most of the value.
+    head = min(4, len(rest) // 8)
+    tail = min(5, len(rest) // 8)
+    return f"{prefix}{rest[:head]}…{rest[-tail:]}"

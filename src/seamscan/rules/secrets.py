@@ -226,18 +226,39 @@ def _is_placeholder(value: str) -> bool:
     )
 
 
+# `scheme://user:password@host` or Redis-style `scheme://:password@host`.
+_URL_CREDENTIALS = re.compile(r"://[^/\s@:]*:[^/\s@]+@")
+
+
+def _sensitive(key: str, value: str) -> bool:
+    # Next.js, Vite and CRA projects commit a .env of public build settings on purpose;
+    # the risk is a value someone could log in or pay with.
+    return (
+        _names_a_secret(key)
+        or bool(_URL_CREDENTIALS.search(value))
+        or any(m.kind == "secret" for m in find_secrets(value))
+    )
+
+
 def _committed_env_files(ctx: RuleContext) -> Iterator[Finding]:
     for file in ctx.files:
         if not _holds_real_values(file.path):
             continue
-        real = next((e for e in parse_env(file.text) if not _is_placeholder(e.value)), None)
+        real = next(
+            (
+                e
+                for e in parse_env(file.text)
+                if not _is_placeholder(e.value) and _sensitive(e.key, e.value)
+            ),
+            None,
+        )
         if real is None:
             continue
         end_line, end_col = _offset_position(real.line, real.col, real.value, len(real.value))
         yield finding(
             ENV_FILE_COMMITTED,
             Location(file.path, real.line, 1, end_line, end_col),
-            f"`{_file_name(file.path)}` is in the repository with real values "
+            f"`{_file_name(file.path)}` is in the repository with real credentials "
             f"(first: `{real.key}`); ignore it in git and commit a `.env.example` instead",
             f"{real.key}=…",
         )

@@ -106,5 +106,16 @@ def test_env_file_names():
         ".env.template",
         ".envrc",
     ]
-    found = run(ENV_FILE_COMMITTED.id, {n: "K=v\n" for n in names})
+    found = run(ENV_FILE_COMMITTED.id, {n: "DB_PASSWORD=hunter2\n" for n in names})
     assert {f.location.path for f in found} == set(names[:5])
+
+
+def test_env_file_with_only_public_settings_is_not_reported():
+    found = run(ENV_FILE_COMMITTED.id, {".env": "VITE_API_URL=https://api.acme.dev\nPORT=3000\n"})
+    assert not found
+
+
+def test_env_file_reported_at_its_first_sensitive_value():
+    text = "NODE_ENV=production\nAPP_NAME=acme\nREDIS_URL=redis://:s3cret@cache:6379/0\n"
+    (f,) = run(ENV_FILE_COMMITTED.id, {".env": text})
+    assert f.location.start_line == 3

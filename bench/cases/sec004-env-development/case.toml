@@ -9,4 +9,4 @@ source = "original"
 [[expected]]
 rule = "SC-SEC-004"
 path = ".env.development"
-line = 1
+line = 2

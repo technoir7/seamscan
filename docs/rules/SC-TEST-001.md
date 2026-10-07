@@ -88,6 +88,8 @@ new behavior rather than nothing.
   (`assert_*`, `check_*`, `expect_*`, `verify_*`). A helper called `run_case` in
   `tests/helpers.py` that asserts looks like no assertion (false positive).
 - Same-module helpers are followed one level deep only.
+- The name conventions are matched on any call, so a test whose only call is
+  `subprocess.check_output(...)` counts as asserting (false negative).
 - An assertion anywhere in the body counts, including one in a branch that never runs
   or in a nested function that is never called (false negative).
 - A test whose only assertion is vacuous (`assert True`) is SC-TEST-002's finding, not

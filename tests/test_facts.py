@@ -51,3 +51,9 @@ def test_redaction_never_returns_the_value():
         r = redact(value)
         assert value not in r and "…" in r
     assert redact(FAKES["FAKE_STRIPE_LIVE"]).startswith("sk_live_51Hx")
+
+
+def test_short_values_reveal_little():
+    r = redact(FAKES["FAKE_AWS_KEY_ID"])  # AKIA + 16 characters
+    shown = r.removeprefix("AKIA").replace("…", "")
+    assert len(shown) <= 4
