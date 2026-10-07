@@ -7,7 +7,7 @@ name = "seamscan"
 version = "0.2.2"
 description = "Static checks for the security and correctness failures AI coding tools ship"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "Aaron Fung"}
@@ -17,11 +17,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
     "typer>=0.9.0",
@@ -31,6 +29,8 @@ dependencies = [
 dev = [
     "ruff>=0.1.0",
     "pytest>=7.0.0",
+    "pyright>=1.1.400",
+    "jsonschema>=4.0",
 ]
 
 [project.scripts]
@@ -38,8 +38,24 @@ seamscan = "seamscan.legacy:main"
 
 [tool.ruff]
 line-length = 100
-target-version = "py38"
+target-version = "py311"
+# legacy.py is the frozen v0.2 engine, kept only until the rewrite replaces it
+# (spec §14, end of M2); it is not maintained to current lint rules.
+extend-exclude = [
+    "src/seamscan/legacy.py",
+    "bench/cases",  # deliberately flawed sample code
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP"]
 ignore = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]  # makes the bench/ package importable in tests
+
+[tool.pyright]
+include = ["src/seamscan", "bench"]
+exclude = ["src/seamscan/legacy.py", "bench/cases"]
+typeCheckingMode = "strict"
+pythonVersion = "3.11"
