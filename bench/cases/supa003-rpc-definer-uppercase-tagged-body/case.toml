@@ -1,0 +1,12 @@
+id = "supa003-rpc-definer-uppercase-tagged-body"
+description = "Dashboard stats RPC: CREATE OR REPLACE FUNCTION ... SECURITY DEFINER AS $function$, called from the client"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260209120000_team_stats.sql"
+line = 25

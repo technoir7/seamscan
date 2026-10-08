@@ -1,0 +1,12 @@
+id = "supa001-audit-log-no-client-reference"
+description = "audit_log is written by a trigger and never queried from the browser, but still has no RLS"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260125113000_audit_log.sql"
+line = 1

@@ -1,0 +1,17 @@
+id = "supa004-disabled-again-after-reenable"
+description = "RLS is disabled, re-enabled, then disabled again; only the last DISABLE still stands"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260101090000_leads.sql"
+line = 1
+
+[[expected]]
+rule = "SC-SUPA-004"
+path = "supabase/migrations/20260215090000_landing_form.sql"
+line = 2

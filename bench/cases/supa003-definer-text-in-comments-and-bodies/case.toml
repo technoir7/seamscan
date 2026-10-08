@@ -1,0 +1,10 @@
+id = "supa003-definer-text-in-comments-and-bodies"
+description = "SECURITY DEFINER only appears in comments, a COMMENT string and a function body; a definer function is replaced with a safe one"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

@@ -1,0 +1,17 @@
+id = "supa003-invoker-explicitly-off-and-definer-procedure"
+description = "A view with security_invoker = off over an RLS table, and a SECURITY DEFINER procedure without search_path"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260219120000_reports.sql"
+line = 15
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260219120000_reports.sql"
+line = 18

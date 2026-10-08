@@ -1,0 +1,10 @@
+id = "supa001-private-schema-table"
+description = "Webhook events live in a private schema without RLS; only the public subscriptions table is exposed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

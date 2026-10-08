@@ -1,0 +1,12 @@
+id = "supa001-scan-new-client-query-old-table"
+description = "Scan: a new widget inserts into feedback, which an unchanged older migration created without RLS"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260105120000_projects_and_feedback.sql"
+line = 15

@@ -1,0 +1,12 @@
+id = "supa001-uppercase-unquoted-bookings"
+description = "Booking form inserts into a table created as Public.Bookings (folds to public.bookings) without RLS"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260302101500_bookings.sql"
+line = 2

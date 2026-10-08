@@ -1,0 +1,10 @@
+id = "supa004-disable-only-in-comments-and-strings"
+description = "DISABLE ROW LEVEL SECURITY appears only in comments and a COMMENT ON string"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-004"

@@ -1,0 +1,10 @@
+id = "supa004-private-schema-queue"
+description = "RLS disabled on a queue table in a private schema the API does not expose"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-004"

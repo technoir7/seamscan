@@ -1,0 +1,10 @@
+id = "supa003-definer-with-search-path"
+description = "SECURITY DEFINER functions that pin search_path: an empty one and an explicit list"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

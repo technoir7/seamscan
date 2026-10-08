@@ -1,0 +1,10 @@
+id = "supa003-search-path-fixed-by-alter-function"
+description = "The linter's suggested fix: a later migration runs ALTER FUNCTION ... SET search_path = ''"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

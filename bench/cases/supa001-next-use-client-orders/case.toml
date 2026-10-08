@@ -1,0 +1,12 @@
+id = "supa001-next-use-client-orders"
+description = "Next.js dashboard: orders table has no RLS and a use-client page lists it through the browser client"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260203120000_init.sql"
+line = 8

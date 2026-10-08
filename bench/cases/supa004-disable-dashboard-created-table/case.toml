@@ -1,0 +1,12 @@
+id = "supa004-disable-dashboard-created-table"
+description = "RLS disabled on a table created in the dashboard, so no migration ever created it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-004"
+path = "supabase/migrations/20260214080000_newsletter.sql"
+line = 2

@@ -1,0 +1,10 @@
+id = "supa001-api-roles-revoked"
+description = "job_queue has no RLS but anon and authenticated lose all privileges on it; only the service role uses it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

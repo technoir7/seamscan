@@ -1,0 +1,13 @@
+id = "supa004-reenabled-in-later-migration"
+description = "A disable from early prototyping is undone by a later migration"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-004"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

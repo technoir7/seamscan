@@ -1,0 +1,10 @@
+id = "supa002-restrictive-mfa-policy"
+description = "A restrictive MFA policy for all commands plus owner policies; nothing grants rows to everyone"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

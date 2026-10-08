@@ -1,0 +1,12 @@
+id = "supa001-scan-component-switches-to-direct-query"
+description = "Scan: a use-client component stops calling the API route and reads invoices directly; the migration is unchanged"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260301000000_invoices.sql"
+line = 1

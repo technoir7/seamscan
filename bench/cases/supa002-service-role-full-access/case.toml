@@ -1,0 +1,10 @@
+id = "supa002-service-role-full-access"
+description = "USING (true) WITH CHECK (true) granted only to service_role, next to owner policies"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

@@ -1,0 +1,10 @@
+id = "supa002-boolean-column-conditions"
+description = "Policies compare boolean columns to true and mention USING (true) in comments, but all have row conditions"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

@@ -1,0 +1,12 @@
+id = "supa001-lovable-messages-no-rls-vite"
+description = "Lovable chat app: messages table never gets RLS and a React component reads it with the anon key"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260114093212_3f9c2b1e-8d4a-4c55-9f0e-2a7b6c1d4e90.sql"
+line = 22

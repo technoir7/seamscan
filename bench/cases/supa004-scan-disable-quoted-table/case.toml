@@ -1,0 +1,12 @@
+id = "supa004-scan-disable-quoted-table"
+description = "Scan: a new migration disables RLS on the quoted mixed-case table \"public\".\"Profiles\""
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-004"
+path = "supabase/migrations/20260303093000_onboarding_wizard.sql"
+line = 2

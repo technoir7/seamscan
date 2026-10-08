@@ -1,0 +1,17 @@
+id = "supa004-disable-among-other-alter-actions"
+description = "DISABLE ROW LEVEL SECURITY hides in a multi-action ALTER TABLE that also adds a column"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260206120000_events.sql"
+line = 1
+
+[[expected]]
+rule = "SC-SUPA-004"
+path = "supabase/migrations/20260227133000_events_venue.sql"
+line = 1

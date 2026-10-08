@@ -1,0 +1,10 @@
+id = "supa001-alter-only-if-exists-mixed-case"
+description = "RLS enabled with ALTER TABLE IF EXISTS ONLY in mixed case, and on a quoted mixed-case table name"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

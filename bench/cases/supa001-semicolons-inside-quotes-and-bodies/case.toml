@@ -1,0 +1,10 @@
+id = "supa001-semicolons-inside-quotes-and-bodies"
+description = "Defaults, E-strings, comments and a dollar-quoted body all contain semicolons and table DDL text"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

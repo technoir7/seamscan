@@ -1,0 +1,10 @@
+id = "supa001-prototype-table-dropped"
+description = "An early notes table without RLS is dropped later and replaced by documents, which has RLS"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

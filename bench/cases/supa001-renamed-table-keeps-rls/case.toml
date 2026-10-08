@@ -1,0 +1,10 @@
+id = "supa001-renamed-table-keeps-rls"
+description = "task_items gets RLS and is then renamed to tasks; the client queries tasks"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

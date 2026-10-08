@@ -1,0 +1,12 @@
+id = "supa003-view-before-table-gets-rls"
+description = "A public view over messages is created first; a later migration turns RLS on for messages, which the view bypasses"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260112100000_messages.sql"
+line = 9

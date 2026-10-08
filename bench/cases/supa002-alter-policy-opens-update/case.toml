@@ -1,0 +1,12 @@
+id = "supa002-alter-policy-opens-update"
+description = "A later migration loosens the owner update policy with ALTER POLICY ... USING (true) WITH CHECK (true)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260304120000_fix_profile_save.sql"
+line = 2
