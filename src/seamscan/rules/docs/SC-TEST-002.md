@@ -100,13 +100,11 @@ expect(result).toBeDefined();
 Not flagged:
 
 ```python
-assert (
-    response.status_code == 200
-), "health check failed"                       # parenthesized condition, not a tuple
-assert render(data) == render(data)            # determinism check
-assert user.email == user.email.lower()        # sides differ
+assert response.status_code == 200, "health check failed"  # parenthesized condition, not a tuple
+assert render(data) == render(data)  # determinism check
+assert user.email == user.email.lower()  # sides differ
 assert (user.email, user.active) == ("ada@example.com", True)
-assert False, "should have raised"             # marks unreachable code
+assert False, "should have raised"  # marks unreachable code
 ```
 
 ```ts

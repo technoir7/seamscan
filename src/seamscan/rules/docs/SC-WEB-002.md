@@ -80,12 +80,14 @@ const res = await fetch(`${target}/health`);           // target = c.req.query("
 ```python
 upstream = requests.get(request.args.get("url"), timeout=10)
 
+
 @app.get("/preview")
 async def link_preview(url: str):
     async with httpx.AsyncClient() as client:
         resp = await client.get(url)
 
-r = requests.get(f"http://{host}:{port}/status")       # host from the JSON body
+
+r = requests.get(f"http://{host}:{port}/status")  # host from the JSON body
 ```
 
 Not flagged:
@@ -99,10 +101,12 @@ await fetch(`${process.env.SEARCH_URL}/v1/search?q=${encodeURIComponent(q)}`);
 ```
 
 ```python
-if parsed.hostname not in ALLOWED_HOSTS: abort(400)
+if parsed.hostname not in ALLOWED_HOSTS:
+    abort(400)
 requests.get(src, timeout=5)
 requests.get("https://api.openweathermap.org/data/2.5/weather", params={"q": city})
-for url in sys.argv[1:]: requests.head(url)                 # not request input
+for url in sys.argv[1:]:
+    requests.head(url)  # not request input
 ```
 
 ## How to fix

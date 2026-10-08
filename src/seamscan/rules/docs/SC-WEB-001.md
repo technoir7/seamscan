@@ -130,10 +130,11 @@ export async function PATCH(req: Request, { params }) {
 ```python
 @router.post("/", status_code=201)
 def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
-    db.add(models.Item(**item.model_dump()))        # Depends(get_db) is not auth
+    db.add(models.Item(**item.model_dump()))  # Depends(get_db) is not auth
     db.commit()
 
-def edit_profile(request, username):                 # no @login_required
+
+def edit_profile(request, username):  # no @login_required
     profile = get_object_or_404(Profile, user__username=username)
     if request.method == "POST":
         profile.bio = request.POST.get("bio", "")
@@ -156,8 +157,11 @@ await supabase.from("analytics_events").insert({ path });           // public be
 ```
 
 ```python
-def create_note(note: NoteCreate, db: Session = Depends(get_db),
-                user: User = Depends(get_current_user)): ...
+def create_note(
+    note: NoteCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+): ...
+
+
 class BookmarkView(LoginRequiredMixin, View): ...
 ```
 

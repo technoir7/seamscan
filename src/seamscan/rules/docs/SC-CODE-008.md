@@ -80,7 +80,7 @@ Not flagged:
 
 ```python
 ast.literal_eval(raw)
-exec(STARTUP, namespace)          # STARTUP is a module-level string literal
+exec(STARTUP, namespace)  # STARTUP is a module-level string literal
 eval("2 * math.pi", namespace)
 re.compile(user_pattern)
 ```

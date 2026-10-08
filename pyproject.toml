@@ -39,6 +39,10 @@ dev = [
 [project.scripts]
 seamscan = "seamscan.cli:main"
 
+[tool.setuptools.package-data]
+# Rule pages ship in the wheel so `seamscan explain` works offline after install.
+"seamscan.rules" = ["docs/*.md"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

@@ -18,7 +18,7 @@ from seamscan.model import (
 from seamscan.parse.javascript import JsModule
 from seamscan.parse.python import PyModule
 
-DOCS_BASE = "https://github.com/technoir7/seamscan/blob/main/docs/rules"
+DOCS_BASE = "https://github.com/technoir7/seamscan/blob/main/src/seamscan/rules/docs"
 
 
 @dataclass(frozen=True)

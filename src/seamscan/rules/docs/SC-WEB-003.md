@@ -60,10 +60,15 @@ app.run(host="0.0.0.0", port=5000, debug=True)
 if __name__ == "__main__":
     app.run(debug=True)
 
-DEBUG = True        # mysite/settings.py, or config/settings/production.py
+DEBUG = True  # mysite/settings.py, or config/settings/production.py
 
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-                   allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 ```
 
 ```ts
@@ -82,10 +87,11 @@ Not flagged:
 if __name__ == "__main__" and os.environ.get("FLASK_ENV") == "development":
     app.run(debug=True)
 app.run(debug=os.environ.get("FLASK_DEBUG") == "1")
-DEBUG = True        # config/settings/dev.py
+DEBUG = True  # config/settings/dev.py
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
-app.add_middleware(CORSMiddleware, allow_origins=["https://app.example.com"],
-                   allow_credentials=True)
+app.add_middleware(
+    CORSMiddleware, allow_origins=["https://app.example.com"], allow_credentials=True
+)
 ```
 
 ```ts

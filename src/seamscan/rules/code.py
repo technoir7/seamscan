@@ -304,7 +304,7 @@ _BROAD_EXCEPTIONS = frozenset(
 
 # A swallowed error around one of these means a write, payment or login silently didn't
 # happen, so the finding is raised to HIGH. The list is short and explicit on purpose;
-# docs/rules/SC-CODE-002.md says what it covers.
+# rules/docs/SC-CODE-002.md says what it covers.
 _WRITE_METHODS = frozenset(
     {
         "commit",
@@ -423,7 +423,7 @@ def _swallowed_exceptions_python(ctx: RuleContext) -> Iterator[Finding]:
 # A catch that only writes to the console counts as logging, as `logger.warning` does in
 # Python, except around a write, payment or auth call, where the caller still carries on
 # as if it worked. Flagging every console-only catch would multiply the findings tenfold
-# on real AI-built apps; docs/rules/SC-CODE-002.md has the measurement.
+# on real AI-built apps; rules/docs/SC-CODE-002.md has the measurement.
 _CONSOLE = frozenset(
     {
         "console.log",
@@ -437,7 +437,7 @@ _CONSOLE = frozenset(
 
 _SILENT, _LOGGED = "silent", "logged"
 
-# The explicit HIGH list for TS/JS; docs/rules/SC-CODE-002.md says what it covers.
+# The explicit HIGH list for TS/JS; rules/docs/SC-CODE-002.md says what it covers.
 _JS_WRITE_METHODS = frozenset(
     {
         "insert",
@@ -731,7 +731,7 @@ def _swallowed_exceptions_js(module: JsModule) -> Iterator[Finding]:
             # `audio.play().catch(() => {})`, `prefetch().catch(() => {})`: writing a
             # no-op handler on a promise is an explicit choice, and it's almost always a
             # deliberate fire-and-forget; only a write, payment or auth call makes it a
-            # finding (docs/rules/SC-CODE-002.md).
+            # finding (rules/docs/SC-CODE-002.md).
             continue
         found = _swallow_finding(loc, evidence, effect, sensitive)
         if found is not None:
