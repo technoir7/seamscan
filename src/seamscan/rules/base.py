@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from seamscan.facts.project import ProjectModel, build_project
 from seamscan.model import (
     ChangeSet,
     Confidence,
@@ -26,6 +27,9 @@ class RuleContext:
     js: tuple[JsModule, ...] = ()  # every parsed TS/TSX/JS/JSX file (see parse.javascript)
     files: tuple[SourceFile, ...] = ()  # every analyzed file, any type, sorted by path
     change: ChangeSet | None = None  # set in scan mode; rules about "this change" need it
+    # Whole-project facts (packages, file roles, table references, .env values). In scan
+    # mode they cover every file, not just the changed ones (ADR-002).
+    project: ProjectModel = field(default_factory=lambda: build_project(()))
 
 
 @dataclass(frozen=True)

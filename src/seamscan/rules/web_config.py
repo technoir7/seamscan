@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterator
 from typing import cast
 
-from seamscan.facts.roles import Role, js_role, role_of
+from seamscan.facts.roles import Role, role_of
 from seamscan.model import Confidence, Finding, Location, Severity, SourceFile
 from seamscan.parse import javascript as js
 from seamscan.parse.javascript import JsNode
@@ -324,7 +324,7 @@ def _permissive_config(ctx: RuleContext) -> Iterator[Finding]:
         yield from _django_debug(module)
         yield from _cors_middleware(module)
     for jsm in ctx.js:
-        role = js_role(jsm)
+        role = ctx.project.js_role(jsm)
         if role is Role.TEST:
             continue
         yield from _cors_calls(jsm)

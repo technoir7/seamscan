@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
+from seamscan.facts.project import build_project
 from seamscan.model import ChangeSet, Finding, Location, SourceFile, with_fingerprints
 from seamscan.parse.javascript import JsModule, js_dialect, parse_js
 from seamscan.parse.python import ParseFailure, PyModule, parse_python
@@ -90,12 +91,21 @@ def analyze(
     files: Iterable[SourceFile],
     change: ChangeSet | None = None,
     rules: Sequence[Rule] = RULES,
+    context: Iterable[SourceFile] = (),
 ) -> Analysis:
-    """Run every rule over the files. With a ChangeSet, keep only findings the change touches."""
+    """Run every rule over the files. With a ChangeSet, keep only findings the change touches.
+
+    `context` holds files that inform project facts without being analyzed themselves: in
+    scan mode, the unchanged rest of the repository (ADR-002).
+    """
     ordered = tuple(sorted(files, key=lambda f: f.path))
+    analyzed = {f.path for f in ordered}
+    project = build_project([*ordered, *(f for f in context if f.path not in analyzed)])
     parsed = _parse(ordered)
     findings = parsed.failures
-    ctx = RuleContext(python=parsed.python, js=parsed.js, files=ordered, change=change)
+    ctx = RuleContext(
+        python=parsed.python, js=parsed.js, files=ordered, change=change, project=project
+    )
     for rule in rules:
         findings.extend(_run(rule, ctx))
     applied = apply_suppressions(findings, {f.path: f.text for f in ordered})

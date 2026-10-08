@@ -10,7 +10,7 @@ import ast
 import re
 from collections.abc import Iterator
 
-from seamscan.facts.roles import Role, js_role, role_of
+from seamscan.facts.roles import Role, role_of
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse.javascript import JsModule, JsNode
@@ -45,7 +45,7 @@ def _js_calls(ctx: RuleContext) -> Iterator[tuple[JsModule, Role, JsNode, str]]:
     Tagged templates (sql`...`, Prisma.sql`...`) are left out: the tag receives the
     values separately from the text, which is the safe form for every sink here."""
     for module in ctx.js:
-        role = js_role(module)
+        role = ctx.project.js_role(module)
         if role is Role.TEST:
             continue
         found = js.captures(module, "(call_expression) @c (new_expression) @c")
@@ -884,7 +884,7 @@ def _js_dom_html(module: JsModule) -> Iterator[tuple[JsNode, JsNode, str]]:
 
 def _js_html_injected(ctx: RuleContext) -> Iterator[Finding]:
     for module in ctx.js:
-        role = js_role(module)
+        role = ctx.project.js_role(module)
         if role is Role.TEST:
             continue
         safe = _js_html_safe(module)

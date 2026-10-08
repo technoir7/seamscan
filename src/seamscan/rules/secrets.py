@@ -10,7 +10,8 @@ import ast
 import re
 from collections.abc import Iterator
 
-from seamscan.facts.roles import Role, js_role, role_of
+from seamscan.facts.project import ProjectModel
+from seamscan.facts.roles import Role, role_of
 from seamscan.facts.secrets import SecretMatch, find_secrets, redact
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
@@ -117,8 +118,8 @@ def _literal_span(module: PyModule, node: ast.Constant, m: SecretMatch) -> Locat
     return _span(module.path, node.lineno, node.col_offset + 1, source, at, at + len(m.value))
 
 
-def _js_provider_secrets(module: js.JsModule) -> Iterator[Finding]:
-    role = js_role(module)
+def _js_provider_secrets(module: js.JsModule, project: ProjectModel) -> Iterator[Finding]:
+    role = project.js_role(module)
     if role is Role.TEST:
         return
     # Fragments are the raw text between quotes or around `${}`, so offsets into them are
@@ -142,7 +143,7 @@ def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
                     if _reportable(m):
                         yield _secret_finding(_literal_span(module, node, m), m)
     for module in ctx.js:
-        yield from _js_provider_secrets(module)
+        yield from _js_provider_secrets(module, ctx.project)
     for file in ctx.files:
         if not _is_env_file(file.path):
             continue
@@ -230,7 +231,7 @@ def _secret_fallbacks(ctx: RuleContext) -> Iterator[Finding]:
                     loc = location(module, node)
                     yield _fallback_finding(loc, name, f'{func}("{name}") or …')
     for module in ctx.js:
-        if js_role(module) is not Role.TEST:
+        if ctx.project.js_role(module) is not Role.TEST:
             yield from _js_secret_fallbacks(module)
 
 

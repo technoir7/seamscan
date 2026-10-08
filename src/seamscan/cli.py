@@ -72,7 +72,7 @@ def scan(
         raise typer.Exit(code=2) from exc
     fileset = collect(root)
     changed = tuple(f for f in fileset.files if f.path in change.added)
-    _emit(analyze(changed, change=change).findings, fmt, output)
+    _emit(analyze(changed, change=change, context=fileset.files).findings, fmt, output)
 
 
 def _show_version(value: bool) -> None:

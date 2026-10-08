@@ -13,7 +13,7 @@ from bisect import bisect_right
 from collections.abc import Iterator
 from typing import cast
 
-from seamscan.facts.roles import Role, js_role, role_of
+from seamscan.facts.roles import Role, role_of
 from seamscan.facts.secrets import redact
 from seamscan.model import Confidence, Finding, Location, Severity, SourceFile
 from seamscan.parse import javascript as js
@@ -275,7 +275,7 @@ def _shipped(ctx: RuleContext) -> Iterator[PyModule]:
 
 
 def _shipped_js(ctx: RuleContext) -> Iterator[JsModule]:
-    return (m for m in ctx.js if js_role(m) is not Role.TEST)
+    return (m for m in ctx.js if ctx.project.js_role(m) is not Role.TEST)
 
 
 def _source_line(source: str, lineno: int) -> str:

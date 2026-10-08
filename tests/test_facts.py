@@ -2,7 +2,7 @@ import base64
 import json
 
 from bench.fake_secrets import FAKES
-from seamscan.facts.roles import Role, role_of
+from seamscan.facts.roles import PackageKind, Role, role_of
 from seamscan.facts.secrets import classify, find_secrets, redact
 
 
@@ -64,6 +64,7 @@ def test_js_roles():
     assert role_of("src/__tests__/api.ts") is Role.TEST
     assert role_of("e2e/login.spec.ts") is Role.TEST
     assert role_of("app/components/Chat.tsx", "use client") is Role.CLIENT
+    assert role_of("server.js", kind=PackageKind.BACKEND) is Role.SERVER
     assert role_of("app/actions.ts", "use server") is Role.SERVER
     assert role_of("app/api/messages/route.ts") is Role.SERVER
     assert role_of("middleware.ts") is Role.SERVER

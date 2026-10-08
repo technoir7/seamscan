@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from seamscan.rules import code, deserialize, injection, secrets, tests_integrity, web
+from seamscan.rules import (
+    code,
+    deserialize,
+    firebase,
+    injection,
+    secrets,
+    supabase,
+    tests_integrity,
+    web,
+)
 from seamscan.rules.base import Rule
 
 RULES: tuple[Rule, ...] = (
@@ -12,4 +21,6 @@ RULES: tuple[Rule, ...] = (
     *deserialize.RULES,
     *tests_integrity.RULES,
     *web.RULES,
+    *supabase.RULES,
+    *firebase.RULES,
 )

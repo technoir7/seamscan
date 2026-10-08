@@ -12,7 +12,7 @@ import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from seamscan.facts.roles import Role, js_role, role_of
+from seamscan.facts.roles import Role, role_of
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse import python as py
@@ -1028,7 +1028,7 @@ def _missing_auth(ctx: RuleContext) -> Iterator[Finding]:
             yield from _py_findings(module, project)
     protected_routes = _middleware_protected(ctx.js)
     for jsm in ctx.js:
-        if js_role(jsm) is not Role.TEST:
+        if ctx.project.js_role(jsm) is not Role.TEST:
             yield from _js_findings(jsm, protected_routes)
 
 

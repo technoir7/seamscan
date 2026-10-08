@@ -12,7 +12,7 @@ import re
 from collections.abc import Iterator
 from enum import Enum
 
-from seamscan.facts.roles import Role, js_role, role_of
+from seamscan.facts.roles import Role, role_of
 from seamscan.model import ChangeSet, Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse.javascript import JsModule, JsNode
@@ -471,7 +471,7 @@ _JS_FUNCTIONS = ("arrow_function", "function_expression")
 
 
 def _js_test_modules(ctx: RuleContext) -> Iterator[JsModule]:
-    return (m for m in ctx.js if js_role(m) is Role.TEST)
+    return (m for m in ctx.js if ctx.project.js_role(m) is Role.TEST)
 
 
 def _js_walk(node: JsNode) -> Iterator[JsNode]:

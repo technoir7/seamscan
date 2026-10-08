@@ -11,7 +11,8 @@ import ast
 import re
 from collections.abc import Iterator
 
-from seamscan.facts.roles import Role, js_role, role_of
+from seamscan.facts.project import ProjectModel
+from seamscan.facts.roles import Role, role_of
 from seamscan.model import Confidence, Finding, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse import python as py
@@ -86,8 +87,8 @@ _JS_WRAPPERS = frozenset(
 )
 
 
-def _server_side(module: js.JsModule) -> bool:
-    role = js_role(module)
+def _server_side(module: js.JsModule, project: ProjectModel) -> bool:
+    role = project.js_role(module)
     if role is Role.TEST or js.directive(module) == "use client":
         return False
     if role is Role.CLIENT:
@@ -700,7 +701,7 @@ def _ssrf(ctx: RuleContext) -> Iterator[Finding]:
         if role_of(module.path) is not Role.TEST:
             yield from _py_ssrf(module)
     for jsm in ctx.js:
-        if _server_side(jsm):
+        if _server_side(jsm, ctx.project):
             yield from _js_ssrf(jsm)
 
 
