@@ -118,3 +118,28 @@ def test_rls_disabled_ignores_tables_the_api_cannot_reach():
         )
     ]
     assert run(files) == []
+
+
+def test_sql_comments_can_suppress_with_a_reason():
+    sql = SourceFile(
+        "supabase/migrations/1_w.sql",
+        "create table public.waitlist (email text);\n"
+        "alter table public.waitlist enable row level security;\n"
+        "-- seamscan: ignore-next-line[SC-SUPA-002] reason: public waitlist, insert only\n"
+        "create policy w on public.waitlist for insert to anon with check (true);\n",
+    )
+    result = analyze([sql], rules=supabase.RULES)
+    assert result.findings == ()
+    assert [f.rule_id for f in result.suppressed] == ["SC-SUPA-002"]
+
+
+def test_scan_honours_a_suppression_in_an_unchanged_migration():
+    suppressed = SourceFile(
+        MIGRATION.path,
+        "-- seamscan: ignore-next-line[SC-SUPA-001] reason: demo data, no user rows\n"
+        + MIGRATION.text,
+    )
+    change = ChangeSet(added={CLIENT.path: (WHOLE_FILE,)})
+    result = analyze([CLIENT], change, supabase.RULES, [VITE, suppressed, CLIENT])
+    assert result.findings == ()
+    assert [f.rule_id for f in result.suppressed] == ["SC-SUPA-001"]

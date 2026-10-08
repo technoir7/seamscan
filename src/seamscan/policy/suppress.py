@@ -3,6 +3,8 @@
     x = f()  # seamscan: ignore[SC-CODE-001] reason: <why this is safe>
     # seamscan: ignore-next-line[SC-CODE-001, SC-CODE-002] reason: <why>
 
+The marker may follow `#`, `//` or `--` (SQL), so every analyzed language can carry one.
+
 Matching is textual, so a marker inside a string literal also counts. That is
 rare enough to accept, and it can only hide a finding the author named explicitly.
 """
@@ -16,7 +18,7 @@ from dataclasses import dataclass
 from seamscan.model import Finding
 
 _MARK = re.compile(
-    r"(?:#|//)\s*seamscan:\s*ignore(?P<next>-next-line)?\[(?P<rules>[^\]]*)\]"
+    r"(?:#|//|--)\s*seamscan:\s*ignore(?P<next>-next-line)?\[(?P<rules>[^\]]*)\]"
     r"(?:\s*reason:\s*(?P<reason>\S.*?))?\s*$"
 )
 
