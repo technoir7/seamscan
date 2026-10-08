@@ -1,0 +1,10 @@
+id = "fire001-readme-mentions-test-mode"
+description = "README and setup notes quote the test-mode rules; the deployed rules are owner-scoped"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

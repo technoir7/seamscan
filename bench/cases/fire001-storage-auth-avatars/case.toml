@@ -1,0 +1,10 @@
+id = "fire001-storage-auth-avatars"
+description = "Storage avatars readable by signed-in users, writable only by their owner"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

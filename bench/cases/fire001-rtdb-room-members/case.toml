@@ -1,0 +1,10 @@
+id = "fire001-rtdb-room-members"
+description = "RTDB rooms readable only by members, membership checked with root.child(...).exists()"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

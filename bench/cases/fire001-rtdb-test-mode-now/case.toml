@@ -1,0 +1,19 @@
+id = "fire001-rtdb-test-mode-now"
+description = "Realtime Database left on the console's test mode (now < timestamp), comments and all"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "database.rules.json"
+line = 3
+tolerance = 0
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "database.rules.json"
+line = 4
+tolerance = 0

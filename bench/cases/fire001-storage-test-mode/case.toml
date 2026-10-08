@@ -1,0 +1,13 @@
+id = "fire001-storage-test-mode"
+description = "Photo app: Firestore rules are owner-scoped but Storage is still on test mode"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "storage.rules"
+line = 19
+tolerance = 0

@@ -1,0 +1,10 @@
+id = "fire001-firestore-owner-function"
+description = "Helper functions isSignedIn()/isOwner(userId); signed-in reads only on a named collection"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

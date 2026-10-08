@@ -1,0 +1,10 @@
+id = "fire001-firestore-auth-narrow"
+description = "request.auth != null on named collections only, admin writes via custom claims"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

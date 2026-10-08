@@ -1,0 +1,10 @@
+id = "fire001-firestore-commented-test-mode"
+description = "The old test-mode and if-true rules survive only in comments"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

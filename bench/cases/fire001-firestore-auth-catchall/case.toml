@@ -1,0 +1,13 @@
+id = "fire001-firestore-auth-catchall"
+description = "Any signed-in user can read and write every document (HIGH)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 6
+tolerance = 0

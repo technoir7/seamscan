@@ -1,0 +1,2 @@
+# Give the dashboard user access to the USB serial adapter
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0666", SYMLINK+="ttyDashboard"

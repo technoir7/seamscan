@@ -1,0 +1,13 @@
+id = "fire001-storage-public-uploads"
+description = "Storage uploads folder readable and writable by anyone"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "storage.rules"
+line = 5
+tolerance = 0

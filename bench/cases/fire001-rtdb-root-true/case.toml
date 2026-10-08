@@ -1,0 +1,19 @@
+id = "fire001-rtdb-root-true"
+description = "Realtime Database chat with .read and .write true at the root"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "database.rules.json"
+line = 3
+tolerance = 0
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "database.rules.json"
+line = 4
+tolerance = 0

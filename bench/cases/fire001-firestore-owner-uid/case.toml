@@ -1,0 +1,10 @@
+id = "fire001-firestore-owner-uid"
+description = "Users can only read and write their own profile and notes (request.auth.uid == userId)"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

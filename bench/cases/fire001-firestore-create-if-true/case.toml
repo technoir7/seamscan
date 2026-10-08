@@ -1,0 +1,13 @@
+id = "fire001-firestore-create-if-true"
+description = "Landing page waitlist: anyone can create documents with any content"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 5
+tolerance = 0

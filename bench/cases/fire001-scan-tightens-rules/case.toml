@@ -1,0 +1,10 @@
+id = "fire001-scan-tightens-rules"
+description = "Scan: the change replaces test-mode rules with owner-scoped ones"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

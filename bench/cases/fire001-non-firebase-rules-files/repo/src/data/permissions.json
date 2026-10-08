@@ -1,0 +1,4 @@
+{
+  "viewer": { ".read": true, ".write": false },
+  "editor": { ".read": true, ".write": true }
+}
