@@ -346,6 +346,15 @@ fold over statements:
 | `GRANT ... TO anon / authenticated` | record grants |
 | anything else | ignored, counted in `--stats` |
 
+**As built (M4):**
+- The replayed schemas live on `ProjectModel.supabase`, one per `supabase/migrations/`
+  directory, rather than being built from `ctx.files`. In CLI scan mode `ctx.files`
+  holds only the changed files, which would make an unchanged migration invisible.
+- Only migrations are replayed. `seed.sql` runs only on a local reset, and schema
+  dumps would double-count.
+- SC-SUPA-001 skips tables with `revoke all` from both anon and authenticated.
+- SC-SUPA-004 reports a `DISABLE` only while it still stands.
+
 **ADR-001 (decided 2026-10-07):** a small in-house statement scanner, no
 `sqlglot`. The spike showed sqlglot returns raw unparsed text for exactly the
 statements these rules need: RLS toggles, `CREATE/DROP POLICY`, and
@@ -462,7 +471,17 @@ CRITICAL / HIGH / CWE-798.
 - TP: `const stripe = new Stripe("sk_live_51H…")`
 - HN: `const stripe = loadStripe("pk_live_51H…")`; `"sk_test_…"` → LOW instead.
 
-**SC-SEC-002 — Secret reachable from the browser.**
+**SC-SEC-002 — Secret reachable from the browser.** *As built (M4):*
+- SEC-002 owns secrets in client files and in bundled-public `.env` entries, and
+  SEC-001 skips both, so one key gives one finding.
+- The value decides when it looks like a known key.
+- `ADMIN` counts only alongside a credential word. A last-word-only match is HIGH.
+- With no `.env` value, it reports at the client read.
+- A server-only variable read in browser code is not reported: it's undefined
+  there, so it breaks the page but leaks nothing.
+- SC-SEC-004 uses the same judgement for bundled-public names.
+
+Original definition:
 CRITICAL / HIGH / CWE-200, CWE-522. Fires on either:
 - (a) a SC-SEC-001-class secret literal in a client file; or
 - (b) an env var with a public prefix (`NEXT_PUBLIC_`, `VITE_`,
@@ -537,6 +556,20 @@ HIGH / HIGH / CWE-284. Fires on `DISABLE ROW LEVEL SECURITY` in a migration.
 In scan mode, it fires when the change adds that statement.
 
 ### 7.3 Firebase
+
+**As built (M4):**
+- Rules files are found by content (`service cloud.firestore` / `firebase.storage`, or
+  a JSON `rules` object with `.read`/`.write`), not through `firebase.json`, which
+  is usually unchanged in a scan.
+- Severity depends on both who can get in and how much is exposed:
+
+| Who can get in | Catch-all path | Named path |
+|---|---|---|
+| Anyone, or test mode, with any write | CRITICAL | CRITICAL |
+| Anyone, or test mode, read only | CRITICAL | LOW |
+| Any signed-in user | HIGH | not reported |
+
+RTDB test mode (`".read": "now < <ms>"`) counts as test mode.
 
 **SC-FIRE-001 — Open security rules.**
 CRITICAL / HIGH / CWE-284. Fires on:
@@ -743,6 +776,11 @@ These are listed so they aren't half-built now:
 - auth checks on Supabase Edge Functions
 - cookie flags (`HttpOnly`, `Secure`, `SameSite`)
 - `npm` lockfile integrity
+- SC-SUPA-002 beyond a literal `true`: treat `auth.uid() is not null` and
+  `auth.role() = 'authenticated'` as having no row condition. Also flag public views
+  over `auth.users` (splinter 0002).
+- reading the extra exposed schemas listed in `supabase/config.toml`, and SQL outside
+  `supabase/migrations/` (v0's `scripts/*.sql`)
 - SC-WEB-001 handlers in Supabase Edge Functions (`Deno.serve`) and tRPC procedures
 - cross-file auth for SC-WEB-001: middleware mounted elsewhere, FastAPI
   `include_router(dependencies=...)`, Django `urls.py` wrappers. Each is a
@@ -918,6 +956,13 @@ stated with the result.
 ```python
 data = requests.get(url, verify=False)  # seamscan: ignore[SC-CODE-001] reason: internal CA, pinned in INFRA-12
 ```
+
+```sql
+alter table public.audit_log disable row level security; -- seamscan: ignore[SC-SUPA-004] reason: server-only table, revoked from anon
+```
+
+Markers may follow `#`, `//` or `--`. In scan mode, a reasoned suppression in an
+unchanged file still applies to a finding that reaches it via `related`.
 
 ```ts
 // seamscan: ignore-next-line[SC-WEB-001] reason: auth enforced by middleware.ts matcher
@@ -1212,6 +1257,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-08: **M4 done (0.5.0).** New rules: SC-SUPA-001..004 (statement scanner + schema replay per ADR-001; table→browser links per ADR-002), SC-FIRE-001 (Firestore/Storage/RTDB rules parser) and SC-SEC-002 (secrets reachable from the browser). 26 rules, 746 cases, every rule 1.00/1.00 on both splits (author-written; §8.3). The README rule table is now generated from the registry (`scripts/rules_table.py`) and a test fails when it is stale. Expo Router's `app/` is client code. SQL `--` suppressions. Decisions recorded in §5.7, §7.1, §7.3 and §9.2; backlog in §7.9.
 - 2026-10-08: M4 groundwork: `facts/project.py` (ProjectModel: package kinds from package.json, package-relative file roles, lexical `.from('table')` index, .env values), roles now come from `ctx.project`; fixes Node backends under `src/` (§5.6 known issue), Next.js `src/app` layouts and monorepo packages. Scan mode passes the unchanged repository as `context` so project facts are complete (ADR-002).
 - 2026-10-08: **M3 done (0.4.0).** All rules extended to TypeScript/JavaScript, plus new SC-CODE-011 (unsafe deserialization) and SC-WEB-001..003 (auth before writes, SSRF, permissive CORS/debug). 20 rules, 647 cases (319 with TS/JS); every rule at 1.00/1.00 on both splits (author-written; see §8.3). Merge-time fixes: an unanchored `lib/` gitignore pattern had hidden 61 case files (now guarded by a test); the parse layer is the only one that imports tree-sitter (enforced); Deno `npm:`/`jsr:`/CDN imports resolve to package names; the benchmark fails on any rule crash; bundled-public env names (`VITE_`, `NEXT_PUBLIC_`, …) are out of SC-SEC-003's scope. Known issues recorded in §5.6 and §6.2; backlog in §7.9.
 - 2026-10-07: M3 groundwork: `parse/javascript.py` (tree-sitter TS/TSX/JS with import resolution, char-accurate locations, taint-lite), JS file roles per §5.6, JS files in the pipeline with partial-parse reporting, `rules/web.py`, and per-language case minimums.

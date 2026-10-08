@@ -54,7 +54,7 @@ SECRET_FALLBACK = meta(
 
 ENV_FILE_COMMITTED = meta(
     "SC-SEC-004",
-    "Env file committed",
+    "Env file with credentials committed",
     Severity.HIGH,
     Confidence.HIGH,
     ("CWE-538",),

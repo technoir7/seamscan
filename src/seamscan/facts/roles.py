@@ -57,6 +57,9 @@ def _js_role(parts: list[str], file_directive: str | None, kind: PackageKind) ->
     name = parts[-1]
     stem = name.split(".", 1)[0]
     dirs = parts[:-1]
+    # Expo Router keeps its (mobile, client-side) screens in app/: not Next's server app/.
+    if kind is PackageKind.FRONTEND and dirs and dirs[0] == "app":
+        return Role.CLIENT
     # Next.js: route handlers, middleware, API routes and *.server.* modules run on the
     # server; anything else under app/ is a server component unless it says "use client".
     if (dirs and dirs[0] == "app" and stem == "route") or (not dirs and stem == "middleware"):

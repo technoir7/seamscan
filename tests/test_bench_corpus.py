@@ -95,7 +95,15 @@ def test_no_case_file_is_hidden_by_gitignore():
     assert not hidden, f"git ignores these case files: {hidden[:10]}"
 
 
-def test_readme_rule_table_matches_the_registry():
-    readme = (DOCS.parent.parent / "README.md").read_text()
-    listed = set(re.findall(r"^\| \[(SC-[A-Z]+-\d{3})\]", readme, flags=re.M))
-    assert listed == {r.meta.id for r in RULES}
+def test_readme_rule_table_is_generated_from_the_registry():
+    import importlib.util
+
+    script = DOCS.parent.parent / "scripts" / "rules_table.py"
+    spec = importlib.util.spec_from_file_location("rules_table", script)
+    assert spec is not None and spec.loader is not None
+    rules_table = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rules_table)
+    readme = rules_table.README.read_text()
+    assert rules_table.render(readme) == readme, (
+        "README rule table is stale: run `uv run python scripts/rules_table.py`"
+    )

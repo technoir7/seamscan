@@ -125,3 +125,14 @@ def test_scan_mode_project_facts_include_unchanged_context_files():
         context=[changed, manifest],
     )
     assert seen == [Role.SERVER]  # judged by the unchanged package.json, not as browser code
+
+
+def test_expo_router_app_directory_is_client_code():
+    project = build_project([SourceFile("package.json", pkg({"expo": "54", "expo-router": "6"}))])
+    assert project.role("app/(tabs)/index.tsx") is Role.CLIENT
+    assert project.role("app/_layout.tsx") is Role.CLIENT
+
+
+def test_next_conventions_still_apply_without_a_package_json():
+    project = build_project([])
+    assert project.role("app/api/x/route.ts") is Role.SERVER
