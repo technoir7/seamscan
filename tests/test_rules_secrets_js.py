@@ -17,14 +17,12 @@ def run(rule_id: str, files: dict[str, str]) -> tuple[Finding, ...]:
 # ---------------------------------------------------------------- SC-SEC-001
 
 
-def test_key_in_browser_code_says_so_and_stays_critical():
+def test_key_in_browser_code_is_left_to_sec002():
     key = FAKES["FAKE_STRIPE_LIVE"]
     src = f'"use client";\nconst stripe = new Stripe("{key}");\n'
-    (client,) = run(PROVIDER_SECRET.id, {"components/Pay.tsx": src})
+    assert not run(PROVIDER_SECRET.id, {"components/Pay.tsx": src})
     (server,) = run(PROVIDER_SECRET.id, {"app/api/pay/route.ts": src.split("\n", 1)[1]})
-    assert client.severity is server.severity is Severity.CRITICAL
-    assert "browser" in client.message
-    assert "browser" not in server.message
+    assert server.severity is Severity.CRITICAL
 
 
 def test_js_test_mode_key_is_low():
@@ -49,7 +47,7 @@ def test_js_secret_location_points_at_the_secret_inside_a_template():
 
 def test_js_secret_output_is_redacted():
     key = FAKES["FAKE_ANTHROPIC"]
-    (f,) = run(PROVIDER_SECRET.id, {"src/ai.ts": f'export const k = "{key}";\n'})
+    (f,) = run(PROVIDER_SECRET.id, {"server/ai.ts": f'export const k = "{key}";\n'})
     assert key not in f.message and key not in f.evidence
     assert "…" in f.evidence
 
