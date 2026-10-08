@@ -1,0 +1,10 @@
+id = "sec002-ts-edge-function-service-role"
+description = "Vite client uses the anon key; the service_role key is read only inside a Supabase Edge Function (Deno.env), which runs on the server."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-002"

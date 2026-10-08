@@ -1,0 +1,12 @@
+id = "sec002-tsx-next-service-role-read"
+description = "A client admin panel reads NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY to get around RLS; no .env is in the repo, so the finding is at the read."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "app/dashboard/admin/AdminPanel.tsx"
+line = 9

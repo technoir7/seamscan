@@ -1,0 +1,20 @@
+id = "sec002-ts-vite-anon-var-holds-service-role"
+description = "The variable is named VITE_SUPABASE_ANON_KEY, but the value pasted into it is the service_role JWT (role claim service_role): the value decides, and it bypasses RLS from the browser."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env"
+line = 2
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env"
+line = 2
+
+[[forbidden]]
+rule = "SC-SEC-001"

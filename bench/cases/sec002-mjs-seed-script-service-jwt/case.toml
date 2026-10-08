@@ -1,0 +1,15 @@
+id = "sec002-mjs-seed-script-service-jwt"
+description = "The service_role JWT is hardcoded in a Node seed script outside src/, which never ships to the browser: SC-SEC-001 (secret in source), not SC-SEC-002."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "scripts/seed.mjs"
+line = 7
+
+[[forbidden]]
+rule = "SC-SEC-002"

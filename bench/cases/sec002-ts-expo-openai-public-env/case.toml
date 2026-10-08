@@ -1,0 +1,20 @@
+id = "sec002-ts-expo-openai-public-env"
+description = "Expo app stores its OpenAI key in EXPO_PUBLIC_OPENAI_API_KEY; Expo inlines EXPO_PUBLIC_ values into the app bundle, which anyone can unpack."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env"
+line = 2
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env"
+line = 2
+
+[[forbidden]]
+rule = "SC-SEC-001"

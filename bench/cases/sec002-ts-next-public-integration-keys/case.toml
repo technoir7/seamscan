@@ -1,0 +1,13 @@
+id = "sec002-ts-next-public-integration-keys"
+description = "Browser keys that are public by design under NEXT_PUBLIC_ names: Google Maps, PostHog project key, Algolia search-only key, reCAPTCHA site key, Mapbox public token, and an admin contact email (ADMIN alone is not a secret)."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-002"
+
+[[forbidden]]
+rule = "SC-SEC-004"

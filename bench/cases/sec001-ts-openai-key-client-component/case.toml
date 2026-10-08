@@ -1,5 +1,5 @@
 id = "sec001-ts-openai-key-client-component"
-description = "React client component calls OpenAI from the browser with a project key"
+description = "React client component calls OpenAI from the browser with a project key. A key in a client file is SC-SEC-002's finding since M4, so SC-SEC-001 stays quiet to report it once."
 mode = "audit"
 split = "dev"
 
@@ -7,6 +7,9 @@ split = "dev"
 source = "original"
 
 [[expected]]
-rule = "SC-SEC-001"
+rule = "SC-SEC-002"
 path = "components/ChatBox.tsx"
 line = 7
+
+[[forbidden]]
+rule = "SC-SEC-001"

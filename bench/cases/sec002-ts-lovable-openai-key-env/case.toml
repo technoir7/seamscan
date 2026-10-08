@@ -1,0 +1,20 @@
+id = "sec002-ts-lovable-openai-key-env"
+description = "Lovable-style Vite app keeps its OpenAI project key in VITE_OPENAI_API_KEY and calls OpenAI from the browser; Vite inlines it into the bundle. The Supabase publishable key beside it is fine."
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env"
+line = 4
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env"
+line = 4
+
+[[forbidden]]
+rule = "SC-SEC-001"

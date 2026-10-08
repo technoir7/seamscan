@@ -1,0 +1,12 @@
+{
+  "name": "printshop",
+  "private": true,
+  "scripts": { "dev": "next dev", "build": "next build" },
+  "dependencies": {
+    "@stripe/stripe-js": "^4.10.0",
+    "next": "15.0.3",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "stripe": "^17.4.0"
+  }
+}

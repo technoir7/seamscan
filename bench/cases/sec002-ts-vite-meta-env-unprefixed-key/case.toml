@@ -1,0 +1,10 @@
+id = "sec002-ts-vite-meta-env-unprefixed-key"
+description = "Vite browser code reads unprefixed secrets from import.meta.env; Vite does not expose them, so they are undefined at runtime rather than leaked."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-002"

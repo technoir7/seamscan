@@ -1,0 +1,13 @@
+id = "sec002-ts-lovable-sb-publishable-literal"
+description = "Lovable's generated Supabase client hardcodes the sb_publishable_ key in browser code and the committed .env repeats it under VITE_SUPABASE_PUBLISHABLE_KEY; publishable keys are meant to ship."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-002"
+
+[[forbidden]]
+rule = "SC-SEC-004"

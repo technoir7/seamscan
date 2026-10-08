@@ -1,0 +1,15 @@
+{
+  "name": "open-house",
+  "private": true,
+  "scripts": { "dev": "next dev", "build": "next build" },
+  "dependencies": {
+    "@react-google-maps/api": "^2.20.3",
+    "algoliasearch": "^5.15.0",
+    "mapbox-gl": "^3.8.0",
+    "next": "15.0.3",
+    "posthog-js": "^1.188.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-google-recaptcha": "^3.1.0"
+  }
+}

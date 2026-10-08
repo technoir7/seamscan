@@ -1,0 +1,11 @@
+{
+  "name": "study-buddy",
+  "private": true,
+  "scripts": { "dev": "next dev", "build": "next build" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "next": "14.2.18",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

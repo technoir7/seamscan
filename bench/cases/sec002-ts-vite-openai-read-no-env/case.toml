@@ -1,0 +1,15 @@
+id = "sec002-ts-vite-openai-read-no-env"
+description = "Bolt-style Vite app reads VITE_OPENAI_API_KEY in browser code; the real .env is ignored and the template holds a placeholder, so the finding is at the read."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/lib/ai.ts"
+line = 10
+
+[[forbidden]]
+rule = "SC-SEC-004"

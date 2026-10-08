@@ -1,0 +1,20 @@
+id = "sec002-ts-next-service-role-public-env"
+description = "Next.js app puts the Supabase service_role JWT in NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY so a client admin table can call auth.admin; the key bypasses RLS and ships to every visitor. The committed .env.local is SC-SEC-004 too."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env.local"
+line = 3
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.local"
+line = 3
+
+[[forbidden]]
+rule = "SC-SEC-001"

@@ -1,0 +1,15 @@
+id = "sec002-js-cra-github-token-literal"
+description = "Create React App service module under src/ builds Octokit with a literal GitHub token to dodge rate limits; src/ ships to the browser."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/services/github.js"
+line = 4
+
+[[forbidden]]
+rule = "SC-SEC-001"
