@@ -91,7 +91,10 @@ def test_top_findings_explain_why_and_how_to_fix_with_evidence():
     top = section(report(analyze(FILES)), 3)
     assert "### 3.1 Public table without row-level security" in top
     assert "anyone holding the project's public anon key" in top  # the rule's summary
-    assert "(https://github.com/technoir7/seamscan/blob/main/src/seamscan/rules/docs/SC-SUPA-001.md)" in top
+    assert (
+        "(https://github.com/technoir7/seamscan/blob/main/src/seamscan/rules/docs/SC-SUPA-001.md)"
+        in top
+    )
     assert "```sql\ncreate table public.messages" in top
     assert "### 3.2 TLS verification disabled" in top
     assert "Unparseable" not in top and "could not be parsed" not in top  # scan coverage
