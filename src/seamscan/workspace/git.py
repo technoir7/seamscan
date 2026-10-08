@@ -57,3 +57,21 @@ def read_changeset(root: Path, base: str | None = None, staged: bool = False) ->
     for path in filter(None, untracked):
         added[path] = (WHOLE_FILE,)
     return ChangeSet(added=added)
+
+
+def read_file_at(root: Path, ref: str, path: str) -> str | None:
+    """The text of `path` (relative to `root`) as committed at `ref`; None if absent there."""
+    _require_repository(root)
+    if ref.startswith("-"):
+        raise GitError(f"not a git ref: {ref!r}")
+    try:
+        _git(root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}")
+    except GitError as exc:
+        raise GitError(f"unknown git ref: {ref}") from exc
+    # `<ref>:./<path>` resolves against the working directory, so a root below the
+    # repository top still names the right file.
+    spec = f"{ref}:./{path}"
+    exists = subprocess.run(["git", "cat-file", "-e", spec], cwd=root, capture_output=True)
+    if exists.returncode != 0:
+        return None
+    return _git(root, "show", spec)
