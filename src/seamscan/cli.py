@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Sequence
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, NoReturn
@@ -122,9 +122,11 @@ def _analyze(
         rules=tuple(r for r in RULES if r.meta.id not in config.disabled),
         context=[f for f in context if not config.excludes(f.path)],
     )
-    return Analysis(
-        config.override_severity(analysis.findings),
-        config.override_severity(analysis.suppressed),
+    # `replace`, so any other Analysis fields pass through untouched.
+    return replace(
+        analysis,
+        findings=config.override_severity(analysis.findings),
+        suppressed=config.override_severity(analysis.suppressed),
     )
 
 
