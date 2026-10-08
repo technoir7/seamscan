@@ -1,0 +1,10 @@
+id = "fire001-rtdb-per-user"
+description = "RTDB: root closed, per-user nodes keyed by $uid, presence readable by signed-in users"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

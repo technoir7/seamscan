@@ -1,0 +1,13 @@
+id = "fire001-firestore-signed-in-function"
+description = "Catch-all read through an isSignedIn() helper; writes are admin-only"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 14
+tolerance = 0

@@ -1,0 +1,10 @@
+id = "fire001-firestore-validated-create"
+description = "Waitlist create allowed only for a validated shape; request.time used as a field check"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

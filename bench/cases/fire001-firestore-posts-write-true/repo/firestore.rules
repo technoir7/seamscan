@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /posts/{postId} {
+      allow read: if true;
+      allow create, update, delete: if true; // TODO: lock down before launch
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+      }
+    }
+  }
+}

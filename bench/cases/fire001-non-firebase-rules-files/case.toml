@@ -1,0 +1,10 @@
+id = "fire001-non-firebase-rules-files"
+description = "udev .rules and an ESLint JSON 'rules' block next to strict Firestore rules"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

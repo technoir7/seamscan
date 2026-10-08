@@ -1,0 +1,10 @@
+id = "fire001-storage-owner-path"
+description = "Storage: per-user folders with size and content-type checks over several lines"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

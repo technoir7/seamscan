@@ -1,0 +1,10 @@
+id = "fire001-firestore-resource-owner"
+description = "Projects owned through resource.data.owner, tasks checked with get()"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

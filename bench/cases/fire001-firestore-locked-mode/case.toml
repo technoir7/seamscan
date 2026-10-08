@@ -1,0 +1,10 @@
+id = "fire001-firestore-locked-mode"
+description = "Production-mode default: every client read and write denied, data served by Cloud Functions"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

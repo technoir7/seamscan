@@ -1,0 +1,13 @@
+id = "fire001-firestore-test-mode"
+description = "Vite todo app still on the Firestore console's 30-day test-mode rules"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 16
+tolerance = 0

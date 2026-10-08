@@ -1,0 +1,13 @@
+id = "fire001-firestore-if-true-catchall"
+description = "Next.js guestbook with allow read, write: if true on every document"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 5
+tolerance = 0

@@ -1,0 +1,13 @@
+id = "fire001-scan-adds-debug-catchall"
+description = "Scan: the change adds an open catch-all match; the old public read on /posts is out of scope"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 16
+tolerance = 0

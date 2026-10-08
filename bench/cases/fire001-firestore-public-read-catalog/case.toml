@@ -1,0 +1,19 @@
+id = "fire001-firestore-public-read-catalog"
+description = "Shop: public product and category reads are LOW; writes are admin-only or closed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 9
+tolerance = 0
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 14
+tolerance = 0

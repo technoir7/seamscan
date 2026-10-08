@@ -1,0 +1,13 @@
+id = "fire001-rtdb-messages-write-true"
+description = "RTDB: signed-in reads, but anyone can write /messages"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "database.rules.json"
+line = 5
+tolerance = 0
