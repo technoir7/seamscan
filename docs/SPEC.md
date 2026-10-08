@@ -189,15 +189,16 @@ src/seamscan/
     registry.py          #   PyPI/npm lookups (stdlib urllib), cache, offline snapshot
   report/                # pure: verdict -> text
     terminal.py  json.py  sarif.py  markdown.py  agent.py
-  integrations/
-    claude_hook.py       #   stdin hook JSON -> scan -> hook response JSON
+  hooks/
+    claude.py            #   pure: hook input -> plan; verdict -> hook response
+  rules/docs/<ID>.md     # one page per rule (required, §12.2); shipped in the wheel
+                         #   so `seamscan explain` works offline
   analysis.py            # pure: SourceFile[] (+ ChangeSet) -> Finding[]; the whole pipeline, no I/O
   cli.py                 # composition root: the only place that wires I/O to the core
 bench/                   # benchmark corpus, runner, scorer (§8)
 docs/
   SPEC.md                # this file
   decisions/             # ADRs
-  rules/SC-XXX-NNN.md    # one page per rule (required, §12.2)
 schemas/
   findings.v1.schema.json
 tests/
@@ -208,7 +209,7 @@ action.yml               # GitHub composite action
 ### 5.3 Layer contract (enforced in CI)
 
 ```
-cli ─▶ integrations ─▶ report, policy ─▶ rules ─▶ facts ─▶ parse ─▶ model
+cli ─▶ hooks ─▶ report, policy ─▶ rules ─▶ facts ─▶ parse ─▶ model
  │                                         ▲
  └──▶ workspace, supply (I/O edges) ───────┘ (pass plain data in; never imported by rules)
 ```
@@ -250,7 +251,7 @@ class RuleMeta:
     cwe: tuple[str, ...]        # ("CWE-284",)
     languages: frozenset[str]
     summary: str                # one line, used in agent output
-    help_uri: str               # docs/rules/<id>.md on GitHub
+    help_uri: str               # src/seamscan/rules/docs/<id>.md on GitHub
 
 @dataclass(frozen=True)
 class Finding:
@@ -443,7 +444,7 @@ Used by the injection, SSRF and auth rules. Within one function body:
 **Where the detail lives.** This section defines each rule's intent, severity,
 confidence and core detection. The exact matching decisions (which names, which
 exemptions, which test files are skipped) live on the rule's page in
-`docs/rules/<ID>.md`. Every rule must have one (§12.2), and each page includes its
+`src/seamscan/rules/docs/<ID>.md`. Every rule must have one (§12.2), and each page includes its
 Known gaps. If this section and a rule page disagree, the rule page describes what
 ships. Fix the disagreement in the same change.
 
@@ -887,7 +888,7 @@ Targets for v1.0:
 the same author can't be truly held out. The author has seen them, even if
 the rule is tuned on `dev` only. So in M7 a second set, `holdout-independent`, is
 written by a different author (a separate agent session or model with no access
-to `src/seamscan/rules/`). It works from the rule pages in `docs/rules/` alone.
+to `src/seamscan/rules/`). It works from the rule pages alone.
 Published headline numbers come from that set.
 
 **Holdout discipline:**
@@ -999,6 +1000,15 @@ unchanged file still applies to a finding that reaches it via `related`.
 The terminal summary is generated from the same `Verdict` object as the exit
 code, so they can never disagree again (v0.2.1 bug).
 
+**As built (M6):** the baseline sits at `<root>/.seamscan/baseline.json`, where
+root is the directory the command analyzes (cwd for `scan`, PATH for `audit` and
+`baseline`). It records every unsuppressed finding of a full audit under the
+repository's config, including SC-META-001/002. `create` and `prune` refuse with
+exit 3 if a rule crashed, since the baseline would be incomplete. A corrupt
+baseline is exit 2. `check --against REF` reads the file at REF; a missing file
+there is an empty baseline. Entries are one per line, so a PR that adds debt
+shows one added line per entry.
+
 ### 9.5 Configuration (`seamscan.toml`)
 
 ```toml
@@ -1031,6 +1041,14 @@ allow = ["@internal/*"]
 Unknown keys are an error (exit 2). Typos in config must not silently disable
 rules.
 
+**As built (M6):** `exclude` globs match the whole repo-relative POSIX path: `**`
+(a whole segment) spans any number of directories, including none; `*` and `?`
+stay within a segment. Write `dir/**` to exclude a directory. Excluded files are
+neither analyzed nor used as context. `[rules] severity` replaces any per-finding
+severity a rule chose. Levels are uppercase. SC-META rules can't be disabled or
+re-ranked, so nobody can hide a rule crash. `--config PATH` replaces
+`<root>/seamscan.toml`; a missing explicit file is exit 2.
+
 ---
 
 ## 10. Output formats
@@ -1054,6 +1072,17 @@ rules.
 - The output is validated against the official SARIF 2.1.0 schema in tests.
 - GitHub's limits apply: 10 MB gzipped, and 5,000 results shown. The audit
   mode caps results and says so.
+- **As built (M6):** `level` follows severity (CRITICAL/HIGH → error, MEDIUM →
+  warning, LOW → note). Rules with a CWE are tagged `security` and
+  `external/cwe/cwe-N`, since GitHub applies security-severity only to rules
+  tagged `security`. Suppressed findings carry
+  `suppressions[{kind: inSource, justification}]`; baselined findings carry
+  `baselineState: unchanged`, and others omit it (GitHub works out new vs fixed
+  from fingerprints). A rule crash is a failed invocation with an error
+  notification, not a result. Past 5,000 results the most severe are kept, and a
+  notification and run properties state the cut. The 10 MB limit is not yet
+  enforced. GitHub's severity label follows the rule's default, so a finding
+  raised per finding (SUPA-001 to CRITICAL) shows it only in `level`.
 
 **Markdown audit report sections:**
 1. Summary for a non-technical reader
@@ -1061,17 +1090,29 @@ rules.
 3. Top findings, each with redacted evidence, why it matters, and how to fix it
 4. Everything else, grouped
 5. Suppressions and baseline
-6. **Method and limits**: what seamscan checks, what it can't, benchmark scores
-   with the version, and the files skipped and why
+6. **Method and limits**: what seamscan checks, what it can't, the version, a
+   link to the README's benchmark figures with the caveat that the cases were
+   written alongside the rules (numbers aren't embedded, since they go stale),
+   and the files skipped and why
 
 This report is the deliverable for consulting Offer A, so it has to stand on
-its own in front of a client.
+its own in front of a client. Section 3 covers every kind of issue with a
+blocking finding (up to 3 examples each); with none, the 3 most serious kinds.
+It has no dates or repository name: the consultant adds those.
+
+**JSON (as built, M6):** `suppressed[]` with each `reason`, a per-finding
+`baselined` flag, and summary counts. These are additive and optional, so
+`schema_version` stays 1.
 
 **Agent format:**
 - One line per finding: `path:line [RULE] message → fix`.
 - Sorted by severity, then confidence, and capped at the top 20. The cut is
   stated.
 - Built for the Claude Code hook's context limits.
+- **As built (M6):** the first line is the verdict headline. Blocking findings
+  come first; baselined findings are left out; the fix is a pointer to
+  `seamscan explain RULE`, because the rule pages' fix sections are too long for
+  one line and ship offline. The 8,000-char cap is enforced.
 
 ---
 
@@ -1088,7 +1129,10 @@ seamscan explain RULE-ID                 # print the rule page
 seamscan hook claude                     # Claude Code hook adapter (stdin -> stdout)
 ```
 
-Global: `--config PATH`, `--stats`, `--debug`, `--version`.
+Global: `--config PATH`, `--debug`, `--version`. `--stats` is an option on
+`audit` and `scan` and writes to stderr, so stdout stays machine-readable.
+`scan --files PATH...` limits any scan mode to those paths; a path git doesn't
+know, or ignores, is exit 2. `--offline` and `--strict` arrive with M5.
 
 ### 11.2 GitHub Action (`action.yml`, composite)
 
@@ -1096,6 +1140,12 @@ The action:
 1. Installs uv.
 2. Runs `uvx seamscan@<pinned> scan --base ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --format sarif --output seamscan.sarif`.
 3. Uploads it with `github/codeql-action/upload-sarif@v4`, category `seamscan`.
+
+**As built (M6):** until 1.0 is on PyPI, the Action runs seamscan from its own
+checkout (`uvx --from ${{ github.action_path }}`). It fetches the base commit on
+shallow checkouts, records the scan's exit code, uploads SARIF even when
+findings block, then fails the job on any non-zero code. Uploads fail on fork
+PRs (read-only token); documented.
 
 The workflow needs `permissions: security-events: write`. v3 of that action
 is deprecated in Dec 2026, so v4 only.
@@ -1105,7 +1155,7 @@ repo has it enabled. seamscan finds, and GitHub's own tools can propose fixes.
 
 ### 11.3 pre-commit
 
-`.pre-commit-hooks.yaml` defines `id: seamscan`, `entry: seamscan scan --staged --offline`,
+`.pre-commit-hooks.yaml` defines `id: seamscan`, `entry: seamscan scan --staged` (`--offline` added with M5),
 `pass_filenames: false`.
 
 ### 11.4 Claude Code hook
@@ -1117,7 +1167,9 @@ failure modes and the stacks AI tools build.
 `seamscan hook claude` reads the hook JSON on stdin and branches on
 `hook_event_name`:
 
-- **`PostToolUse`** (matcher `Edit|Write|MultiEdit`) or **`PostToolBatch`**:
+- **`PostToolUse`** (matcher `Edit|Write`; MultiEdit no longer exists) or
+  **`PostToolBatch`** (no matcher; seamscan picks the `Edit`/`Write` calls).
+  Configure one, not both:
   - Scans only the edited files, with the offline rules only. Budget: ≤ 1 s.
   - New blocking findings come back as
     `{"hookSpecificOutput": {"hookEventName": "...", "additionalContext": "<agent format>"}}`.
@@ -1129,8 +1181,12 @@ failure modes and the stacks AI tools build.
     and fixes them.
   - If the input has `stop_hook_active: true`, it returns only a
     `systemMessage` for the user. That prevents loops.
-- **Errors:** they go to stderr with a non-blocking exit code. A broken
-  scanner must never trap the agent.
+- **Errors:** they go to stderr with exit code 1, never 2: Claude Code treats
+  exit 2 as blocking on `Stop` and `PostToolBatch`. A bad `seamscan.toml` or
+  baseline is reported the same way. A broken scanner must never trap the agent.
+- **As built (M6):** a PostToolUse call takes about 0.2–0.4 s on this repo
+  (2,000 files), split between git calls and reading the repo for context. The
+  Stop check covers all uncommitted changes, not only this session's.
 
 The docs give a copy-paste `settings.json` snippet.
 
@@ -1157,7 +1213,7 @@ The docs give a copy-paste `settings.json` snippet.
 
 - Benchmark cases are written **first** and fail (TDD).
 - The rule is implemented.
-- `docs/rules/<ID>.md` exists, with these sections: what, why, examples (TP
+- `src/seamscan/rules/docs/<ID>.md` exists, with these sections: what, why, examples (TP
   and HN), how to fix, known false positives and negatives, and references
   (CWE, incidents).
 - A registry test enforces that every registered rule has a docs page and at
@@ -1210,7 +1266,7 @@ Each milestone ends with its "done when" checks passing in CI.
 | **M3** | **TS/JS** | The tree-sitter layer, the same rules for TS/JS, WEB-001–003 and file roles (§5.6). TS/JS cases make up ≥ 40% of the corpus. |
 | **M4** | **Supabase and Firebase** | Schema replay; SUPA-001–004, FIRE-001 and SEC-002; ≥ 60 original cases, including the CVE-2025-48757 pattern end to end. |
 | **M5** | **Dependencies** | The registry client, cache, offline snapshot and DEP-001–003, with network failure behavior tested. |
-| **M6** | **Gating and integrations** | Baseline and ratchet; SARIF with GitHub upload verified on a test repo; the Action, pre-commit and the Claude hook; the markdown audit report. |
+| **M6** | **Gating and integrations** (done 2026-10-09, except the GitHub upload check, which waits for the push) | Baseline and ratchet; SARIF with GitHub upload verified on a test repo; the Action, pre-commit and the Claude hook; the markdown audit report. |
 | **M7** | **Evaluation and release** | Holdout scored; the 20-repo noise study; the comparator run; generated README table; write-up; demo GIF; PyPI 1.0.0. |
 
 Order rationale:
@@ -1234,6 +1290,16 @@ Order rationale:
 - Fingerprints are computed before scan mode narrows findings to the change, so
   a baseline written by `audit` matches in `scan`. A cross-file finding that sits
   in an unchanged file can still number its duplicates differently; accepted.
+
+**M6 follow-ups (not blocking):**
+- The audit report's "How to fix" links to the rule page; a client would be
+  better served by the fix text inline (the CLI can pass it in from the packaged
+  pages).
+- SC-META-001..003 have no rule pages, so `explain` doesn't cover them.
+- `scan` run from a subdirectory mismatches git's repo-relative paths (predates
+  M6; the hook already uses the repo root).
+- No test checks the wheel contents; checked by hand once.
+- On a push of a root commit, the Action's `HEAD~1` base doesn't exist.
 
 ---
 
@@ -1274,6 +1340,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-09: **M6 done (0.6.0)**, apart from verifying the GitHub SARIF upload, which needs the branch pushed. Baseline and ratchet (`baseline create|prune|check`), `seamscan.toml` (`[policy]`, `[rules]`, `[paths] exclude`), SARIF 2.1.0 (validated against the vendored OASIS schema), the markdown audit report, the agent format, `--stats`, suppression reasons in every output, `scan --files`, `rules`, `explain`, `hook claude` (new pure `hooks/` layer), `action.yml` and `.pre-commit-hooks.yaml`. Rule pages moved into the package (`src/seamscan/rules/docs/`). Spec corrections from the hook docs: MultiEdit is gone; hook errors must exit 1, not 2. Decisions recorded as "As built (M6)" in §9.3, §9.5, §10, §11.
 - 2026-10-08: M6 moved ahead of M5 (§14). M6 groundwork: fingerprints computed before scan scoping; `Verdict.baselined`; one shared run path in the CLI. M6 scope decisions recorded under §14.
 - 2026-10-08: **M4 done (0.5.0).** New rules: SC-SUPA-001..004 (statement scanner + schema replay per ADR-001; table→browser links per ADR-002), SC-FIRE-001 (Firestore/Storage/RTDB rules parser) and SC-SEC-002 (secrets reachable from the browser). 26 rules, 746 cases, every rule 1.00/1.00 on both splits (author-written; §8.3). The README rule table is now generated from the registry (`scripts/rules_table.py`) and a test fails when it is stale. Expo Router's `app/` is client code. SQL `--` suppressions. Decisions recorded in §5.7, §7.1, §7.3 and §9.2; backlog in §7.9.
 - 2026-10-08: M4 groundwork: `facts/project.py` (ProjectModel: package kinds from package.json, package-relative file roles, lexical `.from('table')` index, .env values), roles now come from `ctx.project`; fixes Node backends under `src/` (§5.6 known issue), Next.js `src/app` layouts and monorepo packages. Scan mode passes the unchanged repository as `context` so project facts are complete (ADR-002).

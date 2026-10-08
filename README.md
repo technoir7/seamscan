@@ -14,14 +14,14 @@ AI assistants make the same mistakes again and again:
 seamscan finds them. It reports each finding with an exact file and line, a severity
 and a confidence.
 
-**Status: alpha (0.5.0).** It covers Python and TypeScript/JavaScript (Next.js, React,
+**Status: alpha (0.6.0).** It covers Python and TypeScript/JavaScript (Next.js, React,
 Vite, Expo, Express, Hono, Supabase Edge Functions, FastAPI, Flask, Django), plus
 Supabase migrations and Firebase security rules.
 
 The cross-file checks link a table without row-level security to the browser code
 that reads it. That's the CVE-2025-48757 pattern, which exposed 170 Lovable apps.
-Next up are integrations; see [Roadmap](#roadmap). The design is
-in [`docs/SPEC.md`](docs/SPEC.md).
+It plugs into GitHub code scanning, pre-commit and Claude Code, and a baseline lets a
+team adopt it on an existing codebase. The design is in [`docs/SPEC.md`](docs/SPEC.md).
 
 ## Install and run
 
@@ -35,9 +35,17 @@ uvx --from git+https://github.com/technoir7/seamscan seamscan scan        # only
 - `scan` checks only the lines your change added. It compares the working tree with
   `HEAD`, or uses `--base REF`, or `--staged` for a pre-commit hook. Untracked files
   count as wholly new.
-- `--format json` gives machine-readable output (schema in
-  [`schemas/findings.v1.schema.json`](schemas/findings.v1.schema.json)). The output is
-  byte-identical for identical input.
+- `--format` picks the output:
+  - `json`: machine-readable (schema in
+    [`schemas/findings.v1.schema.json`](schemas/findings.v1.schema.json))
+  - `sarif`: for GitHub code scanning
+  - `md`: a review report written for a non-technical reader
+  - `agent`: compact lines for a coding agent
+
+  Every format is byte-identical for identical input.
+- `scan --files a.py b.ts` checks only those files' changes.
+- `--stats` prints counts, skipped files and suppressions to stderr.
+- `seamscan rules` lists the rules; `seamscan explain SC-CODE-001` prints a rule's page.
 - Secrets are never printed in full. Output shows a redacted form such as
   `sk_live_51Hx…L2mN4`.
 
@@ -105,6 +113,42 @@ requests.get(url, verify=False)  # seamscan: ignore[SC-CODE-001] reason: interna
 cur.execute(f"SELECT * FROM {table}")
 ```
 
+## Adopting it on an existing codebase
+
+```bash
+seamscan baseline create          # record today's findings in .seamscan/baseline.json
+seamscan baseline check --against origin/main   # in CI: fail if the baseline grew
+seamscan baseline prune           # drop entries that have been fixed
+```
+
+Baselined findings are still reported but never block, so CI fails only on new
+problems. The baseline is a committed file, so adding to it shows up in the pull
+request for a reviewer to accept or reject.
+
+Settings live in `seamscan.toml` at the repository root:
+
+```toml
+[policy]
+fail_on_severity = "HIGH"      # block on HIGH and CRITICAL ...
+fail_on_confidence = "MEDIUM"  # ... when confidence is MEDIUM or HIGH
+
+[rules]
+disable = ["SC-TEST-003"]
+severity = { "SC-CODE-002" = "LOW" }
+
+[paths]
+exclude = ["scripts/legacy/**"]
+```
+
+An unknown key or a typo is an error (exit 2), never silently ignored.
+
+## Integrations
+
+GitHub Action (with code-scanning upload), pre-commit and a Claude Code hook. Setup is
+in [`docs/integrations.md`](docs/integrations.md). The Claude Code hook tells the agent
+about a blocking finding right after the edit that caused it, and stops it from
+finishing while one is left.
+
 ## How well it works
 
 Every rule is developed against a labelled benchmark in `bench/cases/`. Each rule has
@@ -146,14 +190,16 @@ function calls.
 
 See [spec §14](docs/SPEC.md).
 
-- **Done in 0.5: Supabase and Firebase.** Tables without row-level security that are queried from
-  the browser, open Firebase rules, and service-role keys reachable from client code.
-  These are cross-file checks that link migrations, rules files, env files and client
-  code.
-- **Dependency checks.** Packages that don't exist or are suspiciously new
+- **Done in 0.5: Supabase and Firebase.** Tables without row-level security that are
+  queried from the browser, open Firebase rules, and service-role keys reachable from
+  client code. These are cross-file checks that link migrations, rules files, env files
+  and client code.
+- **Done in 0.6: Integrations.** Baseline/ratchet, `seamscan.toml`, SARIF, the
+  markdown review report, a GitHub Action, pre-commit and a Claude Code hook.
+- **Next: dependency checks.** Packages that don't exist or are suspiciously new
   (slopsquatting).
-- **Integrations.** Baseline/ratchet so CI fails only on new findings, SARIF for GitHub
-  code scanning, a GitHub Action, pre-commit, and a Claude Code hook.
+- **Then 1.0:** an independently written test set, a noise study on real
+  repositories, and a PyPI release.
 
 ## Development
 
