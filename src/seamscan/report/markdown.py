@@ -16,7 +16,8 @@ from seamscan.policy.suppress import Suppressed
 from seamscan.policy.verdict import Verdict
 
 ACCURACY_URI = "https://github.com/technoir7/seamscan#how-well-it-works"
-TOP_GROUPS = 5  # kinds of issue explained in full; the rest are listed in section 4
+# With nothing to fix first, this many kinds of issue are still explained in full.
+TOP_GROUPS = 3
 EXAMPLES_PER_GROUP = 3  # places shown with evidence per kind of issue
 SKIPPED_PER_REASON = 20
 
@@ -221,24 +222,36 @@ def _risk_table(active: Sequence[Finding], suppressed: int, baselined: int) -> l
     return lines
 
 
-def _top(active: Sequence[Finding], meta: dict[str, RuleMeta]) -> tuple[list[str], set[str]]:
-    """The most serious kinds of issue, explained in full. Returns the fingerprints shown."""
+def _top(
+    active: Sequence[Finding], verdict: Verdict, meta: dict[str, RuleMeta]
+) -> tuple[list[str], set[str]]:
+    """The kinds of issue to fix first, explained in full. Returns the fingerprints shown.
+
+    Every kind with a finding to fix first is covered, so the summary's count and this
+    section agree; there are at most as many kinds as rules, which keeps it bounded.
+    """
     groups: dict[str, list[Finding]] = {}
     for f in sorted(active, key=_rank):
         if _area(f.rule_id) != "META" and f.severity >= Severity.MEDIUM:
             groups.setdefault(f.rule_id, []).append(f)
     ranked = sorted(groups.values(), key=lambda g: (*_rank(g[0])[:2], -len(g), g[0].rule_id))
-    if not ranked:
+    fix_first = {f.rule_id for f in verdict.blocking}
+    if fix_first:
+        chosen = [g for g in ranked if g[0].rule_id in fix_first]
+        intro = "The issues to fix first, one heading per kind of issue."
+    else:
+        chosen = ranked[:TOP_GROUPS]
+        intro = "Nothing here needs to hold up a release; these are the most serious issues."
+    if not chosen:
         return [
             "No high- or medium-severity findings. Anything else is listed in section 4."
         ], set()
     lines = [
-        "The most serious kinds of issue found, one per heading. Each shows the code that "
-        "triggered it (secrets are shortened, never shown in full), why it matters and how "
-        "to fix it.",
+        f"{intro} Each shows the code that triggered it (secrets are shortened, never shown "
+        "in full), why it matters and how to fix it.",
     ]
     shown: set[str] = set()
-    for n, group in enumerate(ranked[:TOP_GROUPS], start=1):
+    for n, group in enumerate(chosen, start=1):
         m = meta[group[0].rule_id]
         lines += [
             "",
@@ -405,7 +418,7 @@ def render_markdown(
     baselined_fps = {f.fingerprint for f in verdict.baselined}
     active = [f for f in findings if f.fingerprint not in baselined_fps]
     hidden = len(suppressed) + len(verdict.baselined)
-    top, shown = _top(active, meta)
+    top, shown = _top(active, verdict, meta)
     sections = [
         ("Summary", _summary(active, verdict, files_analyzed, hidden)),
         ("Risk at a glance", _risk_table(active, len(suppressed), len(verdict.baselined))),

@@ -185,3 +185,32 @@ def test_every_rule_has_a_named_area():
     ]
     text = render_markdown(findings, decide(findings, Policy()), (), ALL_META, "1", 1, ())
     assert "SC-" in text  # rendered without a missing-category error
+
+
+def test_top_findings_cover_every_kind_of_issue_to_fix_first():
+    blocking = [m for m in ALL_META if m.severity >= Severity.HIGH and m.confidence >= 2]
+    findings = [
+        Finding(
+            m.id,
+            m.severity,
+            m.confidence,
+            Location(f"f{i}.py", 1, 1, 1, 2),
+            "m",
+            "e",
+            (),
+            f"{i:032x}",
+        )
+        for i, m in enumerate(blocking)
+    ]
+    top = section(
+        render_markdown(findings, decide(findings, Policy()), (), ALL_META, "1", 1, ()), 3
+    )
+    assert len(blocking) > 10
+    for m in blocking:
+        assert m.title in top
+    assert "Swallowed exception" not in section(report(analyze(FILES)), 3)  # not blocking
+
+
+def test_without_anything_to_fix_first_the_most_severe_are_explained():
+    a = analyze([SourceFile("svc/err.py", "try:\n    go()\nexcept Exception:\n    pass\n")])
+    assert "### 3.1 Swallowed exception" in section(report(a), 3)
