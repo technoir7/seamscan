@@ -1,0 +1,8 @@
+# Checks only what the commit adds (spec §11.3). It reads the staged diff itself, so
+# pre-commit doesn't pass file names. `--offline` joins the entry with M5.
+- id: seamscan
+  name: seamscan
+  description: Block commits that add the security and correctness failures AI coding tools ship
+  entry: seamscan scan --staged
+  language: python
+  pass_filenames: false

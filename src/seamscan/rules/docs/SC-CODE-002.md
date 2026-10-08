@@ -119,12 +119,12 @@ Flagged:
 ```python
 try:
     db.session.commit()
-except Exception:          # HIGH: a lost write
+except Exception:  # HIGH: a lost write
     pass
 
 try:
     return json.load(f)
-except:                    # MEDIUM
+except:  # MEDIUM
     return None
 
 except (KeyError, Exception):

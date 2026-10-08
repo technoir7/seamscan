@@ -59,32 +59,32 @@ exit code come from the same decision.
 <!-- rules:start -->
 | Rule | What it finds | Languages | Severity | Confidence |
 |---|---|---|---|---|
-| [SC-CODE-001](docs/rules/SC-CODE-001.md) | TLS verification disabled | Py, TS/JS | HIGH | HIGH |
-| [SC-CODE-002](docs/rules/SC-CODE-002.md) | Swallowed exception | Py, TS/JS | MEDIUM | HIGH |
-| [SC-CODE-003](docs/rules/SC-CODE-003.md) | Unfinished code in a shipped path | Py, TS/JS | HIGH | HIGH |
-| [SC-CODE-004](docs/rules/SC-CODE-004.md) | Hardcoded credential comparison | Py, TS/JS | HIGH | HIGH |
-| [SC-CODE-005](docs/rules/SC-CODE-005.md) | JWT accepted without verification | Py, TS/JS | CRITICAL | HIGH |
-| [SC-CODE-006](docs/rules/SC-CODE-006.md) | SQL built from strings | Py, TS/JS | HIGH | MEDIUM |
-| [SC-CODE-007](docs/rules/SC-CODE-007.md) | Shell command built from strings | Py, TS/JS | HIGH | MEDIUM |
-| [SC-CODE-008](docs/rules/SC-CODE-008.md) | Code or HTML evaluated from non-literals | Py, TS/JS | HIGH | MEDIUM |
-| [SC-CODE-009](docs/rules/SC-CODE-009.md) | Predictable randomness for secrets | Py, TS/JS | MEDIUM | HIGH |
-| [SC-CODE-010](docs/rules/SC-CODE-010.md) | Invisible or bidirectional Unicode in source (Trojan Source) | Py, TS/JS | HIGH | HIGH |
-| [SC-CODE-011](docs/rules/SC-CODE-011.md) | Unsafe deserialization | Py | HIGH | MEDIUM |
-| [SC-FIRE-001](docs/rules/SC-FIRE-001.md) | Open security rules | Firebase rules | CRITICAL | HIGH |
-| [SC-SEC-001](docs/rules/SC-SEC-001.md) | Provider secret in source | Py, TS/JS, `.env` | CRITICAL | HIGH |
-| [SC-SEC-002](docs/rules/SC-SEC-002.md) | Secret reachable from the browser | TS/JS, `.env` | CRITICAL | HIGH |
-| [SC-SEC-003](docs/rules/SC-SEC-003.md) | Hardcoded fallback for a secret | Py, TS/JS | HIGH | HIGH |
-| [SC-SEC-004](docs/rules/SC-SEC-004.md) | Env file with credentials committed | `.env` | HIGH | HIGH |
-| [SC-SUPA-001](docs/rules/SC-SUPA-001.md) | Public table without row-level security (CRITICAL when browser code reads it) | SQL | HIGH | HIGH |
-| [SC-SUPA-002](docs/rules/SC-SUPA-002.md) | Policy allows everyone | SQL | HIGH | HIGH |
-| [SC-SUPA-003](docs/rules/SC-SUPA-003.md) | Unsafe definer objects | SQL | MEDIUM | HIGH |
-| [SC-SUPA-004](docs/rules/SC-SUPA-004.md) | RLS explicitly disabled | SQL | HIGH | HIGH |
-| [SC-TEST-001](docs/rules/SC-TEST-001.md) | Test with no assertion | Py, TS/JS | MEDIUM | HIGH |
-| [SC-TEST-002](docs/rules/SC-TEST-002.md) | Assertion that can't fail | Py, TS/JS | MEDIUM | HIGH |
-| [SC-TEST-003](docs/rules/SC-TEST-003.md) | Test disabled in this change (`scan` only) | Py, TS/JS | MEDIUM | HIGH |
-| [SC-WEB-001](docs/rules/SC-WEB-001.md) | Server write without an auth check | Py, TS/JS | HIGH | MEDIUM |
-| [SC-WEB-002](docs/rules/SC-WEB-002.md) | Server-side request to a user-controlled URL | Py, TS/JS | HIGH | MEDIUM |
-| [SC-WEB-003](docs/rules/SC-WEB-003.md) | Permissive debug or CORS config | Py, TS/JS | MEDIUM | HIGH |
+| [SC-CODE-001](src/seamscan/rules/docs/SC-CODE-001.md) | TLS verification disabled | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-002](src/seamscan/rules/docs/SC-CODE-002.md) | Swallowed exception | Py, TS/JS | MEDIUM | HIGH |
+| [SC-CODE-003](src/seamscan/rules/docs/SC-CODE-003.md) | Unfinished code in a shipped path | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-004](src/seamscan/rules/docs/SC-CODE-004.md) | Hardcoded credential comparison | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-005](src/seamscan/rules/docs/SC-CODE-005.md) | JWT accepted without verification | Py, TS/JS | CRITICAL | HIGH |
+| [SC-CODE-006](src/seamscan/rules/docs/SC-CODE-006.md) | SQL built from strings | Py, TS/JS | HIGH | MEDIUM |
+| [SC-CODE-007](src/seamscan/rules/docs/SC-CODE-007.md) | Shell command built from strings | Py, TS/JS | HIGH | MEDIUM |
+| [SC-CODE-008](src/seamscan/rules/docs/SC-CODE-008.md) | Code or HTML evaluated from non-literals | Py, TS/JS | HIGH | MEDIUM |
+| [SC-CODE-009](src/seamscan/rules/docs/SC-CODE-009.md) | Predictable randomness for secrets | Py, TS/JS | MEDIUM | HIGH |
+| [SC-CODE-010](src/seamscan/rules/docs/SC-CODE-010.md) | Invisible or bidirectional Unicode in source (Trojan Source) | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-011](src/seamscan/rules/docs/SC-CODE-011.md) | Unsafe deserialization | Py | HIGH | MEDIUM |
+| [SC-FIRE-001](src/seamscan/rules/docs/SC-FIRE-001.md) | Open security rules | Firebase rules | CRITICAL | HIGH |
+| [SC-SEC-001](src/seamscan/rules/docs/SC-SEC-001.md) | Provider secret in source | Py, TS/JS, `.env` | CRITICAL | HIGH |
+| [SC-SEC-002](src/seamscan/rules/docs/SC-SEC-002.md) | Secret reachable from the browser | TS/JS, `.env` | CRITICAL | HIGH |
+| [SC-SEC-003](src/seamscan/rules/docs/SC-SEC-003.md) | Hardcoded fallback for a secret | Py, TS/JS | HIGH | HIGH |
+| [SC-SEC-004](src/seamscan/rules/docs/SC-SEC-004.md) | Env file with credentials committed | `.env` | HIGH | HIGH |
+| [SC-SUPA-001](src/seamscan/rules/docs/SC-SUPA-001.md) | Public table without row-level security (CRITICAL when browser code reads it) | SQL | HIGH | HIGH |
+| [SC-SUPA-002](src/seamscan/rules/docs/SC-SUPA-002.md) | Policy allows everyone | SQL | HIGH | HIGH |
+| [SC-SUPA-003](src/seamscan/rules/docs/SC-SUPA-003.md) | Unsafe definer objects | SQL | MEDIUM | HIGH |
+| [SC-SUPA-004](src/seamscan/rules/docs/SC-SUPA-004.md) | RLS explicitly disabled | SQL | HIGH | HIGH |
+| [SC-TEST-001](src/seamscan/rules/docs/SC-TEST-001.md) | Test with no assertion | Py, TS/JS | MEDIUM | HIGH |
+| [SC-TEST-002](src/seamscan/rules/docs/SC-TEST-002.md) | Assertion that can't fail | Py, TS/JS | MEDIUM | HIGH |
+| [SC-TEST-003](src/seamscan/rules/docs/SC-TEST-003.md) | Test disabled in this change (`scan` only) | Py, TS/JS | MEDIUM | HIGH |
+| [SC-WEB-001](src/seamscan/rules/docs/SC-WEB-001.md) | Server write without an auth check | Py, TS/JS | HIGH | MEDIUM |
+| [SC-WEB-002](src/seamscan/rules/docs/SC-WEB-002.md) | Server-side request to a user-controlled URL | Py, TS/JS | HIGH | MEDIUM |
+| [SC-WEB-003](src/seamscan/rules/docs/SC-WEB-003.md) | Permissive debug or CORS config | Py, TS/JS | MEDIUM | HIGH |
 <!-- rules:end -->
 
 Each rule page covers:

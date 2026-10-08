@@ -71,10 +71,10 @@ OPENAI_API_KEY=sk-proj-Qm7R…   # a real key pasted into the template
 Not flagged:
 
 ```python
-PUBLISHABLE_KEY = "pk_live_51Hx…"           # meant to be public
-SUPABASE_ANON_KEY = "eyJ…(role=anon)…"      # public; RLS does the gatekeeping
-EXAMPLE_KEY = "sk-proj-xxxxxxxxxxxxxxxx…"   # key-shaped placeholder
-key.startswith("sk_test_")                  # a prefix, not a key
+PUBLISHABLE_KEY = "pk_live_51Hx…"  # meant to be public
+SUPABASE_ANON_KEY = "eyJ…(role=anon)…"  # public; RLS does the gatekeeping
+EXAMPLE_KEY = "sk-proj-xxxxxxxxxxxxxxxx…"  # key-shaped placeholder
+key.startswith("sk_test_")  # a prefix, not a key
 stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
 ```
 

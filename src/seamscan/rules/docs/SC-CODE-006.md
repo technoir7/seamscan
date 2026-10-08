@@ -92,7 +92,7 @@ Flagged:
 ```python
 query = f"SELECT id, name FROM products WHERE name LIKE '%{term}%'"
 cursor.execute(query)
-cursor.execute("DELETE FROM sessions WHERE user_id = '%s'" % user_id)   # % is not a parameter
+cursor.execute("DELETE FROM sessions WHERE user_id = '%s'" % user_id)  # % is not a parameter
 db.execute(text(f"UPDATE accounts SET balance = {amount} WHERE id = '{account_id}'"))
 User.objects.raw("SELECT * FROM auth_user WHERE username = '" + username + "'")
 ```
@@ -103,10 +103,11 @@ Not flagged:
 cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
 db.execute(text("SELECT * FROM users WHERE email = :email"), {"email": email})
 query = sql.SQL("SELECT {f} FROM {t} WHERE id = %s").format(
-    f=sql.SQL(", ").join(map(sql.Identifier, cols)), t=sql.Identifier(table))
+    f=sql.SQL(", ").join(map(sql.Identifier, cols)), t=sql.Identifier(table)
+)
 placeholders = ", ".join(["%s"] * len(ids))
 cur.execute(f"{BASE_QUERY} WHERE id IN ({placeholders})", ids)
-df.query(f"age >= {min_age}")                                         # pandas, not SQL
+df.query(f"age >= {min_age}")  # pandas, not SQL
 ```
 
 TypeScript, flagged:

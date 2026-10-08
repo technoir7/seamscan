@@ -4,6 +4,7 @@ from bench.case import case_files, load_all
 from bench.fake_secrets import FAKES
 from seamscan.analysis import analyze
 from seamscan.policy.verdict import Policy, decide
+from seamscan.report.agent import render_agent
 from seamscan.report.json import render_json
 from seamscan.report.terminal import render_terminal
 
@@ -13,6 +14,10 @@ def test_no_reporter_prints_a_full_fake_secret():
         result = analyze(case_files(case))
         findings = (*result.findings, *result.suppressed)
         verdict = decide(findings, Policy())
-        outputs = render_json(findings, verdict, "test") + render_terminal(findings, verdict)
+        outputs = (
+            render_json(findings, verdict, "test")
+            + render_terminal(findings, verdict)
+            + render_agent(verdict)
+        )
         for name, value in FAKES.items():
             assert value not in outputs, f"{case.id}: {name} printed in full"

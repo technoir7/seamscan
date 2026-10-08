@@ -73,8 +73,8 @@ const { PORT = "3000", JWT_SECRET = "dev-jwt-secret" } = process.env;   // JWT_S
 Not flagged:
 
 ```python
-SECRET_KEY = os.environ.get("SESSION_SECRET", "")           # fails closed
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")             # a setting, not a secret
+SECRET_KEY = os.environ.get("SESSION_SECRET", "")  # fails closed
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")  # a setting, not a secret
 CERT = os.environ.get("PUBLIC_KEY_PATH", "/etc/certs/pub.pem")
 cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "secrets/sa.json")
 ```

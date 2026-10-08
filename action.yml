@@ -1,0 +1,70 @@
+name: seamscan
+description: >-
+  Check a pull request for the security and correctness failures AI coding tools ship,
+  and upload the findings to GitHub code scanning.
+author: Aaron Fung
+branding:
+  icon: shield
+  color: orange
+
+# Needs `permissions: security-events: write` (upload) and `contents: read` in the
+# calling workflow. See docs/integrations.md.
+runs:
+  using: composite
+  steps:
+    # Pinned to commit SHAs so a moved tag can't change what runs (same pins as ci.yml).
+    - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+    - name: Make sure the base commit is present
+      shell: bash
+      env:
+        PR_BASE: ${{ github.event.pull_request.base.sha }}
+      run: |
+        # actions/checkout fetches one commit by default, so the base usually isn't here.
+        base="${PR_BASE:-HEAD~1}"
+        if ! git rev-parse --verify --quiet "${base}^{commit}" >/dev/null; then
+          if [ -n "$PR_BASE" ]; then
+            git fetch --no-tags --quiet --depth=1 origin "$PR_BASE"
+          else
+            git fetch --no-tags --quiet --deepen=1 origin "$GITHUB_SHA"
+          fi
+        fi
+        echo "SEAMSCAN_BASE=$base" >> "$GITHUB_ENV"
+
+    - name: Run seamscan
+      id: scan
+      shell: bash
+      env:
+        # The action's own checkout, at the ref the workflow asked for. Until 1.0 is on
+        # PyPI (spec §14) this replaces `uvx seamscan@<pinned>`. The path, unlike
+        # github.action_ref, is set inside nested composite actions and needs no clone.
+        SEAMSCAN_SOURCE: ${{ github.action_path }}
+      run: |
+        # Record the exit code instead of failing here, so the upload still runs.
+        set +e
+        rm -f seamscan.sarif
+        uvx --from "$SEAMSCAN_SOURCE" seamscan scan --base "$SEAMSCAN_BASE" \
+          --format sarif --output seamscan.sarif
+        echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+        # A usage error writes no SARIF; then there is nothing to upload.
+        if [ -s seamscan.sarif ]; then echo "sarif=true" >> "$GITHUB_OUTPUT"; fi
+
+    - name: Upload to code scanning
+      if: steps.scan.outputs.sarif == 'true'
+      uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      with:
+        sarif_file: seamscan.sarif
+        category: seamscan
+
+    - name: Fail on blocking findings or errors
+      if: steps.scan.outputs.exit-code != '0'
+      shell: bash
+      env:
+        CODE: ${{ steps.scan.outputs.exit-code }}
+      run: |
+        case "$CODE" in
+          1) echo "::error::seamscan found blocking issues; see the code scanning alerts" ;;
+          2) echo "::error::seamscan usage or configuration error; see the step above" ;;
+          *) echo "::error::seamscan internal error (exit $CODE); results are incomplete" ;;
+        esac
+        exit "$CODE"

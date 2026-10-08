@@ -50,9 +50,9 @@ def is_ad<U+200D>min(user): return True                  HIGH: identifier
 Not flagged:
 
 ```python
-FAMILY = "👨<U+200D>👩<U+200D>👧"                       # ZWJ inside a string: emoji
-BIDI = re.compile("[\u202a-\u202e]")                     # escapes, not the characters
-GREETING = "أهلا وسهلا"                                  # right-to-left letters are fine
+FAMILY = "👨<U+200D>👩<U+200D>👧"  # ZWJ inside a string: emoji
+BIDI = re.compile("[\u202a-\u202e]")  # escapes, not the characters
+GREETING = "أهلا وسهلا"  # right-to-left letters are fine
 # 👩<U+200D>💻 on-call dashboard                          # one emoji
 ```
 

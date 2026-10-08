@@ -61,9 +61,9 @@ new MongoClient(uri, { tls: true, tlsAllowInvalidCertificates: true });
 Not flagged:
 
 ```python
-requests.get(url, timeout=10)                # verification is on by default
+requests.get(url, timeout=10)  # verification is on by default
 requests.get(url, verify="/etc/ssl/ca.pem")  # custom CA bundle
-check(blob, verify=False)                    # not an HTTP client
+check(blob, verify=False)  # not an HTTP client
 ```
 
 ```ts

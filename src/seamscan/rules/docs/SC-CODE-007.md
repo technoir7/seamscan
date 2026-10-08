@@ -71,7 +71,7 @@ Flagged:
 os.system("ping -c 1 " + host)
 cmd = f"git log --oneline -n {count} {branch}"
 subprocess.check_output(cmd, shell=True, text=True)
-subprocess.run(f"tar -czf {shlex.quote(name)} {src_dir}", shell=True)   # src_dir unquoted
+subprocess.run(f"tar -czf {shlex.quote(name)} {src_dir}", shell=True)  # src_dir unquoted
 await asyncio.create_subprocess_shell(f"whois {domain}")
 ```
 

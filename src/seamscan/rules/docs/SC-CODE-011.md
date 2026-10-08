@@ -72,7 +72,7 @@ Flagged:
 
 ```python
 features = pickle.loads(request.data)
-return pickle.loads(r.get(key))                       # cache in Redis
+return pickle.loads(r.get(key))  # cache in Redis
 spec = yaml.load(await file.read(), Loader=yaml.FullLoader)
 return yaml.unsafe_load(resp.text)
 state = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
@@ -86,12 +86,12 @@ Not flagged:
 yaml.safe_load(fh)
 yaml.load(text, Loader=yaml.CSafeLoader)
 torch.load(path, weights_only=True)
-torch.load(path, map_location="cpu")                  # safe default since torch 2.6
+torch.load(path, map_location="cpu")  # safe default since torch 2.6
 with open(Path(__file__).parent / "models" / "churn.pkl", "rb") as f:
-    model = pickle.load(f)                             # ships with the code
-copy = pickle.loads(pickle.dumps(state))              # round trip of our own object
-RestrictedUnpickler(io.BytesIO(data)).load()          # find_class allow-list
-serializer.loads(token)                               # itsdangerous: signed JSON
+    model = pickle.load(f)  # ships with the code
+copy = pickle.loads(pickle.dumps(state))  # round trip of our own object
+RestrictedUnpickler(io.BytesIO(data)).load()  # find_class allow-list
+serializer.loads(token)  # itsdangerous: signed JSON
 ```
 
 ## How to fix

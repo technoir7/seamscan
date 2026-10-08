@@ -37,7 +37,7 @@ def table() -> str:
         m = rule.meta
         langs = ", ".join(LANGUAGES[k] for k in LANGUAGES if k in m.languages)
         rows.append(
-            f"| [{m.id}](docs/rules/{m.id}.md) | {m.title}{NOTES.get(m.id, '')} | {langs} "
+            f"| [{m.id}](src/seamscan/rules/docs/{m.id}.md) | {m.title}{NOTES.get(m.id, '')} | {langs} "
             f"| {m.severity.name} | {m.confidence.name} |"
         )
     return "\n".join(rows)

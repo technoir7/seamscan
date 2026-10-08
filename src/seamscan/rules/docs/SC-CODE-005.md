@@ -68,10 +68,11 @@ failed" or "invalid audience" error during development, and it ships.
 Flagged:
 
 ```python
-payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"],
-                     options={"verify_signature": False})
+payload = jwt.decode(
+    token, settings.jwt_secret, algorithms=["HS256"], options={"verify_signature": False}
+)
 jwt.decode(token, SECRET, algorithms=["HS256", "none"])
-claims = jwt.get_unverified_claims(token)        # python-jose
+claims = jwt.get_unverified_claims(token)  # python-jose
 if claims.get("role") != "admin":
     abort(403)
 ```
@@ -79,12 +80,12 @@ if claims.get("role") != "admin":
 Not flagged:
 
 ```python
-jwt.decode(token, key, algorithms=["HS256"])                      # verified
+jwt.decode(token, key, algorithms=["HS256"])  # verified
 jwt.decode(token, key, algorithms=["HS256"], options={"verify_exp": False})
-header = jwt.get_unverified_header(token)                         # kid lookup
+header = jwt.get_unverified_header(token)  # kid lookup
 unverified = jwt.decode(token, options={"verify_signature": False})
 key = public_key_for_issuer(unverified["iss"])
-return jwt.decode(token, key, algorithms=["RS256"])               # same token verified
+return jwt.decode(token, key, algorithms=["RS256"])  # same token verified
 ```
 
 TypeScript, flagged:

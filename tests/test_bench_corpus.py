@@ -8,7 +8,8 @@ from bench.fake_secrets import FAKES
 from seamscan.parse.javascript import js_dialect
 from seamscan.rules.registry import RULES
 
-DOCS = Path(__file__).resolve().parent.parent / "docs" / "rules"
+ROOT = Path(__file__).resolve().parent.parent
+DOCS = ROOT / "src" / "seamscan" / "rules" / "docs"
 SECRET_SHAPES = re.compile(
     r"sk_live_|rk_live_|sk-proj-|sk-ant-|ghp_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9_]{20}|AKIA[0-9A-Z]{16}"
     r"|sb_secret_|xox[baprs]-[0-9A-Za-z]{6}|eyJ[A-Za-z0-9_-]{10,}\.eyJ"
@@ -68,7 +69,7 @@ def test_every_registered_rule_has_docs_and_enough_cases_per_language():
     for rule in RULES:
         rid = rule.meta.id
         if not (DOCS / f"{rid}.md").exists():
-            problems.append(f"{rid}: missing docs/rules/{rid}.md")
+            problems.append(f"{rid}: missing src/seamscan/rules/docs/{rid}.md")
         for lang in (lang for lang in CODE_LANGUAGES if lang in rule.meta.languages):
             positives = sum(
                 any(e.rule == rid and language_of(e.path) == lang for e in c.expected)
@@ -98,7 +99,7 @@ def test_no_case_file_is_hidden_by_gitignore():
 def test_readme_rule_table_is_generated_from_the_registry():
     import importlib.util
 
-    script = DOCS.parent.parent / "scripts" / "rules_table.py"
+    script = ROOT / "scripts" / "rules_table.py"
     spec = importlib.util.spec_from_file_location("rules_table", script)
     assert spec is not None and spec.loader is not None
     rules_table = importlib.util.module_from_spec(spec)

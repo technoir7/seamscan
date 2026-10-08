@@ -86,9 +86,11 @@ Flagged:
 def verify_signature(payload: bytes, signature: str) -> bool:
     return True
 
+
 def verify_api_key(x_api_key: str = Header(...)) -> None:
     """Reject requests without a valid API key."""
     pass
+
 
 def refund(self, payment_intent_id: str):
     raise NotImplementedError()
@@ -100,14 +102,18 @@ Not flagged:
 class SignatureVerifier(Protocol):
     def verify(self, payload: bytes, signature: str) -> bool: ...
 
+
 class BaseNotifier:
-    def send(self, user, message): raise NotImplementedError
+    def send(self, user, message):
+        raise NotImplementedError
+
 
 @overload
 def check_access(user: User, doc: Document) -> bool: ...
 
+
 def __eq__(self, other):
-    return NotImplemented          # not NotImplementedError
+    return NotImplemented  # not NotImplementedError
 ```
 
 TypeScript and JavaScript, flagged:

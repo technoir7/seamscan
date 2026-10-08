@@ -94,15 +94,17 @@ def test_compute_total_applies_bulk_discount():
     total = compute_total(cart)
     print(total)
 
+
 def test_pipeline_handles_malformed_rows(tmp_path):
     try:
         run_pipeline(source)
     except Exception:
         pass
 
+
 def test_send_welcome_uses_mailer():
     send_welcome("ada@example.com", mailer=mailer)
-    mailer.send.called          # read, never asserted
+    mailer.send.called  # read, never asserted
 ```
 
 ```ts
@@ -129,11 +131,14 @@ def test_rejects_empty():
     with pytest.raises(ValueError):
         parse("")
 
+
 def test_invoice_line_items():
-    _verify_line_items(build_invoice(9), ["A-1"])   # helper asserts
+    _verify_line_items(build_invoice(9), ["A-1"])  # helper asserts
+
 
 def test_load_config_with_empty_file_does_not_raise(tmp_path):
     load_config(tmp_path / "empty.toml")
+
 
 @pytest.fixture
 def test_user():

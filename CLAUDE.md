@@ -11,6 +11,6 @@ Standing rules (details in the spec):
 - Layering is enforced (spec §5.3): rules, facts, parse, policy and report are
   pure — no filesystem, git, network or env access.
 - Every rule lands test-first via benchmark cases (spec §12.2), with a page in
-  `docs/rules/`.
+  `src/seamscan/rules/docs/` (shipped in the package for `seamscan explain`).
 - Never print a full secret in any output (spec §6.4).
 - Python via uv; run tools with `uv run`.
