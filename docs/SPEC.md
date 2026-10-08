@@ -324,6 +324,11 @@ records its reason (shown in `--explain`).
 8. Otherwise → unknown. Rules that need a role skip unknown files and
    count them in `--stats`.
 
+**Known issue (M3):** step 5 classifies every `src/` file of a plain Node backend
+as client code. SC-WEB-002 works around it by checking for server-framework
+imports. The fix belongs in M4's `ProjectModel`, which can tell a Vite/React
+frontend from a Node service by its `package.json` dependencies.
+
 ### 5.7 Supabase schema replay (`facts/supabase.py`)
 
 Migrations are applied in filename order (`<timestamp>_name.sql`) as a pure
@@ -377,6 +382,9 @@ the forms above.
 - Import and alias resolution covers ES modules and CommonJS `require` within
   a file. `node:` prefixes are dropped, so `import * as cp from "node:child_process"`
   makes `cp.exec` resolve to `child_process.exec`.
+- **Grammar gap:** tree-sitter-typescript 0.23 can't parse a generic tagged
+  template (`prisma.$queryRaw<User[]>\`...\``), which is common in AI-written
+  Prisma code. Such files get `SC-META-002`, and code near the call may be missed.
 - tree-sitter never refuses a file. A file it had to recover from still gets
   analyzed and also produces a `SC-META-002` finding, because code near the error
   may be missed.
@@ -641,12 +649,25 @@ MEDIUM / HIGH / CWE-338. Fires when `Math.random()` or the `random.*` module
 supplies a value assigned to, or returned from, a name matching
 token, secret, password, otp, nonce, salt, code or session.
 
+**SC-CODE-011 — Unsafe deserialization.** HIGH / MEDIUM / CWE-502. Python.
+- Flags non-literal input to `pickle`/`dill`/`marshal`/`jsonpickle`, `yaml.load`
+  without a safe loader, and `torch.load` with `weights_only` not `True`.
+- `torch.load` with the argument absent is safe from torch 2.6 on, and isn't
+  flagged.
+- Fixed in-repo paths and `pickle.loads(pickle.dumps(x))` round trips are safe.
+- Shipped in M3.
+
 **SC-CODE-010 — Invisible or bidirectional Unicode in source.**
 HIGH / HIGH / CWE-1007. Fires on bidi control characters anywhere in source,
 lowered to MEDIUM inside string literals, and on zero-width characters outside
 string literals (Trojan Source, CVE-2021-42574).
 
 ### 7.6 Test integrity (AI agents "make tests pass")
+
+These cover pytest/unittest and, since M3, Jest, Vitest, Mocha/Chai, node:test and
+Playwright Test. Platform- or browser-only skip conditions are exempt in both
+languages. Environment-variable conditions (`skipif(CI)`) are not.
+
 
 **SC-TEST-001 — Test with no assertion.**
 MEDIUM / HIGH. Fires on a pytest test function, or a jest/vitest `it`/`test`
@@ -712,14 +733,6 @@ the resolved version.
   the crash is reported with a traceback in `--debug`, and the exit code
   becomes 3.
 
-### 7.8a Planned addition
-
-**SC-CODE-011 — Unsafe deserialization.** HIGH / MEDIUM / CWE-502. Covers
-`pickle.loads`, `yaml.load` without a safe loader, and `torch.load` with
-`weights_only=False` on non-literal input. It was proposed during M2 and is kept
-separate from SC-CODE-008 because the weakness and the fix differ. It is scheduled
-with M3.
-
 ### 7.9 Deliberately deferred to v2
 
 These are listed so they aren't half-built now:
@@ -730,6 +743,10 @@ These are listed so they aren't half-built now:
 - auth checks on Supabase Edge Functions
 - cookie flags (`HttpOnly`, `Secure`, `SameSite`)
 - `npm` lockfile integrity
+- SC-WEB-001 handlers in Supabase Edge Functions (`Deno.serve`) and tRPC procedures
+- cross-file auth for SC-WEB-001: middleware mounted elsewhere, FastAPI
+  `include_router(dependencies=...)`, Django `urls.py` wrappers. Each is a
+  documented false-positive source today.
 - test-removal detection in scan mode (deleted test files, functions or
   assertions). This needs `ChangeSet` to record deletions as well as additions.
 
@@ -1195,6 +1212,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-08: **M3 done (0.4.0).** All rules extended to TypeScript/JavaScript, plus new SC-CODE-011 (unsafe deserialization) and SC-WEB-001..003 (auth before writes, SSRF, permissive CORS/debug). 20 rules, 647 cases (319 with TS/JS); every rule at 1.00/1.00 on both splits (author-written; see §8.3). Merge-time fixes: an unanchored `lib/` gitignore pattern had hidden 61 case files (now guarded by a test); the parse layer is the only one that imports tree-sitter (enforced); Deno `npm:`/`jsr:`/CDN imports resolve to package names; the benchmark fails on any rule crash; bundled-public env names (`VITE_`, `NEXT_PUBLIC_`, …) are out of SC-SEC-003's scope. Known issues recorded in §5.6 and §6.2; backlog in §7.9.
 - 2026-10-07: M3 groundwork: `parse/javascript.py` (tree-sitter TS/TSX/JS with import resolution, char-accurate locations, taint-lite), JS file roles per §5.6, JS files in the pipeline with partial-parse reporting, `rules/web.py`, and per-language case minimums.
 - 2026-10-07: **M2 done.** 16 Python rules shipped: SEC-001/003/004, CODE-001..010 and TEST-001..003. Each has ≥5 positive and ≥5 negative cases, a rule page, and passes its budget. The corpus has 262 cases. The `seamscan` command now runs the new engine; the legacy engine was removed after recording its score. Spec changes: rule pages are authoritative for matching detail (§7); severity may be lowered per finding (§5.4); SEC-003 uses the last-word rule; SEC-004 fires only on sensitive values; §6.3 documents the helper semantics; SC-CODE-011 planned (§7.8a); test-removal detection deferred to v2 (§7.9).
 - 2026-10-07: M2 infrastructure: file roles, secret classification and redaction, taint-lite string helper, inline suppressions (SC-META-001), scan-mode benchmark cases, budget check, CI workflow with SHA-pinned actions. Added the independent-holdout requirement (§8.3).

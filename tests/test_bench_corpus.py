@@ -93,3 +93,9 @@ def test_no_case_file_is_hidden_by_gitignore():
         check=True,
     ).stdout.split()
     assert not hidden, f"git ignores these case files: {hidden[:10]}"
+
+
+def test_readme_rule_table_matches_the_registry():
+    readme = (DOCS.parent.parent / "README.md").read_text()
+    listed = set(re.findall(r"^\| \[(SC-[A-Z]+-\d{3})\]", readme, flags=re.M))
+    assert listed == {r.meta.id for r in RULES}

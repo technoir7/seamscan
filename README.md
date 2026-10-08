@@ -14,7 +14,8 @@ AI assistants make the same mistakes again and again:
 seamscan finds them. It reports each finding with an exact file and line, a severity
 and a confidence.
 
-**Status: alpha (0.3.0).** Python is covered. TypeScript/JavaScript and the
+**Status: alpha (0.4.0).** Python and TypeScript/JavaScript are covered: Next.js,
+React, Vite, Express, Hono, Supabase Edge Functions, FastAPI, Flask and Django. The
 Supabase/Firebase cross-file checks are next; see [Roadmap](#roadmap). The design is
 in [`docs/SPEC.md`](docs/SPEC.md).
 
@@ -51,24 +52,28 @@ exit code come from the same decision.
 
 ## Rules
 
-| Rule | What it finds | Severity | Confidence |
-|---|---|---|---|
-| [SC-SEC-001](docs/rules/SC-SEC-001.md) | Provider secret in source | CRITICAL | HIGH |
-| [SC-SEC-003](docs/rules/SC-SEC-003.md) | Hardcoded fallback for a secret | HIGH | HIGH |
-| [SC-SEC-004](docs/rules/SC-SEC-004.md) | Env file with credentials committed | HIGH | HIGH |
-| [SC-CODE-001](docs/rules/SC-CODE-001.md) | TLS verification disabled | HIGH | HIGH |
-| [SC-CODE-002](docs/rules/SC-CODE-002.md) | Swallowed exception | MEDIUM | HIGH |
-| [SC-CODE-003](docs/rules/SC-CODE-003.md) | Unfinished code in a shipped path | HIGH | HIGH |
-| [SC-CODE-004](docs/rules/SC-CODE-004.md) | Hardcoded credential comparison | HIGH | HIGH |
-| [SC-CODE-005](docs/rules/SC-CODE-005.md) | JWT accepted without verification | CRITICAL | HIGH |
-| [SC-CODE-006](docs/rules/SC-CODE-006.md) | SQL built from strings | HIGH | MEDIUM |
-| [SC-CODE-007](docs/rules/SC-CODE-007.md) | Shell command built from strings | HIGH | MEDIUM |
-| [SC-CODE-008](docs/rules/SC-CODE-008.md) | Code evaluated from non-literals | HIGH | MEDIUM |
-| [SC-CODE-009](docs/rules/SC-CODE-009.md) | Predictable randomness for secrets | MEDIUM | HIGH |
-| [SC-CODE-010](docs/rules/SC-CODE-010.md) | Invisible or bidirectional Unicode (Trojan Source) | HIGH | HIGH |
-| [SC-TEST-001](docs/rules/SC-TEST-001.md) | Test with no assertion | MEDIUM | HIGH |
-| [SC-TEST-002](docs/rules/SC-TEST-002.md) | Assertion that can't fail | MEDIUM | HIGH |
-| [SC-TEST-003](docs/rules/SC-TEST-003.md) | Test disabled in this change (`scan` only) | MEDIUM | HIGH |
+| Rule | What it finds | Languages | Severity | Confidence |
+|---|---|---|---|---|
+| [SC-CODE-001](docs/rules/SC-CODE-001.md) | TLS verification disabled | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-002](docs/rules/SC-CODE-002.md) | Swallowed exception | Py, TS/JS | MEDIUM | HIGH |
+| [SC-CODE-003](docs/rules/SC-CODE-003.md) | Unfinished code in a shipped path | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-004](docs/rules/SC-CODE-004.md) | Hardcoded credential comparison | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-005](docs/rules/SC-CODE-005.md) | JWT accepted without verification | Py, TS/JS | CRITICAL | HIGH |
+| [SC-CODE-006](docs/rules/SC-CODE-006.md) | SQL built from strings | Py, TS/JS | HIGH | MEDIUM |
+| [SC-CODE-007](docs/rules/SC-CODE-007.md) | Shell command built from strings | Py, TS/JS | HIGH | MEDIUM |
+| [SC-CODE-008](docs/rules/SC-CODE-008.md) | Code or HTML evaluated from non-literals | Py, TS/JS | HIGH | MEDIUM |
+| [SC-CODE-009](docs/rules/SC-CODE-009.md) | Predictable randomness for secrets | Py, TS/JS | MEDIUM | HIGH |
+| [SC-CODE-010](docs/rules/SC-CODE-010.md) | Invisible or bidirectional Unicode (Trojan Source) | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-011](docs/rules/SC-CODE-011.md) | Unsafe deserialization | Py | HIGH | MEDIUM |
+| [SC-SEC-001](docs/rules/SC-SEC-001.md) | Provider secret in source | Py, TS/JS, `.env` | CRITICAL | HIGH |
+| [SC-SEC-003](docs/rules/SC-SEC-003.md) | Hardcoded fallback for a secret | Py, TS/JS | HIGH | HIGH |
+| [SC-SEC-004](docs/rules/SC-SEC-004.md) | Env file with credentials committed | `.env` | HIGH | HIGH |
+| [SC-TEST-001](docs/rules/SC-TEST-001.md) | Test with no assertion | Py, TS/JS | MEDIUM | HIGH |
+| [SC-TEST-002](docs/rules/SC-TEST-002.md) | Assertion that can't fail | Py, TS/JS | MEDIUM | HIGH |
+| [SC-TEST-003](docs/rules/SC-TEST-003.md) | Test disabled in this change (`scan` only) | Py, TS/JS | MEDIUM | HIGH |
+| [SC-WEB-001](docs/rules/SC-WEB-001.md) | Server write without an auth check | Py, TS/JS | HIGH | MEDIUM |
+| [SC-WEB-002](docs/rules/SC-WEB-002.md) | Server-side request to a user-controlled URL | Py, TS/JS | HIGH | MEDIUM |
+| [SC-WEB-003](docs/rules/SC-WEB-003.md) | Permissive debug or CORS config | Py, TS/JS | MEDIUM | HIGH |
 
 Each rule page covers:
 - exactly what matches
@@ -96,14 +101,14 @@ at least 5 cases it must flag and 5 close calls it must not. The cases are split
 rule at the right file and line. CI fails if any rule drops below its precision/recall
 budget.
 
-On the current 262 cases, and with the same scoring:
+The corpus has 647 cases, about half (319) of them TypeScript/JavaScript. Every rule scores
+precision 1.00 and recall 1.00 on both splits.
 
-| | Precision | Recall |
-|---|---|---|
-| v0.2 engine (regex over diff text; given credit without a location) | 0.40 | 0.19 |
-| v0.3 engine | 1.00 | 1.00 |
+When the Python rules landed, the old v0.2 engine was scored on the 262-case corpus of
+the time with the same scoring. It got credit even without a location, and still
+reached precision 0.40 and recall 0.19.
 
-**Read the v0.3 numbers with care.** The cases were written alongside the rules, so
+**Read the current numbers with care.** The cases were written alongside the rules, so
 even the holdout split isn't independent. An independently written holdout set comes
 before any published accuracy claim ([spec §8.3](docs/SPEC.md)). The rule pages list
 the misfires already found outside the benchmark.
@@ -129,9 +134,7 @@ function calls.
 
 See [spec §14](docs/SPEC.md).
 
-- **Next: TypeScript/JavaScript** (tree-sitter). These are the same rules plus
-  web-route checks (missing auth on writes, SSRF, permissive CORS).
-- **Supabase and Firebase.** Tables without row-level security that are queried from
+- **Next: Supabase and Firebase.** Tables without row-level security that are queried from
   the browser, open Firebase rules, and service-role keys reachable from client code.
   These are cross-file checks that link migrations, rules files, env files and client
   code.

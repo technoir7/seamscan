@@ -134,7 +134,8 @@ Python:
   reads a file from the repository, so the risk is low, but the rule can't tell.
 - Unsafe deserialization (`pickle.loads`, `yaml.load` with an unsafe loader) also
   runs attacker-chosen code, but it isn't covered here. It's a different weakness
-  (CWE-502) with a different fix, so it's proposed as its own rule.
+  (CWE-502) with a different fix, so it has its own rule:
+  [SC-CODE-011](SC-CODE-011.md).
 - `pandas.eval`/`DataFrame.query` with untrusted text can evaluate expressions too, and
   aren't covered.
 
