@@ -16,7 +16,11 @@ from seamscan.analysis import Analysis, analyze
 from seamscan.model import ChangeSet, SourceFile
 from seamscan.policy.verdict import Policy, Verdict, decide
 from seamscan.report.json import render_json
+from seamscan.report.markdown import render_markdown
+from seamscan.report.sarif import render_sarif
+from seamscan.report.stats import render_stats
 from seamscan.report.terminal import render_terminal
+from seamscan.rules.registry import ALL_META
 from seamscan.workspace.files import collect
 from seamscan.workspace.git import GitError, read_changeset
 
@@ -26,11 +30,16 @@ app = typer.Typer(add_completion=False, no_args_is_help=True)
 class Format(StrEnum):
     terminal = "terminal"
     json = "json"
+    sarif = "sarif"
+    md = "md"
 
 
 FormatOpt = Annotated[Format, typer.Option("--format", help="Output format")]
 OutputOpt = Annotated[
     Path | None, typer.Option("--output", help="Write to a file instead of stdout")
+]
+StatsOpt = Annotated[
+    bool, typer.Option("--stats", help="Print files skipped, suppressions and counts to stderr")
 ]
 
 
@@ -57,14 +66,35 @@ def _run(
 
 
 def _render(outcome: Outcome, fmt: Format) -> str:
-    findings = outcome.analysis.findings
-    if fmt is Format.json:
-        return render_json(findings, outcome.verdict, __version__)
-    return render_terminal(findings, outcome.verdict)
+    a, verdict = outcome.analysis, outcome.verdict
+    match fmt:
+        case Format.json:
+            return render_json(a.findings, verdict, __version__, a.suppressed)
+        case Format.sarif:
+            return render_sarif(a.findings, verdict, a.suppressed, ALL_META, __version__)
+        case Format.md:
+            return render_markdown(
+                a.findings,
+                verdict,
+                a.suppressed,
+                ALL_META,
+                __version__,
+                a.files_analyzed,
+                outcome.skipped,
+            )
+        case Format.terminal:
+            return render_terminal(a.findings, verdict, a.suppressed)
 
 
-def _emit(outcome: Outcome, fmt: Format, output: Path | None) -> None:
+def _emit(outcome: Outcome, fmt: Format, output: Path | None, stats: bool = False) -> None:
     text = _render(outcome, fmt)
+    if stats:
+        a = outcome.analysis
+        sys.stderr.write(
+            render_stats(
+                a.findings, outcome.verdict, a.suppressed, a.files_analyzed, outcome.skipped
+            )
+        )
     if output:
         output.write_text(text)
     else:
@@ -77,11 +107,12 @@ def audit(
     path: Annotated[Path, typer.Argument(help="Repository root")] = Path("."),
     fmt: FormatOpt = Format.terminal,
     output: OutputOpt = None,
+    stats: StatsOpt = False,
 ) -> None:
     """Check a whole repository."""
     root = path.resolve()
     fileset = collect(root)
-    _emit(_run(root, fileset.files, fileset.skipped), fmt, output)
+    _emit(_run(root, fileset.files, fileset.skipped), fmt, output, stats)
 
 
 @app.command()
@@ -90,6 +121,7 @@ def scan(
     staged: Annotated[bool, typer.Option(help="Check only staged changes")] = False,
     fmt: FormatOpt = Format.terminal,
     output: OutputOpt = None,
+    stats: StatsOpt = False,
 ) -> None:
     """Check only what a change introduced (working tree vs HEAD by default)."""
     root = Path.cwd()
@@ -101,7 +133,7 @@ def scan(
     fileset = collect(root)
     changed = tuple(f for f in fileset.files if f.path in change.added)
     outcome = _run(root, changed, fileset.skipped, change=change, context=fileset.files)
-    _emit(outcome, fmt, output)
+    _emit(outcome, fmt, output, stats)
 
 
 def _show_version(value: bool) -> None:
