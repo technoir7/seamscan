@@ -5,7 +5,7 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "src" / "seamscan"
 
-PURE_LAYERS = ("model", "parse", "facts", "rules", "policy", "report", "analysis")
+PURE_LAYERS = ("model", "parse", "facts", "rules", "policy", "report", "analysis", "hooks")
 IO_MODULES = {"subprocess", "urllib", "socket", "http", "requests", "httpx", "shutil"}
 IO_PACKAGES = {"seamscan.workspace", "seamscan.supply", "seamscan.cli"}
 
@@ -18,6 +18,8 @@ ALLOWED = {
     "policy": {"model"},
     "report": {"model", "policy"},
     "analysis": {"model", "parse", "facts", "rules", "policy"},
+    # Hook adapters turn a verdict into a response; they never see rules or files.
+    "hooks": {"policy.verdict", "report.agent"},
 }
 
 
