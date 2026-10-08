@@ -1,0 +1,12 @@
+id = "supa003-leaderboard-view-over-rls-table"
+description = "A public leaderboard view joins two RLS-protected tables without security_invoker"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260213150000_scores.sql"
+line = 15

@@ -1,0 +1,12 @@
+id = "supa003-handle-new-user-no-search-path"
+description = "The classic profile trigger function is SECURITY DEFINER without SET search_path"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260121081000_new_user_trigger.sql"
+line = 2

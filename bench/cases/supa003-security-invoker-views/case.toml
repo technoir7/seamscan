@@ -1,0 +1,10 @@
+id = "supa003-security-invoker-views"
+description = "Views over RLS tables created WITH (security_invoker = true), or switched on with ALTER VIEW"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

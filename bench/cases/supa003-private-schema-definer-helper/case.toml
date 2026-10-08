@@ -1,0 +1,10 @@
+id = "supa003-private-schema-definer-helper"
+description = "The recommended pattern: a SECURITY DEFINER helper in a private schema, and an invoker function in public"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

@@ -1,0 +1,12 @@
+id = "supa003-security-barrier-view-not-invoker"
+description = "A view WITH (security_barrier = true) still runs as its owner and bypasses RLS on orders"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260224093000_order_totals.sql"
+line = 13

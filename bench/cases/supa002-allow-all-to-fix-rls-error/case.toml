@@ -1,0 +1,12 @@
+id = "supa002-allow-all-to-fix-rls-error"
+description = "An AI fix for 'new row violates row-level security policy' replaces the owner policy with FOR ALL true"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260205101500_c4d5e6f7-0a1b-4c2d-8e3f-9a8b7c6d5e4f.sql"
+line = 4

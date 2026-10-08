@@ -1,0 +1,12 @@
+id = "supa003-scan-new-is-admin-helper"
+description = "Scan: a new migration adds an unqualified SECURITY DEFINER is_admin() helper without search_path"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260220110000_admin_helpers.sql"
+line = 1

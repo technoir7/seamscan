@@ -1,0 +1,12 @@
+id = "supa002-authenticated-delete-any-comment"
+description = "Any signed-in user may delete any comment: FOR DELETE TO authenticated USING ( true )"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260222170000_comments.sql"
+line = 20

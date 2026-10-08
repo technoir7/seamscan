@@ -1,0 +1,10 @@
+id = "supa002-allow-all-policy-dropped-later"
+description = "A prototype 'Allow all' policy is dropped and replaced by owner policies in a later migration"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

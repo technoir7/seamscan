@@ -1,0 +1,13 @@
+id = "supa004-no-force-and-dropped-table"
+description = "NO FORCE ROW LEVEL SECURITY keeps RLS on, and a disabled scratch table is dropped later"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-004"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

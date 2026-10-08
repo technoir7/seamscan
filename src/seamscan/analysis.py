@@ -99,6 +99,7 @@ def analyze(
     scan mode, the unchanged rest of the repository (ADR-002).
     """
     ordered = tuple(sorted(files, key=lambda f: f.path))
+    context = tuple(context)
     analyzed = {f.path for f in ordered}
     project = build_project([*ordered, *(f for f in context if f.path not in analyzed)])
     parsed = _parse(ordered)
@@ -108,7 +109,12 @@ def analyze(
     )
     for rule in rules:
         findings.extend(_run(rule, ctx))
-    applied = apply_suppressions(findings, {f.path: f.text for f in ordered})
+    sources = {f.path: f.text for f in ordered}
+    # A cross-file finding can sit in an unchanged context file (ADR-002), and so can the
+    # suppression for it.
+    located = {f.location.path for f in findings}
+    sources.update({f.path: f.text for f in context if f.path in located - analyzed})
+    applied = apply_suppressions(findings, sources)
     findings = list(applied.kept)
     for s in applied.missing_reason:
         findings.append(

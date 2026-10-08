@@ -1,0 +1,12 @@
+id = "supa002-storage-anyone-uploads"
+description = "Avatar bucket lets anyone upload any object to any bucket: storage.objects insert WITH CHECK (true)"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260121083000_avatars.sql"
+line = 8

@@ -1,0 +1,12 @@
+id = "supa001-bolt-todos-recreated-without-rls"
+description = "Bolt app drops and recreates todos to add columns; the new table never gets RLS back"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260118091544_bright_sun.sql"
+line = 10

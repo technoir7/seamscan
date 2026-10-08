@@ -1,0 +1,13 @@
+id = "supa001-rls-enabled-in-later-migration"
+description = "messages is created without RLS in one migration and gets RLS plus policies in the next"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-001"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

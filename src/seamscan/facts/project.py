@@ -1,5 +1,6 @@
 """Whole-project facts every rule can use (spec §5.2, §5.6): which package a file belongs
-to and what kind it is, the role of each file, Supabase table references and .env values.
+to and what kind it is, the role of each file, Supabase table references, the schema the
+Supabase migrations leave behind, and .env values.
 Built once per scan from the files' text. Pure."""
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from seamscan.facts.roles import PackageKind, Role, role_of
+from seamscan.facts.supabase import SupabaseSchema, build_supabase_schemas
 from seamscan.model import Location, SourceFile
 from seamscan.parse.envfile import parse_env
 from seamscan.parse.javascript import JsModule, directive, js_dialect
@@ -75,6 +77,9 @@ class ProjectModel:
     table_references: Mapping[str, tuple[TableReference, ...]]
     env: tuple[EnvValue, ...]
     unreadable_manifests: tuple[str, ...]  # package.json files that aren't valid JSON
+    # One per supabase/migrations directory. Here rather than built from ctx.files because
+    # in scan mode the unchanged migrations arrive only as context (ADR-002).
+    supabase: tuple[SupabaseSchema, ...] = ()
 
     def package_for(self, path: str) -> Package | None:
         for p in self.packages:
@@ -149,4 +154,5 @@ def build_project(files: Iterable[SourceFile]) -> ProjectModel:
         {table: tuple(r) for table, r in refs.items()},
         tuple(env),
         partial.unreadable_manifests,
+        build_supabase_schemas(files),
     )

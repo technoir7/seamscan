@@ -1,0 +1,17 @@
+id = "supa002-dashboard-template-policies"
+description = "Policies from the dashboard templates: public read (informational) and insert for any signed-in user"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260119143000_posts.sql"
+line = 11
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260119143000_posts.sql"
+line = 18

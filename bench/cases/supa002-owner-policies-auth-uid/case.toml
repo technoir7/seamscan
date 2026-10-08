@@ -1,0 +1,10 @@
+id = "supa002-owner-policies-auth-uid"
+description = "Owner-scoped policies for every command, written with auth.uid() and (select auth.uid())"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

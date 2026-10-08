@@ -1,0 +1,12 @@
+id = "supa002-scan-guest-checkout-anon-insert"
+description = "Scan: a new migration lets anonymous visitors insert any order row for guest checkout"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260215094500_guest_checkout.sql"
+line = 2
