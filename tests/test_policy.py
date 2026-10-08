@@ -29,3 +29,18 @@ def test_rule_crash_is_an_internal_error():
 def test_clean_run():
     v = decide([], Policy())
     assert v.exit_code == 0 and v.headline == "No findings"
+
+
+def test_known_findings_are_reported_but_never_block():
+    known = Finding(
+        "SC-CODE-001",
+        Severity.HIGH,
+        Confidence.HIGH,
+        Location("a.py", 1, 1, 1, 2),
+        "m",
+        "e",
+        fingerprint="abc",
+    )
+    v = decide([known], Policy(), known=frozenset({"abc"}))
+    assert v.exit_code == 0 and not v.blocking and v.baselined == (known,)
+    assert v.headline == "No new findings (1 in baseline)"

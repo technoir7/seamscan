@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Sequence
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
@@ -10,9 +12,9 @@ from typing import Annotated
 import typer
 
 from seamscan import __version__
-from seamscan.analysis import analyze
-from seamscan.model import ChangeSet, Finding
-from seamscan.policy.verdict import Policy, decide
+from seamscan.analysis import Analysis, analyze
+from seamscan.model import ChangeSet, SourceFile
+from seamscan.policy.verdict import Policy, Verdict, decide
 from seamscan.report.json import render_json
 from seamscan.report.terminal import render_terminal
 from seamscan.workspace.files import collect
@@ -32,17 +34,42 @@ OutputOpt = Annotated[
 ]
 
 
-def _emit(findings: tuple[Finding, ...], fmt: Format, output: Path | None) -> None:
-    verdict = decide(findings, Policy())
+@dataclass(frozen=True)
+class Outcome:
+    """Everything one run produced; every output format renders from this."""
+
+    analysis: Analysis
+    verdict: Verdict
+    skipped: tuple[tuple[str, str], ...]  # (path, reason) from file collection
+
+
+def _run(
+    root: Path,
+    files: Sequence[SourceFile],
+    skipped: tuple[tuple[str, str], ...],
+    change: ChangeSet | None = None,
+    context: Sequence[SourceFile] = (),
+) -> Outcome:
+    """The one path from files to a verdict, shared by every command."""
+    analysis = analyze(files, change=change, context=context)
+    verdict = decide(analysis.findings, Policy())
+    return Outcome(analysis, verdict, skipped)
+
+
+def _render(outcome: Outcome, fmt: Format) -> str:
+    findings = outcome.analysis.findings
     if fmt is Format.json:
-        text = render_json(findings, verdict, __version__)
-    else:
-        text = render_terminal(findings, verdict)
+        return render_json(findings, outcome.verdict, __version__)
+    return render_terminal(findings, outcome.verdict)
+
+
+def _emit(outcome: Outcome, fmt: Format, output: Path | None) -> None:
+    text = _render(outcome, fmt)
     if output:
         output.write_text(text)
     else:
         sys.stdout.write(text)
-    raise typer.Exit(code=verdict.exit_code)
+    raise typer.Exit(code=outcome.verdict.exit_code)
 
 
 @app.command()
@@ -52,8 +79,9 @@ def audit(
     output: OutputOpt = None,
 ) -> None:
     """Check a whole repository."""
-    fileset = collect(path.resolve())
-    _emit(analyze(fileset.files).findings, fmt, output)
+    root = path.resolve()
+    fileset = collect(root)
+    _emit(_run(root, fileset.files, fileset.skipped), fmt, output)
 
 
 @app.command()
@@ -72,7 +100,8 @@ def scan(
         raise typer.Exit(code=2) from exc
     fileset = collect(root)
     changed = tuple(f for f in fileset.files if f.path in change.added)
-    _emit(analyze(changed, change=change, context=fileset.files).findings, fmt, output)
+    outcome = _run(root, changed, fileset.skipped, change=change, context=fileset.files)
+    _emit(outcome, fmt, output)
 
 
 def _show_version(value: bool) -> None:

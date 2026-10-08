@@ -125,8 +125,11 @@ def analyze(
                 "",
             )
         )
-    suppressed = list(applied.suppressed)
+    # Fingerprint before narrowing to the change: an occurrence index counted over fewer
+    # findings would differ from audit's, and a baseline written by audit would not match.
+    kept = with_fingerprints(findings)
+    suppressed = with_fingerprints(applied.suppressed)
     if change is not None:
-        findings = [f for f in findings if _in_scope(f, change)]
-        suppressed = [f for f in suppressed if _in_scope(f, change)]
-    return Analysis(with_fingerprints(findings), with_fingerprints(suppressed))
+        kept = tuple(f for f in kept if _in_scope(f, change))
+        suppressed = tuple(f for f in suppressed if _in_scope(f, change))
+    return Analysis(kept, suppressed)

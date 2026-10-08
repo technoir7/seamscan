@@ -136,3 +136,16 @@ def test_expo_router_app_directory_is_client_code():
 def test_next_conventions_still_apply_without_a_package_json():
     project = build_project([])
     assert project.role("app/api/x/route.ts") is Role.SERVER
+
+
+def test_scan_mode_fingerprints_match_audit_fingerprints():
+    # A baseline written by `audit` must still match in `scan` (spec §9.3), so the
+    # occurrence index in a fingerprint can't depend on which findings are in scope.
+    from seamscan.analysis import analyze
+    from seamscan.model import ChangeSet
+
+    text = "import requests\nrequests.get(u, verify=False)\nrequests.get(u, verify=False)\n"
+    f = SourceFile("a.py", text)
+    audit = analyze([f]).findings
+    scan = analyze([f], change=ChangeSet(added={"a.py": ((3, 3),)})).findings
+    assert [x.fingerprint for x in scan] == [audit[1].fingerprint]

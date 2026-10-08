@@ -1217,6 +1217,23 @@ Order rationale:
 - **M1 first:** the measuring stick comes before the rules.
 - **M3 and M4 before M5:** the vibe-coded stack is the differentiator,
   while dependency checks are the most crowded area.
+- **M6 before M5** (decided 2026-10-08): baseline, SARIF, the Action and the
+  audit report are what make seamscan adoptable by a team and usable for
+  consulting Offer A. Dependency checks are the most crowded area, so they wait.
+
+**M6 scope as built:**
+- `seamscan.toml` supports `[policy]`, `[rules]` and `[paths] exclude` now. The
+  other keys in §9.5 (`[paths] client/server`, `[auth]`, `[ssrf]`, `[deps]`)
+  arrive with the code that reads them; until then they are unknown keys and
+  exit 2, which is the honest failure.
+- `--offline` arrives with M5, the first thing that uses the network.
+- Until 1.0 is on PyPI (M7), the Action and pre-commit install seamscan from
+  this repository at a pinned ref instead of `uvx seamscan@<pinned>`.
+- The GitHub code-scanning upload is verified on a test repository once the
+  branch is pushed; until then SARIF is validated against the official schema.
+- Fingerprints are computed before scan mode narrows findings to the change, so
+  a baseline written by `audit` matches in `scan`. A cross-file finding that sits
+  in an unchanged file can still number its duplicates differently; accepted.
 
 ---
 
@@ -1257,6 +1274,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-08: M6 moved ahead of M5 (§14). M6 groundwork: fingerprints computed before scan scoping; `Verdict.baselined`; one shared run path in the CLI. M6 scope decisions recorded under §14.
 - 2026-10-08: **M4 done (0.5.0).** New rules: SC-SUPA-001..004 (statement scanner + schema replay per ADR-001; table→browser links per ADR-002), SC-FIRE-001 (Firestore/Storage/RTDB rules parser) and SC-SEC-002 (secrets reachable from the browser). 26 rules, 746 cases, every rule 1.00/1.00 on both splits (author-written; §8.3). The README rule table is now generated from the registry (`scripts/rules_table.py`) and a test fails when it is stale. Expo Router's `app/` is client code. SQL `--` suppressions. Decisions recorded in §5.7, §7.1, §7.3 and §9.2; backlog in §7.9.
 - 2026-10-08: M4 groundwork: `facts/project.py` (ProjectModel: package kinds from package.json, package-relative file roles, lexical `.from('table')` index, .env values), roles now come from `ctx.project`; fixes Node backends under `src/` (§5.6 known issue), Next.js `src/app` layouts and monorepo packages. Scan mode passes the unchanged repository as `context` so project facts are complete (ADR-002).
 - 2026-10-08: **M3 done (0.4.0).** All rules extended to TypeScript/JavaScript, plus new SC-CODE-011 (unsafe deserialization) and SC-WEB-001..003 (auth before writes, SSRF, permissive CORS/debug). 20 rules, 647 cases (319 with TS/JS); every rule at 1.00/1.00 on both splits (author-written; see §8.3). Merge-time fixes: an unanchored `lib/` gitignore pattern had hidden 61 case files (now guarded by a test); the parse layer is the only one that imports tree-sitter (enforced); Deno `npm:`/`jsr:`/CDN imports resolve to package names; the benchmark fails on any rule crash; bundled-public env names (`VITE_`, `NEXT_PUBLIC_`, …) are out of SC-SEC-003's scope. Known issues recorded in §5.6 and §6.2; backlog in §7.9.
