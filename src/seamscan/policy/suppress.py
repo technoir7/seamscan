@@ -45,19 +45,30 @@ def find_suppressions(path: str, text: str) -> list[Suppression]:
 
 
 @dataclass(frozen=True)
+class Suppressed:
+    """A finding hidden by a reasoned suppression. Outputs list it with its reason (§9.2)."""
+
+    finding: Finding
+    reason: str
+
+
+@dataclass(frozen=True)
 class Applied:
     kept: tuple[Finding, ...]
-    suppressed: tuple[Finding, ...]
+    suppressed: tuple[Suppressed, ...]
     missing_reason: tuple[Suppression, ...]  # ignored; the caller reports them
 
 
 def apply_suppressions(findings: Iterable[Finding], sources: Mapping[str, str]) -> Applied:
     marks = [s for path, text in sources.items() for s in find_suppressions(path, text)]
-    valid = {(s.path, s.target_line, r) for s in marks if s.reason for r in s.rules}
+    valid = {(s.path, s.target_line, r): s.reason for s in marks if s.reason for r in s.rules}
     kept: list[Finding] = []
-    suppressed: list[Finding] = []
+    suppressed: list[Suppressed] = []
     for f in findings:
-        key = (f.location.path, f.location.start_line, f.rule_id)
-        (suppressed if key in valid else kept).append(f)
+        reason = valid.get((f.location.path, f.location.start_line, f.rule_id))
+        if reason is None:
+            kept.append(f)
+        else:
+            suppressed.append(Suppressed(f, reason))
     missing = tuple(s for s in marks if not s.reason)
     return Applied(tuple(kept), tuple(suppressed), missing)
