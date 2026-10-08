@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from seamscan.model import RuleMeta
 from seamscan.rules import (
     code,
     deserialize,
     firebase,
     injection,
+    meta,
     secrets,
     supabase,
     tests_integrity,
@@ -24,3 +26,6 @@ RULES: tuple[Rule, ...] = (
     *supabase.RULES,
     *firebase.RULES,
 )
+
+# Every rule id a finding can carry, for outputs that describe rules (SARIF, the report).
+ALL_META: tuple[RuleMeta, ...] = (*(r.meta for r in RULES), *meta.META)

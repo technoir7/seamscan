@@ -6,10 +6,13 @@ from collections.abc import Sequence
 from itertools import groupby
 
 from seamscan.model import Finding
+from seamscan.policy.suppress import Suppressed
 from seamscan.policy.verdict import Verdict
 
 
-def render_terminal(findings: Sequence[Finding], verdict: Verdict) -> str:
+def render_terminal(
+    findings: Sequence[Finding], verdict: Verdict, suppressed: Sequence[Suppressed] = ()
+) -> str:
     blocking = {f.fingerprint for f in verdict.blocking}
     lines: list[str] = []
     ordered = sorted(findings, key=Finding.sort_key)
@@ -22,5 +25,15 @@ def render_terminal(findings: Sequence[Finding], verdict: Verdict) -> str:
                 f"{f.severity.name}/{f.confidence.name}  {f.message}"
             )
         lines.append("")
+    hidden = [
+        text
+        for count, text in (
+            (len(suppressed), f"{len(suppressed)} suppressed inline"),
+            (len(verdict.baselined), f"{len(verdict.baselined)} in baseline"),
+        )
+        if count
+    ]
+    if hidden:
+        lines.append(f"seamscan: {', '.join(hidden)} (see --stats)")
     lines.append(f"seamscan: {verdict.headline}")
     return "\n".join(lines) + "\n"

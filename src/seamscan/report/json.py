@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from seamscan.model import Finding, Location
+from seamscan.policy.suppress import Suppressed
 from seamscan.policy.verdict import Verdict
 
 SCHEMA_VERSION = 1
@@ -22,8 +23,27 @@ def _loc(loc: Location) -> dict[str, Any]:
     }
 
 
-def render_json(findings: Sequence[Finding], verdict: Verdict, tool_version: str) -> str:
+def _finding(f: Finding) -> dict[str, Any]:
+    return {
+        "rule_id": f.rule_id,
+        "severity": f.severity.name,
+        "confidence": f.confidence.name,
+        "location": _loc(f.location),
+        "related": [_loc(r) for r in f.related],
+        "message": f.message,
+        "evidence": f.evidence,
+        "fingerprint": f.fingerprint,
+    }
+
+
+def render_json(
+    findings: Sequence[Finding],
+    verdict: Verdict,
+    tool_version: str,
+    suppressed: Sequence[Suppressed] = (),
+) -> str:
     blocking = {f.fingerprint for f in verdict.blocking}
+    baselined = {f.fingerprint for f in verdict.baselined}
     doc = {
         "schema_version": SCHEMA_VERSION,
         "tool": {"name": "seamscan", "version": tool_version},
@@ -32,20 +52,20 @@ def render_json(findings: Sequence[Finding], verdict: Verdict, tool_version: str
             "headline": verdict.headline,
             "blocking": len(verdict.blocking),
             "total": len(findings),
+            "baselined": len(verdict.baselined),
+            "suppressed": len(suppressed),
         },
         "findings": [
             {
-                "rule_id": f.rule_id,
-                "severity": f.severity.name,
-                "confidence": f.confidence.name,
-                "location": _loc(f.location),
-                "related": [_loc(r) for r in f.related],
-                "message": f.message,
-                "evidence": f.evidence,
-                "fingerprint": f.fingerprint,
+                **_finding(f),
                 "blocking": f.fingerprint in blocking,
+                "baselined": f.fingerprint in baselined,
             }
             for f in sorted(findings, key=Finding.sort_key)
+        ],
+        "suppressed": [
+            {**_finding(s.finding), "reason": s.reason}
+            for s in sorted(suppressed, key=lambda s: s.finding.sort_key())
         ],
     }
     return json.dumps(doc, indent=2, sort_keys=True, ensure_ascii=False) + "\n"

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from seamscan.facts.project import build_project
+from seamscan.facts.secrets import find_secrets, redact
 from seamscan.model import ChangeSet, Finding, Location, SourceFile, with_fingerprints
 from seamscan.parse.javascript import JsModule, js_dialect, parse_js
 from seamscan.parse.python import ParseFailure, PyModule, parse_python
-from seamscan.policy.suppress import apply_suppressions
+from seamscan.policy.suppress import Suppressed, apply_suppressions
 from seamscan.rules.base import Rule, RuleContext, finding
 from seamscan.rules.meta import PARSE_FAILED, RULE_CRASHED, SUPPRESSION_WITHOUT_REASON
 from seamscan.rules.registry import RULES
@@ -84,7 +85,25 @@ def _in_scope(f: Finding, change: ChangeSet) -> bool:
 @dataclass(frozen=True)
 class Analysis:
     findings: tuple[Finding, ...]  # what the verdict is decided on
-    suppressed: tuple[Finding, ...]  # hidden by a reasoned inline suppression; still reported
+    suppressed: tuple[Suppressed, ...]  # hidden by a reasoned inline suppression; still reported
+    files_analyzed: int
+
+
+def _redact_secrets(text: str) -> str:
+    # A reason is free text copied from the source, and outputs print it (spec §6.4).
+    for m in reversed(find_secrets(text)):
+        text = text[: m.start] + redact(m.value) + text[m.end :]
+    return text
+
+
+def _fingerprint_suppressed(suppressed: Sequence[Suppressed]) -> tuple[Suppressed, ...]:
+    # Fingerprinted apart from the kept findings: suppressing one duplicate must not
+    # renumber the others, or their baseline entries would stop matching.
+    reasons = {s.finding: _redact_secrets(s.reason) for s in suppressed}
+    return tuple(
+        Suppressed(f, reasons[replace(f, fingerprint="")])
+        for f in with_fingerprints(s.finding for s in suppressed)
+    )
 
 
 def analyze(
@@ -128,8 +147,8 @@ def analyze(
     # Fingerprint before narrowing to the change: an occurrence index counted over fewer
     # findings would differ from audit's, and a baseline written by audit would not match.
     kept = with_fingerprints(findings)
-    suppressed = with_fingerprints(applied.suppressed)
+    suppressed = _fingerprint_suppressed(applied.suppressed)
     if change is not None:
         kept = tuple(f for f in kept if _in_scope(f, change))
-        suppressed = tuple(f for f in suppressed if _in_scope(f, change))
-    return Analysis(kept, suppressed)
+        suppressed = tuple(s for s in suppressed if _in_scope(s.finding, change))
+    return Analysis(kept, suppressed, len(ordered))

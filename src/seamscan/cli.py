@@ -34,8 +34,11 @@ from seamscan.policy.verdict import INTERNAL_ERROR_RULES, Verdict, decide
 from seamscan.report.agent import render_agent
 from seamscan.report.catalog import render_rule_json, render_rule_table
 from seamscan.report.json import render_json
+from seamscan.report.markdown import render_markdown
+from seamscan.report.sarif import render_sarif
+from seamscan.report.stats import render_stats
 from seamscan.report.terminal import render_terminal
-from seamscan.rules.registry import RULES
+from seamscan.rules.registry import ALL_META, RULES
 from seamscan.workspace.files import collect
 from seamscan.workspace.git import (
     GitError,
@@ -62,11 +65,16 @@ class Format(StrEnum):
     terminal = "terminal"
     json = "json"
     agent = "agent"
+    sarif = "sarif"
+    md = "md"
 
 
 FormatOpt = Annotated[Format, typer.Option("--format", help="Output format")]
 OutputOpt = Annotated[
     Path | None, typer.Option("--output", help="Write to a file instead of stdout")
+]
+StatsOpt = Annotated[
+    bool, typer.Option("--stats", help="Print files skipped, suppressions and counts to stderr")
 ]
 
 
@@ -140,7 +148,14 @@ def _analyze(
     return replace(
         analysis,
         findings=config.override_severity(analysis.findings),
-        suppressed=config.override_severity(analysis.suppressed),
+        suppressed=tuple(
+            replace(s, finding=f)
+            for s, f in zip(
+                analysis.suppressed,
+                config.override_severity(s.finding for s in analysis.suppressed),
+                strict=True,
+            )
+        ),
     )
 
 
@@ -164,16 +179,37 @@ def _run(
 
 
 def _render(outcome: Outcome, fmt: Format) -> str:
-    findings = outcome.analysis.findings
-    if fmt is Format.json:
-        return render_json(findings, outcome.verdict, __version__)
-    if fmt is Format.agent:
-        return render_agent(outcome.verdict)
-    return render_terminal(findings, outcome.verdict)
+    a, verdict = outcome.analysis, outcome.verdict
+    match fmt:
+        case Format.json:
+            return render_json(a.findings, verdict, __version__, a.suppressed)
+        case Format.sarif:
+            return render_sarif(a.findings, verdict, a.suppressed, ALL_META, __version__)
+        case Format.md:
+            return render_markdown(
+                a.findings,
+                verdict,
+                a.suppressed,
+                ALL_META,
+                __version__,
+                a.files_analyzed,
+                outcome.skipped,
+            )
+        case Format.agent:
+            return render_agent(verdict)
+        case Format.terminal:
+            return render_terminal(a.findings, verdict, a.suppressed)
 
 
-def _emit(outcome: Outcome, fmt: Format, output: Path | None) -> None:
+def _emit(outcome: Outcome, fmt: Format, output: Path | None, stats: bool = False) -> None:
     text = _render(outcome, fmt)
+    if stats:
+        a = outcome.analysis
+        sys.stderr.write(
+            render_stats(
+                a.findings, outcome.verdict, a.suppressed, a.files_analyzed, outcome.skipped
+            )
+        )
     if output:
         output.write_text(text)
     else:
@@ -186,11 +222,12 @@ def audit(
     path: Annotated[Path, typer.Argument(help="Repository root")] = Path("."),
     fmt: FormatOpt = Format.terminal,
     output: OutputOpt = None,
+    stats: StatsOpt = False,
 ) -> None:
     """Check a whole repository."""
     root = path.resolve()
     fileset = collect(root)
-    _emit(_run(root, fileset.files, fileset.skipped), fmt, output)
+    _emit(_run(root, fileset.files, fileset.skipped), fmt, output, stats)
 
 
 def _scan_change(root: Path, change: ChangeSet) -> Outcome:
@@ -229,6 +266,7 @@ def scan(
     ] = False,
     fmt: FormatOpt = Format.terminal,
     output: OutputOpt = None,
+    stats: StatsOpt = False,
 ) -> None:
     """Check only what a change introduced (working tree vs HEAD by default)."""
     root = Path.cwd()
@@ -253,7 +291,7 @@ def scan(
     except GitError as exc:
         typer.echo(f"seamscan: {exc}", err=True)
         raise typer.Exit(code=2) from exc
-    _emit(_scan_change(root, change), fmt, output)
+    _emit(_scan_change(root, change), fmt, output, stats)
 
 
 hook_app = typer.Typer(no_args_is_help=True, help="Adapters for coding-agent hooks.")

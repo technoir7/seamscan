@@ -130,7 +130,7 @@ def test_sql_comments_can_suppress_with_a_reason():
     )
     result = analyze([sql], rules=supabase.RULES)
     assert result.findings == ()
-    assert [f.rule_id for f in result.suppressed] == ["SC-SUPA-002"]
+    assert [s.finding.rule_id for s in result.suppressed] == ["SC-SUPA-002"]
 
 
 def test_scan_honours_a_suppression_in_an_unchanged_migration():
@@ -142,4 +142,4 @@ def test_scan_honours_a_suppression_in_an_unchanged_migration():
     change = ChangeSet(added={CLIENT.path: (WHOLE_FILE,)})
     result = analyze([CLIENT], change, supabase.RULES, [VITE, suppressed, CLIENT])
     assert result.findings == ()
-    assert [f.rule_id for f in result.suppressed] == ["SC-SUPA-001"]
+    assert [s.finding.rule_id for s in result.suppressed] == ["SC-SUPA-001"]

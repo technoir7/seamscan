@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from seamscan.model import Confidence, Severity
+from seamscan.model import Confidence, RuleMeta, Severity
 from seamscan.rules.base import meta
 
 SUPPRESSION_WITHOUT_REASON = meta(
@@ -34,3 +34,6 @@ RULE_CRASHED = meta(
     frozenset(),
     "A rule failed while running; results are incomplete.",
 )
+
+# Not rules that run: the pipeline raises these itself. Outputs still need their metadata.
+META: tuple[RuleMeta, ...] = (SUPPRESSION_WITHOUT_REASON, PARSE_FAILED, RULE_CRASHED)
