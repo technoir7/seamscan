@@ -1,0 +1,16 @@
+id = "sec002-ts-env-example-placeholders"
+description = "A committed .env.example with placeholder values only (including a key-shaped OpenAI dummy containing the word your); the client reads the anon key and OpenAI is called from a route handler."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-002"
+
+[[forbidden]]
+rule = "SC-SEC-001"
+
+[[forbidden]]
+rule = "SC-SEC-004"

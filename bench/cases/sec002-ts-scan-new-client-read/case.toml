@@ -1,0 +1,12 @@
+id = "sec002-ts-scan-new-client-read"
+description = "Scan mode: .env.local already held the service_role key under a NEXT_PUBLIC_ name, used only by a route handler. This change adds a client component that reads it, so the old definition is reported with the new read as its related location. SC-SEC-004 stays out of scope: the .env.local did not change."
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env.local"
+line = 3

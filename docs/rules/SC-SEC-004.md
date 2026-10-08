@@ -16,6 +16,14 @@ secret. A `.env` of public build settings (`VITE_API_URL`, `PORT`,
 `NEXT_PUBLIC_SITE_URL`) is not reported: Vite, Next.js and Create React App projects
 commit such files on purpose.
 
+A variable with a bundled-public prefix (`NEXT_PUBLIC_`, `VITE_`, `EXPO_PUBLIC_`,
+`REACT_APP_`, `NUXT_PUBLIC_`, `GATSBY_`) is judged the way [SC-SEC-002](SC-SEC-002.md)
+judges it: a provider-shaped value decides (a `pk_live_` key under
+`NEXT_PUBLIC_STRIPE_KEY` is not sensitive), and keys that are public by design
+(`VITE_FIREBASE_API_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `*_ANON_KEY`, …) are not
+credentials. A committed `.env` holding a real secret under such a name gets both
+findings: this one for the file, SC-SEC-002 for the browser exposure.
+
 It reports once per file, at the first real sensitive value. Values are not placeholders when
 they are none of: empty, `changeme`/`change-me`/`change_me`, `replace-me`/`replace_me`,
 `TODO`, `example`, anything starting with `xxx`, `your-` or `your_`, anything in
@@ -57,6 +65,12 @@ Not flagged:
 OPENAI_API_KEY=
 STRIPE_SECRET_KEY= # set in the Render dashboard
 DATABASE_URL=<postgres-connection-string>
+```
+
+```sh
+# .env — Firebase web config is public by design
+VITE_FIREBASE_API_KEY=AIza…
+VITE_FIREBASE_PROJECT_ID=pet-diary-4f2a1
 ```
 
 ```sh

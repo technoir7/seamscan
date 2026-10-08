@@ -1,0 +1,15 @@
+id = "sec002-tsx-use-client-anthropic-literal"
+description = "A \"use client\" tutor widget constructs the Anthropic SDK with a literal key and dangerouslyAllowBrowser; SC-SEC-002 reports it, not SC-SEC-001."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "components/AskTutor.tsx"
+line = 7
+
+[[forbidden]]
+rule = "SC-SEC-001"

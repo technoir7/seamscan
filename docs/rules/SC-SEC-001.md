@@ -22,10 +22,17 @@ The shapes are Stripe `sk_live_`/`rk_live_`, OpenAI `sk-proj-`/`sk-`, Anthropic
 Stripe test-mode keys (`sk_test_`) are reported at LOW severity. Publishable values
 (`pk_live_`, `sb_publishable_`, anon JWTs) are not reported.
 
-In a TS/JS file whose role is **client** (spec §5.6: `"use client"`, or `src/**` in a
-Vite/CRA app outside its server folders), the message says the key is in browser code
-and ships to every visitor. The severity stays CRITICAL either way. SC-SEC-002 (M4)
-will own the full client-exposure story, including public env vars.
+**Split with [SC-SEC-002](SC-SEC-002.md)**, so one key gives one finding:
+
+- A key in a TS/JS file whose role is **client** (spec §5.6: `"use client"`, or `src/**`
+  in a Vite/CRA app outside its server folders) is SC-SEC-002's. This rule skips client
+  files.
+- A key in a `.env*` value whose variable has a bundled-public prefix (`NEXT_PUBLIC_`,
+  `VITE_`, `EXPO_PUBLIC_`, `REACT_APP_`, `NUXT_PUBLIC_`, `GATSBY_`) is SC-SEC-002's too.
+  This rule skips those entries.
+- Everything else stays here: server and unknown-role TS/JS files (route handlers,
+  server actions, Edge Functions, Node scripts, shared `lib/` modules), Python, and
+  `.env*` values under unprefixed names.
 
 Test files are skipped in both languages: `test_*.py`, `*_test.py`, `conftest.py`,
 `*.test.*`, `*.spec.*`, and anything under `tests/`, `test/`, `__tests__/`, `e2e/` or
@@ -50,11 +57,6 @@ client = Anthropic(api_key="sk-ant-api03-…")
 headers = {"Authorization": f"Bearer xoxb-…"}
 ```
 
-```tsx
-"use client";
-const openai = new OpenAI({ apiKey: "sk-proj-…", dangerouslyAllowBrowser: true });
-```
-
 ```ts
 const stripe = new Stripe("sk_live_51Hx…");                       // route handler
 headers: { Authorization: `Bearer xoxb-…` }                        // Edge Function
@@ -74,6 +76,17 @@ SUPABASE_ANON_KEY = "eyJ…(role=anon)…"      # public; RLS does the gatekeepi
 EXAMPLE_KEY = "sk-proj-xxxxxxxxxxxxxxxx…"   # key-shaped placeholder
 key.startswith("sk_test_")                  # a prefix, not a key
 stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
+```
+
+```tsx
+"use client";
+const openai = new OpenAI({ apiKey: "sk-proj-…", dangerouslyAllowBrowser: true });
+// browser code: SC-SEC-002 reports it instead
+```
+
+```sh
+# .env.local
+NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=eyJ…(role=service_role)   # SC-SEC-002 instead
 ```
 
 ```ts
@@ -100,9 +113,9 @@ environment or a secret manager, and keep real values in an ignored `.env`.
   is missed too.
 - Test files are skipped entirely, so a live key in `tests/` or a `*.test.ts` is missed.
 - Keys in other file types (JSON, YAML, TOML, HTML) are not checked yet.
-- Only client files get the "browser code" wording. A key in a shared module that a
-  client component imports is reported, but without that wording, since the rule
-  doesn't follow imports.
+- A key in a shared module that a client component imports (`lib/openai.ts` in a
+  Next.js app, role unknown) is reported here as a key in source, not as a browser
+  exposure, since roles don't follow imports.
 - Placeholder detection is a short list: a run of eight or more `x`, or the words
   `your` or `example` anywhere in the value. Other key-shaped dummies are reported.
 - AWS key ids are reported on their own; the spec's "40-char secret nearby" check is

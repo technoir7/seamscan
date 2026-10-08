@@ -105,8 +105,8 @@ throws when it is missing (TS/JS), or validate the environment at startup with a
   defaulting assignment (`process.env.X ??= "dev"`) is missed.
 - Variables with a bundled-public prefix (`VITE_`, `NEXT_PUBLIC_`, `EXPO_PUBLIC_`,
   `REACT_APP_`, `NUXT_PUBLIC_`, `GATSBY_`) are skipped: the framework ships them to the
-  browser, so a literal default exposes nothing new. A real secret under such a name is
-  SC-SEC-002's finding (M4), and until that rule lands it goes unreported.
+  browser, so a literal default exposes nothing new. A secret under such a name is
+  [SC-SEC-002](SC-SEC-002.md)'s finding.
 - A secret name whose last word is a qualifier, such as `DB_PASSWORD_PROD` or
   `SECRET_KEY_BASE`, is missed.
 - A `KEY` name that is not a credential but ends in `KEY` (`SORT_KEY`, `S3_OBJECT_KEY`)

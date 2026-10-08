@@ -1,0 +1,20 @@
+id = "sec002-ts-next-stripe-publishable-pk-live"
+description = "pk_live_ publishable keys under NEXT_PUBLIC_ names (one, NEXT_PUBLIC_STRIPE_KEY, has a secret-looking last word; the pk_live_ value decides) are public by design. The live secret key is unprefixed and used only server-side: SC-SEC-001 and SC-SEC-004 on the committed .env.local, not SC-SEC-002."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = ".env.local"
+line = 3
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.local"
+line = 3
+
+[[forbidden]]
+rule = "SC-SEC-002"

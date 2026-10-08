@@ -8,3 +8,8 @@ source = "original"
 
 [[forbidden]]
 rule = "SC-SEC-003"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/lib/api.ts"
+line = 2

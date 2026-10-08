@@ -9,8 +9,9 @@ from __future__ import annotations
 import ast
 import re
 from collections.abc import Iterator
+from dataclasses import dataclass
 
-from seamscan.facts.project import ProjectModel
+from seamscan.facts.project import EnvValue
 from seamscan.facts.roles import Role, role_of
 from seamscan.facts.secrets import SecretMatch, find_secrets, redact
 from seamscan.model import Confidence, Finding, Location, Severity
@@ -29,6 +30,16 @@ PROVIDER_SECRET = meta(
     frozenset({"python", "javascript", "dotenv"}),
     "A live provider credential is written into the repository, so anyone who can read "
     "the code can use it.",
+)
+
+CLIENT_EXPOSURE = meta(
+    "SC-SEC-002",
+    "Secret reachable from the browser",
+    Severity.CRITICAL,
+    Confidence.HIGH,
+    ("CWE-200", "CWE-522"),
+    frozenset({"javascript", "dotenv"}),
+    "A credential ships in the browser bundle, so every visitor can read it and use it.",
 )
 
 SECRET_FALLBACK = meta(
@@ -88,7 +99,7 @@ def _reportable(m: SecretMatch) -> bool:
     return m.kind != "publishable" and not _DUMMY_SECRET.search(m.value)
 
 
-def _secret_finding(loc: Location, m: SecretMatch, in_browser: bool = False) -> Finding:
+def _secret_finding(loc: Location, m: SecretMatch) -> Finding:
     shown = redact(m.value)
     if m.kind == "test":
         return finding(
@@ -97,13 +108,6 @@ def _secret_finding(loc: Location, m: SecretMatch, in_browser: bool = False) -> 
             f"{m.provider} test-mode key in source: {shown}",
             shown,
             severity=Severity.LOW,
-        )
-    if in_browser:
-        return finding(
-            PROVIDER_SECRET,
-            loc,
-            f"{m.provider} secret in browser code: {shown}; it ships to every visitor",
-            shown,
         )
     return finding(PROVIDER_SECRET, loc, f"{m.provider} secret in source: {shown}", shown)
 
@@ -118,10 +122,7 @@ def _literal_span(module: PyModule, node: ast.Constant, m: SecretMatch) -> Locat
     return _span(module.path, node.lineno, node.col_offset + 1, source, at, at + len(m.value))
 
 
-def _js_provider_secrets(module: js.JsModule, project: ProjectModel) -> Iterator[Finding]:
-    role = project.js_role(module)
-    if role is Role.TEST:
-        return
+def _js_literal_secrets(module: js.JsModule) -> Iterator[tuple[Location, SecretMatch]]:
     # Fragments are the raw text between quotes or around `${}`, so offsets into them are
     # offsets in the source, and templates with substitutions are covered too.
     for fragment in js.captures(module, "(string_fragment) @s").get("s", []):
@@ -130,7 +131,7 @@ def _js_provider_secrets(module: js.JsModule, project: ProjectModel) -> Iterator
         for m in find_secrets(raw):
             if _reportable(m):
                 loc = _span(module.path, start.start_line, start.start_col, raw, m.start, m.end)
-                yield _secret_finding(loc, m, in_browser=role is Role.CLIENT)
+                yield loc, m
 
 
 def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
@@ -143,11 +144,17 @@ def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
                     if _reportable(m):
                         yield _secret_finding(_literal_span(module, node, m), m)
     for module in ctx.js:
-        yield from _js_provider_secrets(module, ctx.project)
+        # A key in browser code, or under a bundled-public name in .env, is SC-SEC-002's:
+        # one key gives one finding.
+        if ctx.project.js_role(module) not in (Role.TEST, Role.CLIENT):
+            for loc, m in _js_literal_secrets(module):
+                yield _secret_finding(loc, m)
     for file in ctx.files:
         if not _is_env_file(file.path):
             continue
         for entry in parse_env(file.text):
+            if _bundled_public(entry.key):
+                continue
             for m in find_secrets(entry.value):
                 if _reportable(m):
                     loc = _span(file.path, entry.line, entry.col, entry.value, m.start, m.end)
@@ -258,8 +265,8 @@ def _bundled_public(name: str) -> bool:
     return name.upper().startswith(_BUNDLED_PREFIXES)
 
 
-def _js_env_read(module: js.JsModule, node: JsNode) -> tuple[str, str] | None:
-    """(how it is read, variable name) for an env read of a secret-named variable."""
+def _js_env_name(module: js.JsModule, node: JsNode) -> tuple[str, str] | None:
+    """(how it is read, variable name) for any env read."""
     name: str | None = None
     shown = ""
     if node.type in ("member_expression", "subscript_expression"):
@@ -279,9 +286,15 @@ def _js_env_read(module: js.JsModule, node: JsNode) -> tuple[str, str] | None:
         args = js.arguments(node)
         name = js.string_value(module, args[0]) if args else None
         shown = f'Deno.env.get("{name}")'
-    if name is None or not _names_a_secret(name) or _bundled_public(name):
+    return None if name is None else (shown, name)
+
+
+def _js_env_read(module: js.JsModule, node: JsNode) -> tuple[str, str] | None:
+    """(how it is read, variable name) for an env read of a secret-named variable."""
+    read = _js_env_name(module, node)
+    if read is None or not _names_a_secret(read[1]) or _bundled_public(read[1]):
         return None
-    return shown, name
+    return read
 
 
 def _js_hardcoded(module: js.JsModule, node: JsNode | None) -> bool:
@@ -391,11 +404,13 @@ _URL_CREDENTIALS = re.compile(r"://[^/\s@:]*:[^/\s@]+@")
 def _sensitive(key: str, value: str) -> bool:
     # Next.js, Vite and CRA projects commit a .env of public build settings on purpose;
     # the risk is a value someone could log in or pay with.
-    return (
-        _names_a_secret(key)
-        or bool(_URL_CREDENTIALS.search(value))
-        or any(m.kind == "secret" for m in find_secrets(value))
-    )
+    if _bundled_public(key):
+        # The same judgement as SC-SEC-002, so Firebase web config or a pk_live_ key in a
+        # committed Vite .env is not a credential here either.
+        secret = _exposure(key, value) is not None
+    else:
+        secret = _names_a_secret(key) or any(m.kind == "secret" for m in find_secrets(value))
+    return secret or bool(_URL_CREDENTIALS.search(value))
 
 
 def _committed_env_files(ctx: RuleContext) -> Iterator[Finding]:
@@ -422,8 +437,175 @@ def _committed_env_files(ctx: RuleContext) -> Iterator[Finding]:
         )
 
 
+# ---------------------------------------------------------------- SC-SEC-002
+
+# Words that make a bundled-public name a secret whatever else it says.
+_EXPOSED_SECRET_WORDS = frozenset({"SECRET", "PRIVATE"})
+# Providers that issue these keys for browser use: security rules, referrer limits or a
+# write-only scope do the gatekeeping. A credential word above still overrides them.
+_PUBLIC_BY_DESIGN = frozenset({"FIREBASE", "MAPS", "MAPBOX", "POSTHOG", "SEGMENT", "REVENUECAT"})
+# The word before the last saying the key is the public half: `*_PUBLIC_TOKEN`,
+# `*_SITE_KEY` (reCAPTCHA, Turnstile, hCaptcha). Extends SC-SEC-003's `*_PUBLIC_KEY`.
+_PUBLIC_QUALIFIERS = _PUBLIC_KEY_QUALIFIERS | {"SITE"}
+
+
+def _bundled_prefix(name: str) -> str:
+    return next(p for p in _BUNDLED_PREFIXES if name.upper().startswith(p))
+
+
+def _name_exposure(name: str) -> Severity | None:
+    """How bad a bundled-public variable is by its name alone, or None if not a secret."""
+    words = [w for w in name.upper()[len(_bundled_prefix(name)) :].split("_") if w]
+    service_role = any(a == "SERVICE" and b == "ROLE" for a, b in zip(words, words[1:]))
+    if service_role or _EXPOSED_SECRET_WORDS.intersection(words):
+        return Severity.CRITICAL
+    if not _names_a_secret(name):
+        return None
+    # ADMIN alone is a setting (NEXT_PUBLIC_ADMIN_EMAIL); an admin key is the worst kind.
+    # PERSONAL marks PostHog's personal API key, unlike its public project key.
+    if "ADMIN" in words or "PERSONAL" in words:
+        return Severity.CRITICAL
+    if len(words) > 1 and words[-2] in _PUBLIC_QUALIFIERS:
+        return None
+    if "SEARCH" in words or _PUBLIC_BY_DESIGN.intersection(words):
+        return None  # Algolia's search-only key; the providers above
+    return Severity.HIGH  # VITE_WEATHER_API_KEY: a key, but whose and how bad is unknown
+
+
+def _key_shaped_dummy(value: str) -> bool:
+    return any(_DUMMY_SECRET.search(m.value) for m in find_secrets(value))
+
+
+def _real_value(value: str) -> bool:
+    return not _is_placeholder(value) and not _key_shaped_dummy(value)
+
+
+def _exposure(key: str, value: str) -> SecretMatch | Severity | None:
+    """Why a bundled-public `key=value` is a secret: the provider secret in its value, or
+    its name's severity. None when it isn't one. The value decides when it has a provider
+    shape, so an anon JWT under a secret-sounding name is fine and a service_role JWT
+    under `*_ANON_KEY` is not."""
+    matches = find_secrets(value)
+    secret = next((m for m in matches if _reportable(m)), None)
+    if secret is not None:
+        return secret
+    if matches or not _real_value(value):
+        return None  # publishable, or a placeholder
+    return _name_exposure(key)
+
+
+def _exposure_finding(
+    loc: Location, key: str, why: SecretMatch | Severity, related: tuple[Location, ...]
+) -> Finding:
+    prefix = _bundled_prefix(key)
+    if isinstance(why, SecretMatch):
+        shown = redact(why.value)
+        return finding(
+            CLIENT_EXPOSURE,
+            loc,
+            f"`{key}` holds a {why.provider} secret ({shown}), and the `{prefix}` prefix "
+            "puts it in the browser bundle",
+            shown,
+            severity=Severity.LOW if why.kind == "test" else None,
+            related=related,
+        )
+    return finding(
+        CLIENT_EXPOSURE,
+        loc,
+        f"`{key}` is named as a secret, and the `{prefix}` prefix puts its value in the "
+        "browser bundle",
+        f"{key}=…",
+        severity=why,
+        related=related,
+    )
+
+
+def _definition_location(entry: EnvValue, why: SecretMatch | Severity) -> Location:
+    if isinstance(why, SecretMatch):
+        return _span(entry.path, entry.line, entry.col, entry.value, why.start, why.end)
+    end_line, end_col = _offset_position(entry.line, entry.col, entry.value, len(entry.value))
+    return Location(entry.path, entry.line, 1, end_line, end_col)
+
+
+@dataclass(frozen=True)
+class _EnvRead:
+    name: str
+    shown: str
+    location: Location
+    role: Role
+
+
+_ENV_ACCESS_QUERY = "[(member_expression) (subscript_expression)] @r"
+
+
+def _bundled_reads(ctx: RuleContext) -> list[_EnvRead]:
+    """Reads of bundled-public variables in code that may run in a browser."""
+    reads: list[_EnvRead] = []
+    for module in ctx.js:
+        role = ctx.project.js_role(module)
+        if role in (Role.SERVER, Role.TEST):
+            continue
+        for node in js.captures(module, _ENV_ACCESS_QUERY).get("r", []):
+            read = _js_env_name(module, node)
+            if read is not None and _bundled_public(read[1]):
+                reads.append(_EnvRead(read[1], read[0], js.location(module, node), role))
+    return reads
+
+
+def _client_exposure(ctx: RuleContext) -> Iterator[Finding]:
+    for module in ctx.js:
+        if ctx.project.js_role(module) is Role.CLIENT:
+            for loc, m in _js_literal_secrets(module):
+                yield _client_literal_finding(loc, m)
+
+    reads = _bundled_reads(ctx)
+    defined: set[str] = set()
+    for entry in ctx.project.env:
+        if not _bundled_public(entry.key):
+            continue
+        if _real_value(entry.value):
+            defined.add(entry.key)
+        why = _exposure(entry.key, entry.value)
+        if why is not None:
+            # The browser code that uses it, so a change adding such a read brings an
+            # unchanged .env into scope (ADR-002).
+            related = tuple(r.location for r in reads if r.name == entry.key)
+            yield _exposure_finding(_definition_location(entry, why), entry.key, why, related)
+
+    # Without a real definition in the repository (the .env is ignored, or only a template
+    # is committed), the name is all there is, and the read in browser code is the bug.
+    reported: set[tuple[str, str]] = set()
+    for r in reads:
+        if r.role is not Role.CLIENT or r.name in defined:
+            continue
+        severity = _name_exposure(r.name)
+        if severity is None or (r.location.path, r.name) in reported:
+            continue
+        reported.add((r.location.path, r.name))
+        yield finding(
+            CLIENT_EXPOSURE,
+            r.location,
+            f"`{r.name}` is read in browser code and named as a secret; the "
+            f"`{_bundled_prefix(r.name)}` prefix means its value ships to every visitor",
+            r.shown,
+            severity=severity,
+        )
+
+
+def _client_literal_finding(loc: Location, m: SecretMatch) -> Finding:
+    shown = redact(m.value)
+    return finding(
+        CLIENT_EXPOSURE,
+        loc,
+        f"{m.provider} secret in browser code: {shown}; it ships to every visitor",
+        shown,
+        severity=Severity.LOW if m.kind == "test" else None,
+    )
+
+
 RULES: tuple[Rule, ...] = (
     Rule(PROVIDER_SECRET, _provider_secrets),
+    Rule(CLIENT_EXPOSURE, _client_exposure),
     Rule(SECRET_FALLBACK, _secret_fallbacks),
     Rule(ENV_FILE_COMMITTED, _committed_env_files),
 )

@@ -1,0 +1,20 @@
+id = "sec002-tsx-use-client-server-only-var"
+description = "A \"use client\" component reads the unprefixed SUPABASE_SERVICE_ROLE_KEY. Next.js leaves it undefined in the browser, so this is a broken page, not a leak: not SC-SEC-002. The committed .env.local is SC-SEC-001 and SC-SEC-004."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = ".env.local"
+line = 2
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.local"
+line = 2
+
+[[forbidden]]
+rule = "SC-SEC-002"

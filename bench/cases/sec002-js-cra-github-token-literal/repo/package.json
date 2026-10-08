@@ -1,0 +1,12 @@
+{
+  "name": "repo-stats",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@octokit/rest": "^21.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": { "start": "react-scripts start", "build": "react-scripts build" }
+}

@@ -1,0 +1,12 @@
+id = "sec002-js-cra-stripe-secret-read"
+description = "Create React App shop creates Stripe Checkout Sessions from the browser with REACT_APP_STRIPE_SECRET_KEY; CRA inlines REACT_APP_ values into the bundle."
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/checkout.js"
+line = 14

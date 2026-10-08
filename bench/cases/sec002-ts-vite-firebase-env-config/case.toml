@@ -1,0 +1,13 @@
+id = "sec002-ts-vite-firebase-env-config"
+description = "Firebase web config in VITE_FIREBASE_* variables, committed in .env: the web API key identifies the project and is public by design (security rules do the gatekeeping)."
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-002"
+
+[[forbidden]]
+rule = "SC-SEC-004"
