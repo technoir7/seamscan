@@ -1,0 +1,209 @@
+{
+  "cases": 697,
+  "tools": {
+    "seamscan": {
+      "Dependencies": {
+        "positives": 44,
+        "found": 43,
+        "coverage": 0.98,
+        "negatives": 43,
+        "false_alarms": 0
+      },
+      "Firebase": {
+        "positives": 13,
+        "found": 12,
+        "coverage": 0.92,
+        "negatives": 9,
+        "false_alarms": 0
+      },
+      "Risky code patterns": {
+        "positives": 154,
+        "found": 145,
+        "coverage": 0.94,
+        "negatives": 126,
+        "false_alarms": 2
+      },
+      "Secrets and keys": {
+        "positives": 43,
+        "found": 39,
+        "coverage": 0.91,
+        "negatives": 39,
+        "false_alarms": 0
+      },
+      "Supabase": {
+        "positives": 31,
+        "found": 31,
+        "coverage": 1.0,
+        "negatives": 32,
+        "false_alarms": 0
+      },
+      "Test integrity": {
+        "positives": 52,
+        "found": 49,
+        "coverage": 0.94,
+        "negatives": 28,
+        "false_alarms": 6
+      },
+      "Web routes and server settings": {
+        "positives": 45,
+        "found": 41,
+        "coverage": 0.91,
+        "negatives": 54,
+        "false_alarms": 0
+      }
+    },
+    "bandit": {
+      "Dependencies": {
+        "positives": 44,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 43,
+        "false_alarms": 0
+      },
+      "Firebase": {
+        "positives": 13,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 9,
+        "false_alarms": 0
+      },
+      "Risky code patterns": {
+        "positives": 154,
+        "found": 42,
+        "coverage": 0.27,
+        "negatives": 126,
+        "false_alarms": 22
+      },
+      "Secrets and keys": {
+        "positives": 43,
+        "found": 2,
+        "coverage": 0.05,
+        "negatives": 39,
+        "false_alarms": 0
+      },
+      "Supabase": {
+        "positives": 31,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 32,
+        "false_alarms": 0
+      },
+      "Test integrity": {
+        "positives": 52,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 28,
+        "false_alarms": 0
+      },
+      "Web routes and server settings": {
+        "positives": 45,
+        "found": 3,
+        "coverage": 0.07,
+        "negatives": 54,
+        "false_alarms": 2
+      }
+    },
+    "gitleaks": {
+      "Dependencies": {
+        "positives": 44,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 43,
+        "false_alarms": 0
+      },
+      "Firebase": {
+        "positives": 13,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 9,
+        "false_alarms": 0
+      },
+      "Risky code patterns": {
+        "positives": 154,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 126,
+        "false_alarms": 0
+      },
+      "Secrets and keys": {
+        "positives": 43,
+        "found": 22,
+        "coverage": 0.51,
+        "negatives": 39,
+        "false_alarms": 13
+      },
+      "Supabase": {
+        "positives": 31,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 32,
+        "false_alarms": 0
+      },
+      "Test integrity": {
+        "positives": 52,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 28,
+        "false_alarms": 0
+      },
+      "Web routes and server settings": {
+        "positives": 45,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 54,
+        "false_alarms": 0
+      }
+    },
+    "eslint-plugin-security": {
+      "Dependencies": {
+        "positives": 44,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 43,
+        "false_alarms": 0
+      },
+      "Firebase": {
+        "positives": 13,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 9,
+        "false_alarms": 0
+      },
+      "Risky code patterns": {
+        "positives": 154,
+        "found": 6,
+        "coverage": 0.04,
+        "negatives": 126,
+        "false_alarms": 3
+      },
+      "Secrets and keys": {
+        "positives": 43,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 39,
+        "false_alarms": 0
+      },
+      "Supabase": {
+        "positives": 31,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 32,
+        "false_alarms": 0
+      },
+      "Test integrity": {
+        "positives": 52,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 28,
+        "false_alarms": 0
+      },
+      "Web routes and server settings": {
+        "positives": 45,
+        "found": 0,
+        "coverage": 0.0,
+        "negatives": 54,
+        "false_alarms": 0
+      }
+    }
+  }
+}

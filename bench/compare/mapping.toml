@@ -1,0 +1,39 @@
+# Which seamscan rules a comparator's finding counts for (spec §8.5). A finding counts
+# for a rule when it is about the same weakness; it then has to be at the expected file
+# and line like any seamscan finding. Results are coverage per category, presented as
+# "different tools, different goals", never as a ranking.
+
+[bandit]  # bandit 1.9.4, all default plugins
+B501 = ["SC-CODE-001"]  # request_with_no_cert_validation
+B323 = ["SC-CODE-001"]  # unverified_context
+B110 = ["SC-CODE-002"]  # try_except_pass
+B112 = ["SC-CODE-002"]  # try_except_continue
+B105 = ["SC-SEC-001", "SC-SEC-003", "SC-CODE-004"]  # hardcoded_password_string
+B106 = ["SC-SEC-001", "SC-SEC-003", "SC-CODE-004"]  # hardcoded_password_funcarg
+B107 = ["SC-SEC-001", "SC-SEC-003", "SC-CODE-004"]  # hardcoded_password_default
+B608 = ["SC-CODE-006"]  # hardcoded_sql_expressions
+B602 = ["SC-CODE-007"]  # subprocess_popen_with_shell_equals_true
+B604 = ["SC-CODE-007"]  # any_other_function_with_shell_equals_true
+B605 = ["SC-CODE-007"]  # start_process_with_a_shell
+B609 = ["SC-CODE-007"]  # linux_commands_wildcard_injection
+B102 = ["SC-CODE-008"]  # exec_used
+B307 = ["SC-CODE-008"]  # eval
+B704 = ["SC-CODE-008"]  # markupsafe_markup_xss
+B311 = ["SC-CODE-009"]  # random
+B613 = ["SC-CODE-010"]  # trojansource
+B301 = ["SC-CODE-011"]  # pickle
+B302 = ["SC-CODE-011"]  # marshal
+B506 = ["SC-CODE-011"]  # yaml_load
+B614 = ["SC-CODE-011"]  # pytorch_load
+B201 = ["SC-WEB-003"]  # flask_debug_true
+
+[gitleaks]  # gitleaks 8.30.1, default rules; every rule is about a leaked secret
+"*" = ["SC-SEC-001", "SC-SEC-002", "SC-SEC-004"]
+
+[eslint-plugin-security]  # 4.2.0, recommended config
+"security/detect-child-process" = ["SC-CODE-007"]
+"security/detect-eval-with-expression" = ["SC-CODE-008"]
+"security/detect-pseudoRandomBytes" = ["SC-CODE-009"]
+"security/detect-bidi-characters" = ["SC-CODE-010"]
+"security/detect-invisible-characters" = ["SC-CODE-010"]
+"security/detect-possible-timing-attacks" = ["SC-CODE-004"]
