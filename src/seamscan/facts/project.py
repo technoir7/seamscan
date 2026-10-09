@@ -116,7 +116,7 @@ _AMBIENT_CREDENTIALS = re.compile(
     |from\s+flask\s+import[^\n]*\bsession\b|flask\.session|HTTPBasic|APIKeyCookie
     |cookie-parser|cookie-session|express-session|@fastify/(?:cookie|session|secure-session)
     |hono/cookie|iron-session|next-auth|@auth/|@supabase/(?:ssr|auth-helpers)|@clerk/
-    |better-auth|\blucia\b|\bpassport\b|basic-auth|["'`]Basic\s
+    |better-auth|\blucia\b|\bpassport\b|basic-auth|basicAuth|Basic\s(?:\$\{|\{|["']\s*\+)
     |withCredentials\s*:\s*true|credentials\s*:\s*["']include["']
     """,
     re.IGNORECASE | re.VERBOSE,

@@ -173,5 +173,13 @@ def test_bearer_tokens_are_not_ambient_credentials():
         SourceFile("main.py", 'oauth2 = OAuth2PasswordBearer(tokenUrl="token")\n'),
         SourceFile("api.ts", "fetch(url, { headers: { Authorization: `Bearer ${t}` } });\n"),
         SourceFile("README.md", "Sessions and cookies are explained below.\n"),
+        SourceFile("ua.py", 'def device(ua):\n    """Basic device type detection"""\n'),
     ]
     assert not build_project(files).ambient_credentials
+
+
+def test_a_basic_auth_header_value_counts():
+    for text in ('h = {"Authorization": f"Basic {creds}"}\n', 'auth = "Basic " + b64\n'):
+        assert build_project([SourceFile("client.py", text)]).ambient_credentials, text
+    js = "headers.set('Authorization', `Basic ${btoa(user + ':' + pass)}`);\n"
+    assert build_project([SourceFile("api.ts", js)]).ambient_credentials
