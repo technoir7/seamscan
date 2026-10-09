@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from seamscan.facts.project import EnvValue
 from seamscan.facts.roles import Role, role_of
-from seamscan.facts.secrets import SecretMatch, find_secrets, redact
+from seamscan.facts.secrets import SecretMatch, classify, find_secrets, redact
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse.envfile import parse_env
@@ -96,7 +96,7 @@ _DUMMY_SECRET = re.compile(r"x{8,}|your|example", re.IGNORECASE)
 
 
 def _reportable(m: SecretMatch) -> bool:
-    return m.kind != "publishable" and not _DUMMY_SECRET.search(m.value)
+    return m.kind not in ("publishable", "demo") and not _DUMMY_SECRET.search(m.value)
 
 
 def _secret_finding(loc: Location, m: SecretMatch) -> Finding:
@@ -196,7 +196,19 @@ def _names_a_secret(name: str) -> bool:
 
 
 def _hardcoded_value(value: str | None) -> bool:
-    return value is not None and bool(value.strip()) and not _FILE_PATH.search(value)
+    return (
+        value is not None
+        and bool(value.strip())
+        and not _FILE_PATH.search(value)
+        and not _local_demo_key(value)
+    )
+
+
+def _local_demo_key(value: str) -> bool:
+    """The Supabase CLI's demo keys open only a local stack: a real project rejects them,
+    so falling back to one fails closed, unlike a "changeme" the app itself trusts."""
+    m = classify(value)
+    return m is not None and m.kind == "demo"
 
 
 def _hardcoded(node: ast.expr | None) -> bool:
@@ -408,6 +420,7 @@ def _is_placeholder(value: str) -> bool:
         or lowered.startswith(("xxx", "your-", "your_"))
         or (value.startswith("<") and value.endswith(">"))
         or value.endswith("...")
+        or _local_demo_key(value)
     )
 
 

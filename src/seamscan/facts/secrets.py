@@ -7,9 +7,11 @@ import binascii
 import json
 import re
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
-Kind = Literal["secret", "publishable", "test"]
+# "demo": a value published for local development, such as the Supabase CLI's demo keys.
+# Secret-shaped, so outputs still redact it, but it protects nothing.
+Kind = Literal["secret", "publishable", "test", "demo"]
 
 
 @dataclass(frozen=True)
@@ -40,26 +42,28 @@ _PATTERNS: tuple[tuple[str, Kind, re.Pattern[str]], ...] = (
 _JWT = re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")
 
 
-def _jwt_role(token: str) -> str | None:
-    """Read the `role` claim without verifying the signature: classification only."""
+def _jwt_claims(token: str) -> dict[str, object]:
+    """The payload's claims, read without verifying the signature: classification only."""
     try:
         payload = token.split(".")[1]
         claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
     except (IndexError, ValueError, binascii.Error):
-        return None
-    if not isinstance(claims, dict):
-        return None
-    role = claims.get("role")  # type: ignore[union-attr]
-    return role if isinstance(role, str) else None
+        return {}
+    return cast(dict[str, object], claims) if isinstance(claims, dict) else {}
 
 
 def _jwt_match(token: str, start: int, end: int) -> SecretMatch | None:
-    role = _jwt_role(token)
+    claims = _jwt_claims(token)
+    role = claims.get("role")
+    if role not in ("service_role", "anon"):
+        return None
+    # `supabase start` issues fixed keys signed with a published JWT secret, the same on
+    # every machine; they only open a local stack.
+    if claims.get("iss") == "supabase-demo":
+        return SecretMatch(f"Supabase local demo {role} JWT", "demo", token, start, end)
     if role == "service_role":
         return SecretMatch("Supabase service_role JWT", "secret", token, start, end)
-    if role == "anon":
-        return SecretMatch("Supabase anon JWT", "publishable", token, start, end)
-    return None
+    return SecretMatch("Supabase anon JWT", "publishable", token, start, end)
 
 
 def find_secrets(text: str) -> list[SecretMatch]:

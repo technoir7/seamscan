@@ -36,6 +36,18 @@ FAKES: dict[str, str] = {
     + "pc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6a3ZieHRybXBsd2hhbmV5ZGNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3"
     + "MzU2ODk2MDAsImV4cCI6MjA1MTIyMjQwMH0."
     + "Tz6Wq1Rk8Lp3Xv5Nb2Jd9Hc4Fs7Gy0Ae1Uz6Wm3Ri8Q",
+    # Shaped like the Supabase CLI's local-dev demo keys (`iss: supabase-demo`), which are
+    # published in Supabase's docs. The signatures are invented, not the real demo keys'.
+    "FAKE_SUPABASE_DEMO_SERVICE_JWT": "eyJ"
+    + "hbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    + "eyJ"
+    + "pc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0."
+    + "Qa8Lm3Rt6Vb1Nw4Jc9Hd2Fs7Gy0Ae5Uz8Wq3Ri6Ot1Pm4",
+    "FAKE_SUPABASE_DEMO_ANON_JWT": "eyJ"
+    + "hbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    + "eyJ"
+    + "pc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9."
+    + "Wn2Kq7Lp4Xv9Tn3Bw8Jc1Hd6Fs0Gy5Ae2Uz7Wq9Ri4Ot8",
     # Credential-shaped placeholders, the kind assistants put in examples. Not secrets.
     "FAKE_OPENAI_PLACEHOLDER": "sk-" + "proj-" + "x" * 48,
     "FAKE_OPENAI_YOUR_KEY": "sk-" + "proj-" + "your-openai-api-key-here",
