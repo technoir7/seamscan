@@ -52,7 +52,10 @@ def test_a_swallowed_write_is_reported_but_does_not_block():
     from seamscan.analysis import analyze
     from seamscan.model import SourceFile
 
-    src = "import stripe\n\ndef refund(cid):\n    try:\n        stripe.Refund.create(charge=cid)\n    except Exception:\n        pass\n    mark_refunded(cid)\n"
+    src = (
+        "import stripe\n\ndef refund(cid):\n    try:\n        stripe.Refund.create(charge=cid)\n"
+        "    except Exception:\n        pass\n    mark_refunded(cid)\n"
+    )
     found = analyze([SourceFile("app/billing.py", src)]).findings
     assert [f.rule_id for f in found] == ["SC-CODE-002"]
     assert decide(found, Policy()).blocking == ()
