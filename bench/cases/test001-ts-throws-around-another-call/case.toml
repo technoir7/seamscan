@@ -1,0 +1,12 @@
+id = "test001-ts-throws-around-another-call"
+description = "Vitest: toThrow guards addItem, but the hollow tax test calls totalWithTax"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "src/cart.test.ts"
+line = 4

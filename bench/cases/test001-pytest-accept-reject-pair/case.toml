@@ -1,0 +1,10 @@
+id = "test001-pytest-accept-reject-pair"
+description = "pytest: accepting tests with no assert next to pytest.raises tests on the same functions"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

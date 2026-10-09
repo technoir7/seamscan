@@ -1,0 +1,15 @@
+id = "sec002-minified-client-bundle"
+description = "a minified vendor bundle under a Vite app's src/ inlines a live OpenAI key, so it ships to the browser"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/vendor/chat-widget.bundle.js"
+line = 2
+
+[[forbidden]]
+rule = "SC-SEC-001"

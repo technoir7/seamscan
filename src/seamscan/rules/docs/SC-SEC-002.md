@@ -12,7 +12,8 @@ in three places.
 Slack, Supabase JWTs with `role: service_role`), found in any string or template literal
 of a TS/TSX/JS/JSX file whose role is **client** (spec §5.6: `"use client"`, or `src/**`
 of a Vite/CRA/Expo app outside its `server/`, `api/` and `functions/` folders). A
-Stripe test-mode key is reported at LOW.
+Stripe test-mode key is reported at LOW. A minified bundle there (a `.min.js` name, or
+lines averaging over 300 characters) isn't parsed, so its whole text is searched instead.
 
 **2. A `.env*` variable with a bundled-public prefix that holds a secret.** Next.js
 (`NEXT_PUBLIC_`), Vite (`VITE_`), Expo (`EXPO_PUBLIC_`), Create React App

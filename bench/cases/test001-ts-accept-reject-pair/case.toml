@@ -1,0 +1,10 @@
+id = "test001-ts-accept-reject-pair"
+description = "Vitest: accepting tests with no expect next to toThrow, rejects.toThrow and assert.throws on the same functions"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

@@ -40,6 +40,13 @@ def test_supabase_jwt_role_decides():
     assert classify(jwt({"sub": "123"})) is None
 
 
+def test_supabase_cli_demo_keys_are_demo_values_whatever_their_role():
+    for role in ("service_role", "anon"):
+        m = classify(jwt({"iss": "supabase-demo", "role": role}))
+        assert m is not None and m.kind == "demo", role
+    assert classify(jwt({"iss": "supabase-demo", "role": "authenticated"})) is None
+
+
 def test_find_secrets_in_text():
     text = f'key = "{FAKES["FAKE_STRIPE_LIVE"]}"  # and {FAKES["FAKE_STRIPE_PK_LIVE"]}'
     kinds = [m.kind for m in find_secrets(text)]

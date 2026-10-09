@@ -1,0 +1,12 @@
+id = "sec001-supabase-real-key-beside-demo"
+description = "a real service_role JWT pasted next to the local demo key is still a secret"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "scripts/sync.py"
+line = 5

@@ -1,0 +1,12 @@
+id = "sec002-service-role-name-with-demo-value"
+description = "a service_role key under a NEXT_PUBLIC_ name is read in the browser; the demo value only hides it locally"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "app/admin/page.tsx"
+line = 6

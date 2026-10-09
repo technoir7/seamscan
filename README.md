@@ -48,7 +48,9 @@ uvx --from git+https://github.com/technoir7/seamscan seamscan scan        # only
 
   Every format is byte-identical for identical input.
 - `scan --files a.py b.ts` checks only those files' changes.
-- `--stats` prints counts, skipped files and suppressions to stderr.
+- `--stats` prints counts, skipped files and suppressions to stderr. Minified JS (a
+  `.min.js` name, or lines averaging over 300 characters) is listed there: it is
+  checked for secrets only, since its code is a bundler's, not yours.
 - `seamscan rules` lists the rules; `seamscan explain SC-CODE-001` prints a rule's page.
 - Secrets are never printed in full. Output shows a redacted form such as
   `sk_live_51Hx…L2mN4`.

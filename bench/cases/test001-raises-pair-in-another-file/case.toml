@@ -1,0 +1,12 @@
+id = "test001-raises-pair-in-another-file"
+description = "the no-assert test's only raising sibling lives in a different test file, so nothing checks it here"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_checkout.py"
+line = 4

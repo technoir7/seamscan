@@ -1,0 +1,12 @@
+id = "test001-raises-around-another-call"
+description = "pytest.raises guards a different function than the one the hollow test calls"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_invoice.py"
+line = 6

@@ -22,6 +22,11 @@ The shapes are Stripe `sk_live_`/`rk_live_`, OpenAI `sk-proj-`/`sk-`, Anthropic
 Stripe test-mode keys (`sk_test_`) are reported at LOW severity. Publishable values
 (`pk_live_`, `sb_publishable_`, anon JWTs) are not reported.
 
+**Decision: the Supabase CLI's demo keys are not secrets.** `supabase start` prints the
+same service_role and anon JWTs on every machine (`iss` claim `supabase-demo`), signed
+with a JWT secret published in Supabase's docs. They open only a local stack; a hosted
+project rejects them. They are still redacted in every output.
+
 **Split with [SC-SEC-002](SC-SEC-002.md)**, so one key gives one finding:
 
 - A key in a TS/JS file whose role is **client** (spec §5.6: `"use client"`, or `src/**`
@@ -33,6 +38,11 @@ Stripe test-mode keys (`sk_test_`) are reported at LOW severity. Publishable val
 - Everything else stays here: server and unknown-role TS/JS files (route handlers,
   server actions, Edge Functions, Node scripts, shared `lib/` modules), Python, and
   `.env*` values under unprefixed names.
+
+Minified files (a `.min.js` name, or JS/TS whose lines average more than 300 characters)
+aren't parsed as code, but their text is still searched: a committed bundle that inlines
+a key ships it all the same. The finding is this rule's, or SC-SEC-002's when the bundle
+sits where browser code lives.
 
 Test files are skipped in both languages: `test_*.py`, `*_test.py`, `conftest.py`,
 `*.test.*`, `*.spec.*`, and anything under `tests/`, `test/`, `__tests__/`, `e2e/` or

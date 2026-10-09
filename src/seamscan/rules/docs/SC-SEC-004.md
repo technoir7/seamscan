@@ -27,7 +27,8 @@ findings: this one for the file, SC-SEC-002 for the browser exposure.
 It reports once per file, at the first real sensitive value. Values are not placeholders when
 they are none of: empty, `changeme`/`change-me`/`change_me`, `replace-me`/`replace_me`,
 `TODO`, `example`, anything starting with `xxx`, `your-` or `your_`, anything in
-`<…>`, or anything ending in `...`.
+`<…>`, anything ending in `...`, or one of the Supabase CLI's published local demo keys
+(a JWT with `iss` `supabase-demo`).
 
 `.env.example`, `.env.sample` and `.env.template` are templates and are allowed.
 SC-SEC-001 still reports a real provider key inside them.

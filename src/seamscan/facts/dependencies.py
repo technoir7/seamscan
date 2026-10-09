@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from seamscan.model import ChangeSet, Ecosystem, Location, PackageRef, SourceFile
-from seamscan.parse.javascript import import_specifiers, js_dialect, location, parse_js
+from seamscan.parse.javascript import import_specifiers, location, parse_js, source_dialect
 
 _NPM_SECTIONS = ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies")
 _REQUIREMENTS = re.compile(r"(?:^|/)requirements(?:[^/]*\.txt|/[^/]+\.txt)$")
@@ -658,7 +658,7 @@ def registry_dependencies(files: Iterable[SourceFile]) -> tuple[Dependency, ...]
         elif f.path in tomls:
             parse = _pyproject if name == "pyproject.toml" else _pipfile
             found.extend(d for d in parse(f, tomls[f.path]) if d.ref.name not in python_skips)
-        elif js_dialect(f.path) is not None and "node_modules/" not in f.path:
+        elif source_dialect(f) is not None and "node_modules/" not in f.path:
             found.extend(_imports(f, npm))
     return tuple(sorted(found, key=lambda d: d.location))
 

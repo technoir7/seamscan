@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from seamscan.facts.project import EnvValue
 from seamscan.facts.roles import Role, role_of
-from seamscan.facts.secrets import SecretMatch, find_secrets, redact
+from seamscan.facts.secrets import SecretMatch, classify, find_secrets, redact
 from seamscan.model import Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse.envfile import parse_env
@@ -96,7 +96,7 @@ _DUMMY_SECRET = re.compile(r"x{8,}|your|example", re.IGNORECASE)
 
 
 def _reportable(m: SecretMatch) -> bool:
-    return m.kind != "publishable" and not _DUMMY_SECRET.search(m.value)
+    return m.kind not in ("publishable", "demo") and not _DUMMY_SECRET.search(m.value)
 
 
 def _secret_finding(loc: Location, m: SecretMatch) -> Finding:
@@ -134,6 +134,17 @@ def _js_literal_secrets(module: js.JsModule) -> Iterator[tuple[Location, SecretM
                 yield loc, m
 
 
+def _minified_secrets(ctx: RuleContext) -> Iterator[tuple[Location, SecretMatch, Role]]:
+    """Secrets in minified files, which aren't parsed (build output): found in the raw
+    text, since a bundle that inlines a key ships it all the same."""
+    for file in ctx.files:
+        if js.minified(file):
+            role = ctx.project.role(file.path)
+            for m in find_secrets(file.text):
+                if _reportable(m):
+                    yield _span(file.path, 1, 1, file.text, m.start, m.end), m, role
+
+
 def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
     for module in ctx.python:
         if role_of(module.path) is Role.TEST:
@@ -149,6 +160,9 @@ def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
         if ctx.project.js_role(module) not in (Role.TEST, Role.CLIENT):
             for loc, m in _js_literal_secrets(module):
                 yield _secret_finding(loc, m)
+    for loc, m, role in _minified_secrets(ctx):
+        if role not in (Role.TEST, Role.CLIENT):
+            yield _secret_finding(loc, m)
     for file in ctx.files:
         if not _is_env_file(file.path):
             continue
@@ -182,7 +196,19 @@ def _names_a_secret(name: str) -> bool:
 
 
 def _hardcoded_value(value: str | None) -> bool:
-    return value is not None and bool(value.strip()) and not _FILE_PATH.search(value)
+    return (
+        value is not None
+        and bool(value.strip())
+        and not _FILE_PATH.search(value)
+        and not _local_demo_key(value)
+    )
+
+
+def _local_demo_key(value: str) -> bool:
+    """The Supabase CLI's demo keys open only a local stack: a real project rejects them,
+    so falling back to one fails closed, unlike a "changeme" the app itself trusts."""
+    m = classify(value)
+    return m is not None and m.kind == "demo"
 
 
 def _hardcoded(node: ast.expr | None) -> bool:
@@ -394,6 +420,7 @@ def _is_placeholder(value: str) -> bool:
         or lowered.startswith(("xxx", "your-", "your_"))
         or (value.startswith("<") and value.endswith(">"))
         or value.endswith("...")
+        or _local_demo_key(value)
     )
 
 
@@ -557,6 +584,9 @@ def _client_exposure(ctx: RuleContext) -> Iterator[Finding]:
         if ctx.project.js_role(module) is Role.CLIENT:
             for loc, m in _js_literal_secrets(module):
                 yield _client_literal_finding(loc, m)
+    for loc, m, role in _minified_secrets(ctx):
+        if role is Role.CLIENT:
+            yield _client_literal_finding(loc, m)
 
     reads = _bundled_reads(ctx)
     defined: set[str] = set()

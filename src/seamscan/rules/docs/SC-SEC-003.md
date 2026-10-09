@@ -40,6 +40,10 @@ Not reported:
 - empty or whitespace-only defaults, `None` and non-string defaults
 - defaults that are file paths (`/…`, `./…`, `~/…`, or ending in `.pem`, `.key`,
   `.json`, `.p12`, `.pfx`, `.crt`), e.g. `GOOGLE_APPLICATION_CREDENTIALS`
+- the Supabase CLI's local demo keys (JWTs with `iss` `supabase-demo`) as the default for
+  `SUPABASE_SERVICE_ROLE_KEY` and the like: a hosted project rejects them, so a missing
+  variable fails closed instead of running with a secret anyone can read. A `changeme`
+  default is still reported: the app itself would trust it.
 - test files, where planting a dummy secret is normal (`*.test.ts`, `__tests__/`, …)
 - in TS/JS, `&&` (not a fallback), and fallbacks on anything that isn't an env read:
   `req.headers.get("x-api-key") ?? "anonymous"`, `config.secret || "x"`

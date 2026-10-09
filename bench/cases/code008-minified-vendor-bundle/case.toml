@@ -1,0 +1,10 @@
+id = "code008-minified-vendor-bundle"
+description = "a vendored, minified tour library assigns innerHTML; build output is not the app's code"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

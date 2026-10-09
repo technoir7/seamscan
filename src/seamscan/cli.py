@@ -269,7 +269,8 @@ def _run(
     registry, dependencies = _registry(config, files, change, context, skipped, offline)
     analysis = _analyze(config, files, change, context, registry)
     verdict = decide(analysis.findings, config.policy, known)
-    kept = tuple(s for s in skipped if not config.excludes(s[0]))
+    # Minified files were read, but only as text; the reports list them with the skipped.
+    kept = tuple(s for s in skipped if not config.excludes(s[0])) + analysis.not_parsed
     return Outcome(analysis, verdict, kept, dependencies)
 
 

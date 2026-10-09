@@ -1,0 +1,13 @@
+id = "sec001-supabase-demo-service-key"
+description = "seed script and admin client fall back to the Supabase CLI's public local demo service key"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-SEC-001"
+
+[[forbidden]]
+rule = "SC-SEC-003"
