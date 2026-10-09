@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from bench.case import Case, case_change, case_files, case_registry, load_all
+from bench.case import INDEPENDENT_DIR, Case, case_change, case_files, case_registry, load_all
 from bench.score import CaseScore, Found, RuleScore, aggregate, score_case
 from seamscan.analysis import analyze
 from seamscan.model import Confidence
@@ -50,10 +50,11 @@ BUDGETS = {
 }
 
 
-def budget_failures(dev: dict[str, RuleScore], holdout: dict[str, RuleScore]) -> list[str]:
+def budget_failures(dev: dict[str, RuleScore], *others: dict[str, RuleScore]) -> list[str]:
+    """Budgets apply to dev only; a crash in any set (holdout, independent) still fails."""
     failures: list[str] = []
     # A crashed rule shows up only as misses for that rule, which is easy to read past.
-    crashes = sum(s.tp + s.fp for s in (dev.get("SC-META-003"), holdout.get("SC-META-003")) if s)
+    crashes = sum(s.tp + s.fp for scores in (dev, *others) if (s := scores.get("SC-META-003")))
     if crashes:
         failures.append(f"SC-META-003: a rule crashed {crashes} time(s); see the findings")
     for rule in RULES:
@@ -77,24 +78,29 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     cases = load_all()
+    # Written by a different author from the rule pages alone (spec §8.3); scored, never gated.
+    independent = load_all(INDEPENDENT_DIR) if INDEPENDENT_DIR.is_dir() else []
+    sets = {
+        "dev": [c for c in cases if c.split == "dev"],
+        "holdout": [c for c in cases if c.split == "holdout"],
+        "independent": independent,
+    }
     results: dict[str, dict[str, dict[str, int]]] = {}
-    dev_scores: dict[str, RuleScore] = {}
-    holdout_scores: dict[str, RuleScore] = {}
-    for split in ("dev", "holdout"):
-        chosen = [c for c in cases if c.split == split]
-        scores = aggregate(run_case(c) for c in chosen)
-        if split == "dev":
-            dev_scores = scores
-        else:
-            holdout_scores = scores
-        print(f"\n== {split} split · {len(chosen)} cases ==")
-        print(table(scores))
-        results[split] = {r: {"tp": s.tp, "fp": s.fp, "fn": s.fn} for r, s in scores.items()}
+    scores: dict[str, dict[str, RuleScore]] = {}
+    for name, chosen in sets.items():
+        if not chosen:
+            continue
+        scores[name] = aggregate(run_case(c) for c in chosen)
+        print(f"\n== {name} · {len(chosen)} cases ==")
+        print(table(scores[name]))
+        results[name] = {r: {"tp": s.tp, "fp": s.fp, "fn": s.fn} for r, s in scores[name].items()}
     if args.record:
-        payload = {"cases": len(cases), "splits": results}
+        payload = {"cases": len(cases), "independent_cases": len(independent), "splits": results}
         args.record.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     if args.check:
-        failures = budget_failures(dev_scores, holdout_scores)
+        failures = budget_failures(
+            scores.get("dev", {}), scores.get("holdout", {}), scores.get("independent", {})
+        )
         print("\nbudget: " + ("OK" if not failures else "FAILED"))
         for line in failures:
             print(f"  {line}")

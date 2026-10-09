@@ -27,6 +27,7 @@ from seamscan.model import (
 from seamscan.workspace.files import collect
 
 CASES_DIR = Path(__file__).resolve().parent / "cases"
+INDEPENDENT_DIR = Path(__file__).resolve().parent / "independent"
 _PLACEHOLDER = re.compile(r"\{\{(FAKE_[A-Z0-9_]+)\}\}")
 
 
