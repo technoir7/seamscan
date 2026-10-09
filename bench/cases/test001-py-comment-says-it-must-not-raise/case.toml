@@ -1,0 +1,12 @@
+id = "test001-py-comment-says-it-must-not-raise"
+description = "deleting a missing key: a comment in the test says not raising is the check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+

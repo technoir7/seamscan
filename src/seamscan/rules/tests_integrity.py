@@ -16,7 +16,14 @@ from seamscan.facts.roles import Role, role_of
 from seamscan.model import ChangeSet, Confidence, Finding, Location, Severity
 from seamscan.parse import javascript as js
 from seamscan.parse.javascript import JsModule, JsNode
-from seamscan.parse.python import PyModule, enclosing_function, location, qualified_name, snippet
+from seamscan.parse.python import (
+    PyModule,
+    comments_by_line,
+    enclosing_function,
+    location,
+    qualified_name,
+    snippet,
+)
 from seamscan.rules.base import Rule, RuleContext, finding, meta
 
 NO_ASSERTION = meta(
@@ -57,9 +64,12 @@ def _test_modules(ctx: RuleContext) -> Iterator[PyModule]:
 
 
 def _is_fixture(module: PyModule, fn: Function) -> bool:
+    # `pytest.fixture`, `pytest_asyncio.fixture` and aliases of either: a fixture named
+    # `test_db` is setup, not a test.
     for d in fn.decorator_list:
         target = d.func if isinstance(d, ast.Call) else d
-        if qualified_name(module, target) == "pytest.fixture":
+        name = qualified_name(module, target)
+        if name is not None and name.rsplit(".", 1)[-1] == "fixture":
             return True
     return False
 
@@ -112,6 +122,37 @@ _NO_RAISE_INTENT = re.compile(
 )
 
 
+# Calls a test makes only for their exception: each raises on bad input, so calling one
+# as a statement and throwing the result away is the check (`uuid.UUID(trace_id)`). The
+# Python counterpart of JS's statement-only Testing Library queries. A result kept in a
+# variable is not a check until something checks it.
+_VALIDATING_CALLS = frozenset(
+    {
+        "uuid.UUID",
+        "json.loads",
+        "datetime.datetime.fromisoformat",
+        "datetime.date.fromisoformat",
+        "datetime.datetime.strptime",
+        "ipaddress.ip_address",
+        "ipaddress.ip_network",
+        "jsonschema.validate",
+    }
+)
+# Pydantic's validators and Django's `full_clean()` raise ValidationError on bad data.
+_VALIDATING_METHODS = frozenset({"model_validate", "model_validate_json", "full_clean"})
+
+
+def _validating_statement(module: PyModule, node: ast.AST) -> bool:
+    if not isinstance(node, ast.Expr):
+        return False
+    call = node.value.value if isinstance(node.value, ast.Await) else node.value
+    if not isinstance(call, ast.Call):
+        return False
+    if qualified_name(module, call.func) in _VALIDATING_CALLS:
+        return True
+    return isinstance(call.func, ast.Attribute) and call.func.attr in _VALIDATING_METHODS
+
+
 def _called_name(call: ast.Call) -> str:
     if isinstance(call.func, ast.Attribute):
         return call.func.attr
@@ -121,7 +162,7 @@ def _called_name(call: ast.Call) -> str:
 
 
 def _is_assertion(module: PyModule, node: ast.AST, asserting_helpers: frozenset[str]) -> bool:
-    if isinstance(node, ast.Assert):
+    if isinstance(node, ast.Assert) or _validating_statement(module, node):
         return True
     if isinstance(node, ast.Raise) and node.exc is not None:
         exc = node.exc.func if isinstance(node.exc, ast.Call) else node.exc
@@ -152,8 +193,28 @@ def _asserting_helpers(module: PyModule) -> frozenset[str]:
     return frozenset(fn.name for fn in candidates if _contains_assertion(module, fn))
 
 
-def _says_it_checks_only_for_errors(fn: Function) -> bool:
-    text = fn.name.replace("_", " ") + " " + (ast.get_docstring(fn) or "")
+def _body_end(module: PyModule, fn: Function) -> int:
+    """The function's last line, counting comment lines indented inside it after its last
+    statement (`ast` ends the function at that statement)."""
+    lines = module.source.splitlines()
+    last = fn.end_lineno or fn.lineno
+    while last < len(lines):
+        text = lines[last]  # the line after `last` (lines is 0-based)
+        stripped = text.lstrip()
+        indented = len(text) - len(stripped) > fn.col_offset
+        if stripped and not (stripped.startswith("#") and indented):
+            break
+        last += 1
+    return last
+
+
+def _says_it_checks_only_for_errors(
+    module: PyModule, fn: Function, comments: dict[int, str]
+) -> bool:
+    """Its name, docstring or a comment in its body says not raising is the point."""
+    last = _body_end(module, fn)
+    body = " ".join(comments[n] for n in range(fn.lineno, last + 1) if n in comments)
+    text = f"{fn.name.replace('_', ' ')} {ast.get_docstring(fn) or ''} {body}"
     return bool(_NO_RAISE_INTENT.search(text))
 
 
@@ -203,8 +264,11 @@ def _no_assertion(ctx: RuleContext) -> Iterator[Finding]:
     for module in _test_modules(ctx):
         helpers = _asserting_helpers(module)
         rejected = _expected_to_raise(module)
+        comments = comments_by_line(module)
         for fn in _test_functions(module):
-            if _contains_assertion(module, fn, helpers) or _says_it_checks_only_for_errors(fn):
+            if _contains_assertion(module, fn, helpers):
+                continue
+            if _says_it_checks_only_for_errors(module, fn, comments):
                 continue
             if _accepts_what_a_sibling_rejects(fn, rejected):
                 continue

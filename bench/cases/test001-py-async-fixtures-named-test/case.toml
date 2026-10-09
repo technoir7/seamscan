@@ -1,0 +1,12 @@
+id = "test001-py-async-fixtures-named-test"
+description = "pytest-asyncio fixtures named test_* (decorated with pytest_asyncio.fixture, also aliased) are fixtures, not tests"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+

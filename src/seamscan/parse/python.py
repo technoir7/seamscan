@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import io
+import tokenize
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 
@@ -68,6 +70,19 @@ def qualified_name(module: PyModule, node: ast.expr) -> str | None:
         base = qualified_name(module, node.value)
         return f"{base}.{node.attr}" if base else None
     return None
+
+
+def comments_by_line(module: PyModule) -> dict[int, str]:
+    """Comment text (without `#`) per line. `ast` drops comments; tokenize keeps them.
+    It tokenizes the whole source on every call, so call it once per module."""
+    out: dict[int, str] = {}
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(module.source).readline):
+            if tok.type == tokenize.COMMENT:
+                out[tok.start[0]] = tok.string.lstrip("#").strip()
+    except (tokenize.TokenError, SyntaxError):
+        return out  # the tree parsed, so this is a tokenizer edge case; keep what was read
+    return out
 
 
 def keyword(call: ast.Call, name: str) -> ast.expr | None:

@@ -1,0 +1,14 @@
+id = "test001-py-comment-without-a-check"
+description = "a comment in a test that checks nothing is not a reason: it doesn't say not raising is the point"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_orders.py"
+line = 4
+

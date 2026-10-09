@@ -19,16 +19,26 @@ A test that pytest or unittest would collect, in a test file, that checks nothin
     Playwright's `expect(page).to_have_title(...)`)
   - a call to a function or method in the same file that itself contains one of the above
     (one level deep)
+  - an implicit check: a call made only for its exception, written as a statement with
+    the result thrown away. The list is closed: `uuid.UUID(...)`, `json.loads(...)`,
+    `datetime.fromisoformat` / `date.fromisoformat` / `datetime.strptime`,
+    `ipaddress.ip_address` / `ip_network`, `jsonschema.validate`, and the methods
+    `model_validate`, `model_validate_json` (Pydantic) and `full_clean` (Django). Each
+    raises on bad input, so `uuid.UUID(trace_id)` checks the id is valid. Assigned to a
+    variable (`payload = json.loads(body)`) it is not a check until something checks the
+    variable. This is the Python counterpart of the JS rule's statement-only queries.
 
 Test files are `test_*.py`, `*_test.py`, `conftest.py` and anything under `tests/` or
-`test/`. Functions decorated with `@pytest.fixture` are not tests, even when named
-`test_user`.
+`test/`. Fixtures are not tests, even when named `test_db`: a function with any
+decorator whose last name is `fixture` (`@pytest.fixture`, `@pytest_asyncio.fixture`, or
+an alias of either).
 
-**Decision: "doesn't raise" tests.** A test with no assertion is not flagged when its name
-or docstring says that not raising is the point, such as `test_load_empty_file_does_not_raise`,
-a docstring "must load without raising", or the word "smoke". Such a test is weak but
-honest. The test this rule hunts keeps its old name (`test_total_includes_tax`) and
-loses its check.
+**Decision: "doesn't raise" tests.** A test with no assertion is not flagged when its
+name, docstring or a comment in its body says that not raising is the point, such as
+`test_load_empty_file_does_not_raise`, a docstring "must load without raising", a
+comment `# should not raise`, or the word "smoke". Such a test is weak but honest. The
+test this rule hunts keeps its old name (`test_total_includes_tax`) and loses its check;
+any other comment (`# the discount is applied by the pricing service`) is not a reason.
 
 **Decision: the accepting half of an accept/reject pair.** A test with no assertion is not
 flagged when it calls a function that another test *in the same file* expects to raise:
@@ -199,8 +209,15 @@ new behavior rather than nothing.
   this rule's.
 - Tests inherited from a base class defined in the same file
   (`class FooTests(BaseTests)`, where `BaseTests` subclasses `TestCase`) are missed.
-- The "doesn't raise" exemption trusts the name. An agent that renames a test to
-  `test_..._does_not_raise` while deleting its assertion is not flagged.
+- The "doesn't raise" exemption trusts the name, docstring and comments. An agent that
+  renames a test to `test_..._does_not_raise`, or writes `# should not raise` where the
+  assertion was, is not flagged.
+- An implicit check counts even when it checks the wrong thing: `json.loads(body)` as a
+  statement proves only that the body is JSON (false negative for a test meant to check
+  its contents). Validators outside the list (`int(x)`, a project's own `parse_*`) don't
+  count (false positive).
+- A smoke test that says nothing about raising (`def test_pre_start(): pre_start()`) is
+  flagged, even when not raising is the whole contract of the code under test.
 - The accept/reject exemption trusts the pair. A test that should check a return value
   (`test_total_includes_tax` calling `compute_total`) is missed when another test in the
   file expects `compute_total` to raise on bad input. Constructors count as calls, so a

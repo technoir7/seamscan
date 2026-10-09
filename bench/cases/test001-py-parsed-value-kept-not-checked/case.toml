@@ -1,0 +1,14 @@
+id = "test001-py-parsed-value-kept-not-checked"
+description = "parsing into a variable that nothing checks is not a check: only a call whose result is thrown away counts"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "tests/test_export.py"
+line = 6
+

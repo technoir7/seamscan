@@ -1,0 +1,12 @@
+id = "test001-py-validating-call-is-the-check"
+description = "a parser called for its exception with the result thrown away (uuid.UUID, json.loads) is an implicit check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+
