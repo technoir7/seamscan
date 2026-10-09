@@ -1,0 +1,13 @@
+id = "web001-ts-safe-action-public-client"
+description = "a next-safe-action server action on the plain (unauthenticated) client deletes a project with no session check"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "src/actions/projects.ts"
+line = 12
+tolerance = 1

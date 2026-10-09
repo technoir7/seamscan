@@ -95,9 +95,11 @@ failing install by publishing or installing whatever answers to the name.
   package really has.
 - A real name used for the wrong thing (a typo that happens to exist, an abandoned
   package) is not this rule; SC-DEP-002 catches the young and obscure ones.
-- npm imports are found lexically: an `import x from 'y'` line inside a template literal
-  or a block comment counts as an import. A misread name that npm happens not to know
-  would be a false positive.
+- npm imports are found by patterns, and checked against the syntax tree where a match
+  may sit inside a template literal: sample code on a docs page
+  (`` const example = `import { Client } from '@acme/sdk'` ``) is not an import. An
+  `import x from 'y'` line inside a block comment or an ordinary string still counts
+  as one; a misread name that npm happens not to know would be a false positive.
 - Path aliases defined anywhere other than tsconfig/jsconfig, Deno import maps and the
   listed bundler configs (a webpack alias built in a function, Babel `module-resolver`
   in `package.json`) are not recognized; an import through one may be looked up. A file

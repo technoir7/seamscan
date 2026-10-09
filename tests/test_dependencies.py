@@ -129,6 +129,31 @@ def test_npm_packages_defined_in_the_repository_are_not_looked_up():
     ]
 
 
+def test_import_text_inside_a_template_literal_is_not_an_import():
+    page = (
+        'import { CodeBlock } from "@acme/ui";\n'
+        "export const docs = `\n"
+        "import { Client } from '@reelspot/sdk';\n"
+        "const sdk = require('reelspot-node');\n"
+        "await import('reelspot-extra');\n"
+        "`;\n"
+        'const lazy = () => import("chart-lib");\n'
+        "export default () => <CodeBlock code={docs} />;\n"
+    )
+    assert found({"src/pages/api-access.jsx": page}) == [
+        ("@acme/ui", "src/pages/api-access.jsx", 1),
+        ("chart-lib", "src/pages/api-access.jsx", 7),
+    ]
+
+
+def test_imports_after_a_template_literal_keep_their_exact_location():
+    src = 'const css = `a { color: red }`;\nimport x from "left-padx";\n'
+    deps = registry_dependencies([SourceFile("src/a.ts", src)])
+    assert [(d.ref.name, d.location.start_line, d.location.start_col) for d in deps] == [
+        ("left-padx", 2, 16)
+    ]
+
+
 def test_npm_only_top_level_sections_count():
     text = json.dumps(
         {"name": "a", "jest": {"dependencies": {"nope": "1"}}, "dependencies": {"react": "19"}},

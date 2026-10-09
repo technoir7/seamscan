@@ -1,0 +1,11 @@
+id = "code008-tsx-style-element-css"
+description = "shadcn/ui's chart component writes theme CSS into a <style> element with dangerouslySetInnerHTML; style text is CSS, not HTML (seen in the noise study)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (shadcn/ui components/ui/chart.tsx, MIT)"
+
+[[forbidden]]
+rule = "SC-CODE-008"

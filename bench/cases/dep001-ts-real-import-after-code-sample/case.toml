@@ -1,0 +1,25 @@
+id = "dep001-ts-real-import-after-code-sample"
+description = "a file with a code sample in a template literal also really imports an invented package; the real import is still reported"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "src/lib/embed.ts"
+line = 9
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react", "npm:vite"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "react-embed-snippet-kit"
+exists = false

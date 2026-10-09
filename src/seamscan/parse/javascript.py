@@ -278,6 +278,31 @@ def snippet(module: JsModule, node: Node, limit: int = 200) -> str:
     return t if len(t) <= limit else t[: limit - 1] + "…"
 
 
+# ------------------------------------------------------------------ module specifiers
+
+_SPECIFIERS = """
+(import_statement source: (string) @s)
+(export_statement source: (string) @s)
+(call_expression
+  function: (identifier) @fn
+  arguments: (arguments . (string) @s .)
+  (#eq? @fn "require"))
+(call_expression function: (import) arguments: (arguments . (string) @s .))
+"""
+# TypeScript's `import x = require("y")`; the JavaScript grammar has no such node.
+_TS_REQUIRE_CLAUSE = "(import_require_clause source: (string) @s)"
+
+
+def import_specifiers(module: JsModule) -> list[Node]:
+    """The string literals that name a module in code: `import … from "x"`, `import "x"`,
+    `export … from "x"`, `require("x")`, `import("x")`. A string or template that only
+    contains such text (a code sample on a docs page) is not one."""
+    query = _SPECIFIERS
+    if module.dialect in ("typescript", "tsx"):
+        query += _TS_REQUIRE_CLAUSE
+    return captures(module, query).get("s", [])
+
+
 # ------------------------------------------------------------------ names and values
 
 

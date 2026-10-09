@@ -1,0 +1,13 @@
+id = "code008-tsx-div-beside-style-element"
+description = "a profile card injects a <style> block (CSS, fine) and renders the user's bio as raw HTML in a <div> (flagged)"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "src/components/ProfileCard.tsx"
+line = 19
+tolerance = 0

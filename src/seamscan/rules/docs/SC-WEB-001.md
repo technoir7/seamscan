@@ -60,7 +60,12 @@ the write's own arguments, which run first), means no finding:
   passed to `use` (`app.use("/api/*", jwt(...))`) must prefix the route. Names count when
   they mention `auth`, `login`, `jwt`, `protect`, `token`, `guard`, `signedin`, `verify`.
   Routers (`authRoutes`, `authRouter`) and CSRF middleware don't count.
-- An auth-named wrapper around the handler: `export const POST = withAuth(...)`.
+- An auth-named wrapper around the handler: `export const POST = withAuth(...)`. A server
+  action built on an action client counts when the client is auth-named or a `.use(...)`
+  step adds auth-named middleware (next-safe-action style):
+  `authActionClient.schema(s).action(async ...)`,
+  `actionClient.use(authMiddleware).action(async ...)`. The plain `actionClient` alone is
+  not a check.
 - Decorators: `@login_required`, `@permission_required`, `@jwt_required`, anything
   mentioning `login`, `auth`, `permission`, `jwt`, `token`, `role`, `staff`, `admin`,
   `superuser`; `method_decorator(login_required, ...)` on a class; DRF

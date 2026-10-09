@@ -760,7 +760,11 @@ rules read a `RegistryView` with `now` passed in. Local, URL and workspace specs
 - *npm imports* skip builtins, protocol specifiers, paths, `@/ ~ # $` aliases,
   tsconfig `paths`/`baseUrl`, bundler aliases and Deno import maps. A file `collect`
   skipped still counts as local. Whether a name is local is decided over the whole
-  repository, in scan mode too.
+  repository, in scan mode too. Imports are found by patterns; where a match may lie
+  inside a template literal (an odd number of backticks before it), the syntax tree
+  decides, so sample code on a docs page isn't an import (M7 noise pass). Parsing
+  every file instead would roughly triple this whole-repository pass, which the
+  Claude hook runs on every edit.
 - *DEP-002* never fires on snapshot names (`PackageFacts.popular`) or missing data;
   PyPI uses age only. *DEP-003* reads the packument's version, or for snapshot names
   the per-version document; `gypfile` counts as `install`; `prepare` is ignored. An

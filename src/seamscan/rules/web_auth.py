@@ -202,6 +202,25 @@ def _top_level_function(module: js.JsModule, name: str) -> JsNode | None:
     return None
 
 
+def _auth_chain(module: js.JsModule, call: JsNode) -> bool:
+    """A builder chain whose root client, or a `.use(...)` step, is auth-named:
+    `authActionClient.schema(s).action(fn)`, `actionClient.use(authMiddleware).action(fn)`
+    (next-safe-action and similar). The client runs that middleware before `fn`."""
+    node: JsNode | None = call
+    while node is not None and node.type == "call_expression":
+        callee = node.child_by_field_name("function")
+        if callee is None or callee.type != "member_expression":
+            return False
+        step = callee.child_by_field_name("property")
+        if step is not None and js.text(module, step) == "use":
+            if any(_auth_middleware(js.text(module, a)) for a in js.arguments(node)):
+                return True
+        node = callee.child_by_field_name("object")
+    if node is None or node.type not in ("identifier", "member_expression"):
+        return False
+    return _auth_middleware(js.text(module, node).rsplit(".", 1)[-1])
+
+
 def _handler_function(module: js.JsModule, value: JsNode) -> JsNode | None:
     """The function a value holds: itself, a named top-level function, or the function a
     non-auth wrapper is given (`withErrorHandling(async (req) => ...)`). None for an
@@ -212,7 +231,7 @@ def _handler_function(module: js.JsModule, value: JsNode) -> JsNode | None:
         return _top_level_function(module, js.text(module, value))
     if value.type == "call_expression":
         wrapper = js.call_name(module, value) or ""
-        if _auth_call(wrapper) or _auth_middleware(wrapper):
+        if _auth_call(wrapper) or _auth_middleware(wrapper) or _auth_chain(module, value):
             return None
         for arg in js.arguments(value):
             fn = _handler_function(module, arg)

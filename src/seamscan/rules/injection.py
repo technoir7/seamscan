@@ -860,6 +860,12 @@ def _js_jsx_html(module: JsModule) -> Iterator[tuple[JsNode, JsNode]]:
         named = attr.named_children
         if len(named) != 2 or js.text(module, named[0]) != "dangerouslySetInnerHTML":
             continue
+        # A <style> element's text is CSS: browsers don't run script from it, and
+        # shadcn/ui's chart component writes theme variables this way in many apps.
+        element = attr.parent
+        tag = element.child_by_field_name("name") if element is not None else None
+        if tag is not None and js.text(module, tag) == "style":
+            continue
         expr = named[1].named_children[0] if named[1].named_children else None
         value = js.object_property(expr, "__html", module) if expr is not None else None
         if value is not None:

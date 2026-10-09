@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from seamscan.model import ChangeSet, Ecosystem, Location, PackageRef, SourceFile
-from seamscan.parse.javascript import js_dialect
+from seamscan.parse.javascript import import_specifiers, js_dialect, location, parse_js
 
 _NPM_SECTIONS = ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies")
 _REQUIREMENTS = re.compile(r"(?:^|/)requirements(?:[^/]*\.txt|/[^/]+\.txt)$")
@@ -580,12 +580,35 @@ def _is_comment(text: str, offset: int) -> bool:
     return "//" in before or before.lstrip().startswith(("*", "/*"))
 
 
+def _in_template(text: str, offset: int) -> bool:
+    # An odd number of backticks before the match: it may sit in a template literal.
+    return text.count("`", 0, offset) % 2 == 1
+
+
+def _specifier_starts(f: SourceFile) -> frozenset[tuple[int, int]]:
+    """(line, column) of each import specifier's text, from the syntax tree."""
+    module = parse_js(f)
+    return frozenset(
+        (loc.start_line, loc.start_col + 1)  # +1: past the opening quote
+        for loc in (location(module, s) for s in import_specifiers(module))
+    )
+
+
 def _imports(f: SourceFile, npm: _NpmProject) -> Iterator[Dependency]:
+    # The patterns find candidates cheaply; the tree has the last word only where a
+    # candidate may be text inside a template literal (sample code on a docs page).
+    # Parsing every file here would double the hook's whole-repo pass (ADR-004 budget).
+    confirmed: frozenset[tuple[int, int]] | None = None
     for pattern in (_SIDE_EFFECT_IMPORT, _FROM_IMPORT, _CALL_IMPORT):
         for m in pattern.finditer(f.text):
             spec = m.group(2)
             if pattern is _CALL_IMPORT and _is_comment(f.text, m.start()):
                 continue  # `/** @type {import('x').Config} */`, `// require('x')`
+            if _in_template(f.text, m.start(2)):
+                if confirmed is None:
+                    confirmed = _specifier_starts(f)
+                if _position(f.text, m.start(2)) not in confirmed:
+                    continue
             package = _package_of(spec)
             if package is None:
                 continue
