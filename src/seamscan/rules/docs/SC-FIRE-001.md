@@ -170,6 +170,10 @@ key data by `$uid` and compare it to `auth.uid`.
   which in a multi-tenant app may leak other tenants' data.
 - **Public reads are name-blind.** `allow read: if true` on `/users/{userId}` is LOW, the
   same as on `/posts/{postId}`, even when the documents hold emails or phone numbers.
+  The other side of the same choice: data that is public on purpose (profile pictures,
+  published posts) is still reported, because rules can't say what is meant to be
+  public. The one SC-FIRE-001 finding in the 2026-10-09 noise studies was this kind
+  (public-read avatars with owner-only writes). Suppress it with a reason.
 - **What's deployed may differ.** Rules edited in the Firebase console, or generated at
   deploy time, are not seen. A `.rules` file that is never deployed (an old copy) is
   still checked.

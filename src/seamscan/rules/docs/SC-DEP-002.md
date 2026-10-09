@@ -66,6 +66,11 @@ legitimate, suppress the finding inline with the reason, or add the name to
 - Downloads are gameable, and npm's counts include mirrors and CI.
 - No PyPI download signal, so an old but abandoned PyPI package passes.
 - Same extraction gaps as SC-DEP-001 (lexical imports, unrecognized path aliases).
+- A project's own little-used packages are judged like anyone's when their source isn't
+  in the repository, for example a generator's `templates/` importing the packages the
+  project publishes from elsewhere. Nothing in the repository proves the scope is
+  theirs; add it to `[deps] allow` (`allow = ["@acme/*"]`). All four SC-DEP-002 findings
+  in the 2026-10-09 noise studies were of this kind, in one repository.
 
 ## References
 
