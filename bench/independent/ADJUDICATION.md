@@ -63,3 +63,32 @@ Totals: **seamscan-wrong 34**, **label-wrong 6**, **page-ambiguous 1**.
 - Separately, four SC-META-004 cases failed only because the harness skipped the CLI's
   rule that a public 404 is inconclusive when the repository uses another registry; the
   harness now applies it (commit "Treat a public 404 as inconclusive...").
+
+## Re-adjudication after the second noise pass (2026-10-09)
+
+SC-CODE-002, SC-SEC-003 and SC-WEB-003 were narrowed (ADR-005 era). Nine cases written
+under the old pages newly disagreed. A fresh adjudicator judged them against the new
+pages only:
+
+| case id | rule | verdict | reason |
+|---|---|---|---|
+| ind-code002-ts-json-parse-empty-catch | SC-CODE-002 | label-wrong | The `try` only parses and sets React state, with no state-changing call, and the page lists this exact line as not flagged: "`try { setItems(JSON.parse(saved)); } catch {}            // a read`" ("without one, nothing is reported"). |
+| ind-sec003-py-setdefault-db-password | SC-SEC-003 | page-ambiguous | The Decision says DB credentials are not reported ("A name is such a credential when one of its words names a service: … `DB` … Those are not reported"), yet the page's own Flagged example is this exact line: "`os.environ.setdefault(\"DB_PASSWORD\", \"postgres\")`". |
+| ind-web003-py-fastapi-cors-wildcard-credentials | SC-WEB-003 | label-wrong | The repo (one file: `app/main.py`, a notes API) has no cookie, session or basic-auth use, and "the CORS shapes above are reported only when the repository shows ambient credentials somewhere". |
+| ind-web003-ts-express-options-const-wildcard-list | SC-WEB-003 | label-wrong | `server/app.ts` is the only file and has no cookie, `express-session`, `cookie-parser` or basic auth, so "reported only when the repository shows ambient credentials somewhere" excludes it. |
+| ind-web003-ts-fastify-register-cors | SC-WEB-003 | label-wrong | `src/app.ts` is the only file and shows no ambient credentials, so "reported only when the repository shows ambient credentials somewhere" excludes it. |
+| ind-web003-ts-hono-cors-wildcard-credentials | SC-WEB-003 | label-wrong | `src/index.ts` is the only file; its `/api/session` route returns `{ ok: true }` and uses no session library or cookie, so "reported only when the repository shows ambient credentials somewhere" excludes it. |
+| ind-web003-ts-next-config-headers-list | SC-WEB-003 | label-wrong | `next.config.js` is the only file and shows no ambient credentials, so "reported only when the repository shows ambient credentials somewhere" excludes it. |
+| ind-web003-ts-route-handler-header-object | SC-WEB-003 | label-wrong | `app/api/session/route.ts` is the only file; despite the folder name it never calls `cookies()`, sets a cookie or uses a session library, so "reported only when the repository shows ambient credentials somewhere" excludes it. |
+| ind-web003-ts-vercel-json-headers | SC-WEB-003 | label-wrong | `vercel.json` is the only file and shows no ambient credentials, so "reported only when the repository shows ambient credentials somewhere" excludes it. |
+
+Notes:
+
+- **Known-gap check (SC-WEB-003).** The page lists as a false negative "Cookies that something outside the repository sets for the API's site … so a credentialed wildcard policy in a repository that never mentions cookies goes unreported." I did not count that as a gap miss here. It only applies when such outside cookies actually exist, and none of these cases shows an outside auth service, gateway or proxy. The two `/api/session` cases (Hono, Next route handler) come closest: the path name hints at a session kept somewhere else. But a path name is not one of the page's listed signals, so I still call them label-wrong.
+- **SC-SEC-003 conflict.** The Known gaps entry ("A local Postgres started with `POSTGRES_PASSWORD=postgres` accepts a `\"postgres\"` fallback; … it isn't reported (false negative)") backs the Decision over the example: it describes not reporting this as intended, with a known downside. The case has no compose file or other sign of such a Postgres, so the gap doesn't turn this into a seamscan error. The stale Flagged example is a doc bug. Once it is fixed (for example, swapped for `SECRET_KEY`), this becomes label-wrong.
+
+Done with the verdicts: the 8 label-wrong cases are relabelled (expected became
+forbidden); the page-ambiguous SC-SEC-003 case keeps its label and counts as a miss,
+and the page's stale Flagged example (a DB password) moved to Not flagged. The
+independent set now under-tests SC-WEB-003's narrowed positive (cookies present):
+none of its remaining WEB-003 positives was written for it.

@@ -91,7 +91,7 @@ Flagged:
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev")
 SECRET_KEY = getenv("JWT_SECRET", "supersecretjwtkey")
 SESSION_SECRET = os.getenv("SESSION_SECRET") or "change-this-in-production"
-os.environ.setdefault("DB_PASSWORD", "postgres")
+os.environ.setdefault("CSRF_SECRET", "dev-csrf-secret")
 ```
 
 ```ts
@@ -108,6 +108,7 @@ SECRET_KEY = os.environ.get("SESSION_SECRET", "")  # fails closed
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")  # a setting, not a secret
 CERT = os.environ.get("PUBLIC_KEY_PATH", "/etc/certs/pub.pem")
 cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "secrets/sa.json")
+os.environ.setdefault("DB_PASSWORD", "postgres")  # outbound: the database rejects it
 ```
 
 ```ts
