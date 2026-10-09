@@ -1356,6 +1356,35 @@ Order rationale:
 - No test checks the wheel contents; checked by hand once.
 - On a push of a root commit, the Action's `HEAD~1` base doesn't exist.
 
+**M7 results so far (2026-10-09, seamscan 0.7.0):**
+- *Independent set* (§8.3): 697 cases by four separate sessions (claude-sonnet-5-5)
+  from the rule pages alone (`bench/independent/`, brief in
+  `bench/prompts/independent/`). Raw score 0.82 precision / 0.93 recall. Four fixes to
+  the harness so it reads cases as the CLI reads repositories (score only the rules a
+  case tests, as the brief promised; apply `.gitignore`; apply `seamscan.toml [deps]`;
+  treat a public 404 as inconclusive when another registry is configured). An
+  adjudicator with only the rule pages judged the remaining 41 disagreements: 34
+  seamscan errors (counted), 6 wrong labels (fixed), 1 contradictory page (counted
+  against seamscan). **Result: precision 0.96, recall 0.94.** Outside the 25 cases
+  tagged `[known-gap]` it is 0.98 / 0.99: nearly every miss is one a rule page
+  already admits. Details: `bench/independent/ADJUDICATION.md`.
+- *Noise in the wild* (§8.4): 20 repos chosen by a written rule
+  (`bench/wild/repos.toml`), 102k lines. Found a parser bug first (a bare `&` in JSX
+  hid 18 files from the rules; fixed). 77 findings (0.75 per 1,000 lines) plus 15
+  notices (Python files that are cookiecutter templates). All 77 triaged by a separate
+  session reading the code: **15 true, 61 false, 1 unclear: precision 0.20** under a
+  strict reading, about 0.27 if UI handlers that fail silently count. Blocking
+  findings only: 12 of 49 true. False alarms by cause: SC-CODE-002 26 of 30 (logged
+  and continued, judged deliberate); vendored minified JS (5); "should not raise"
+  tests (9); a project's own little-used packages (4); intended public data (3);
+  Supabase's public demo key (1). Only counts are committed; per-finding detail stays
+  local (it points at real vulnerabilities in other people's code).
+- *Comparators* (§8.5): Bandit 1.9.4, gitleaks 8.30.1, eslint-plugin-security 4.2.0 on
+  the independent set, `bench/results/compare.json`. Semgrep ran locally only.
+- **Consequence:** the corpus numbers describe the rules as specified; the wild
+  number describes what a user sees, and it is far lower. 1.0 waits for a noise pass
+  developed against these 20 repos (now dev data) and re-measured on 20 fresh ones.
+
 ---
 
 ## 15. Open questions (for Aaron)
@@ -1395,6 +1424,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-09: M7 evaluation: independent set (697 cases, 0.96 / 0.94 after adjudication), 20-repo noise study (0.75 findings per 1,000 lines, precision 0.20), comparator run. JSX `&` parse fix. Results and the decision to do a noise pass before 1.0 are in §14 "M7 results so far".
 - 2026-10-09: **M5 done (0.7.0).** SC-DEP-001..003 and SC-META-004 per ADR-004: pure extraction (`facts/dependencies.py`, `facts/registries.py`), the `supply/` edge (urllib, atomic cache, bundled top-10k snapshot with licensed sources, failure-as-data, 429 backoff), `--offline`, `[deps]` config, registry fixtures in benchmark cases. 30 rules, 820 cases (411 with TS/JS), every rule 1.00/1.00 on both splits (author-written; §8.3). Hook: PostToolUse offline, Stop online. Details under §7.7 "As built (M5)".
 - 2026-10-09: M5 groundwork: ADR-004 (dependency checks keep the core pure: extract, look up at the edge, rules read a `RegistryView` with `now` as data); SC-META-004 "Dependency not verified" (§7.8); `PackageRef`/`PackageFacts`/`RegistryView` in `model.py`; `facts/dependencies.py` (package.json and requirements files, with locations); `analyze(registry=...)`.
 - 2026-10-09: **M6 done (0.6.0)**, apart from verifying the GitHub SARIF upload, which needs the branch pushed. Baseline and ratchet (`baseline create|prune|check`), `seamscan.toml` (`[policy]`, `[rules]`, `[paths] exclude`), SARIF 2.1.0 (validated against the vendored OASIS schema), the markdown audit report, the agent format, `--stats`, suppression reasons in every output, `scan --files`, `rules`, `explain`, `hook claude` (new pure `hooks/` layer), `action.yml` and `.pre-commit-hooks.yaml`. Rule pages moved into the package (`src/seamscan/rules/docs/`). Spec corrections from the hook docs: MultiEdit is gone; hook errors must exit 1, not 2. Decisions recorded as "As built (M6)" in §9.3, §9.5, §10, §11.
