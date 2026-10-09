@@ -42,6 +42,8 @@ def table(scores: dict[str, RuleScore]) -> str:
     return "\n".join(rows)
 
 
+LATEST = Path(__file__).resolve().parent / "results" / "latest.json"
+
 # Spec §8.6: per-rule minimums on the dev split, by rule confidence (precision, recall).
 BUDGETS = {
     Confidence.HIGH: (0.95, 0.85),
@@ -94,13 +96,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n== {name} · {len(chosen)} cases ==")
         print(table(scores[name]))
         results[name] = {r: {"tp": s.tp, "fp": s.fp, "fn": s.fn} for r, s in scores[name].items()}
+    payload = {"cases": len(cases), "independent_cases": len(independent), "splits": results}
+    recorded = json.dumps(payload, indent=2, sort_keys=True) + "\n"
     if args.record:
-        payload = {"cases": len(cases), "independent_cases": len(independent), "splits": results}
-        args.record.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        args.record.write_text(recorded)
     if args.check:
         failures = budget_failures(
             scores.get("dev", {}), scores.get("holdout", {}), scores.get("independent", {})
         )
+        # The README's results table is generated from this file, so it must be current.
+        if not LATEST.exists() or LATEST.read_text() != recorded:
+            failures.append("bench/results/latest.json is stale: run `bench.run --record` on it")
         print("\nbudget: " + ("OK" if not failures else "FAILED"))
         for line in failures:
             print(f"  {line}")

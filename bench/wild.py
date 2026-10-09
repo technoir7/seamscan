@@ -192,7 +192,8 @@ def sample(study: Study, size: int, seed: int) -> None:
     study.triage.write_text(head + "".join(entries))
 
 
-def report(study: Study) -> None:
+def report(study: Study, record: bool) -> None:
+    """Print the triage summary; `record` adds it (totals only) to the committed counts."""
     counts = json.loads(study.counts.read_text())
     triage: list[dict[str, Any]] = (
         tomllib.loads(study.triage.read_text())["finding"] if study.triage.exists() else []
@@ -203,15 +204,20 @@ def report(study: Study) -> None:
     by_rule: dict[str, list[str]] = {}
     for t in triage:
         by_rule.setdefault(t["rule"], []).append(t["verdict"])
+    blocking = {
+        (f["repo"], f["fingerprint"]) for f in json.loads(study.detail.read_text()) if f["blocking"]
+    }
     summary = {
-        "lines": counts["lines"],
-        "findings": counts["findings"],
-        "notices": counts["notices"],
-        "per_kloc": counts["per_kloc"],
         "precision": precision([t["verdict"] for t in triage]),
+        "blocking_precision": precision(
+            [t["verdict"] for t in triage if (t["repo"], t["fingerprint"]) in blocking]
+        ),
         "precision_by_rule": {r: precision(v) for r, v in sorted(by_rule.items())},
     }
+    print(json.dumps({k: counts[k] for k in ("lines", "findings", "notices", "per_kloc")}))
     print(json.dumps(summary, indent=2))
+    if record:
+        study.counts.write_text(json.dumps({**counts, "triage": summary}, indent=2) + "\n")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -224,7 +230,8 @@ def main(argv: list[str] | None = None) -> int:
     sample_p = sub.add_parser("sample")
     sample_p.add_argument("--size", type=int, default=100)
     sample_p.add_argument("--seed", type=int, default=2026)
-    sub.add_parser("report")
+    report_p = sub.add_parser("report")
+    report_p.add_argument("--record", action="store_true", help="add the summary to the counts")
     args = parser.parse_args(argv)
     study = STUDIES[args.study]
     if args.command == "run":
@@ -232,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "sample":
         sample(study, args.size, args.seed)
     else:
-        report(study)
+        report(study, args.record)
     return 0
 
 
