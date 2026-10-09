@@ -1,0 +1,267 @@
+{
+  "seamscan": "0.7.0",
+  "date": "2026-10-09",
+  "offline": false,
+  "lines": 116970,
+  "findings": 34,
+  "notices": 0,
+  "blocking": 29,
+  "per_kloc": 0.29,
+  "by_rule": {
+    "SC-CODE-004": 1,
+    "SC-CODE-008": 11,
+    "SC-CODE-011": 1,
+    "SC-DEP-002": 1,
+    "SC-SEC-003": 2,
+    "SC-TEST-001": 3,
+    "SC-WEB-001": 14,
+    "SC-WEB-003": 1
+  },
+  "repos": [
+    {
+      "repo": "AtotheY/Linktree-nextjs-supabase-template",
+      "commit": "83eea72da38debc5e4703ad03585b56ea4a64403",
+      "group": "js",
+      "lines": 2078,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "ShenSeanChen/launch-kimi-k2-claude",
+      "commit": "bf9f9a8be3b15930489f97bdb366a71a9dee4370",
+      "group": "js",
+      "lines": 5366,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.19,
+      "by_rule": {
+        "SC-CODE-008": 1
+      }
+    },
+    {
+      "repo": "chaibuilder/chaibuilder-next-supabase-starter",
+      "commit": "51f1e35aba1f92164001a8387da1c88fc7b36f40",
+      "group": "js",
+      "lines": 1459,
+      "findings": 4,
+      "notices": 0,
+      "blocking": 3,
+      "per_kloc": 2.74,
+      "by_rule": {
+        "SC-CODE-008": 2,
+        "SC-DEP-002": 1,
+        "SC-WEB-001": 1
+      }
+    },
+    {
+      "repo": "marksantiago290/Nextjs-Supabase-Blog",
+      "commit": "21b91d90c2dcf246ec756af29bc957dd7a79fd5f",
+      "group": "js",
+      "lines": 13930,
+      "findings": 10,
+      "notices": 0,
+      "blocking": 10,
+      "per_kloc": 0.72,
+      "by_rule": {
+        "SC-CODE-008": 2,
+        "SC-WEB-001": 8
+      }
+    },
+    {
+      "repo": "GomaGoma676/mantine-lesson",
+      "commit": "6825253e6abac675452efcbcdeac7164d1ef4da9",
+      "group": "js",
+      "lines": 2060,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Cloud-Dev77/SAAS_Chat_App",
+      "commit": "62a68f3e595046275af2c3375e2882a8f65ce403",
+      "group": "js",
+      "lines": 3855,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "zeikar/nextjs-firebase-boilerplate",
+      "commit": "50b90a7aa91b0a034beb4f363f9cd7a8a6c8d5ce",
+      "group": "js",
+      "lines": 6098,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.16,
+      "by_rule": {
+        "SC-CODE-008": 1
+      }
+    },
+    {
+      "repo": "ayush-that/nextjs-firebase-template",
+      "commit": "c4ade98eeb90bed5652ec40f7a67cd8c1f340477",
+      "group": "js",
+      "lines": 2306,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "sannlynnhtun-coding/nextjs-firebase-push-notification",
+      "commit": "606a1f61381d0bdedb407282dd73fe8d59871169",
+      "group": "js",
+      "lines": 1925,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "didinj/reactjs-firebase-firestore-crud",
+      "commit": "e7b2b273fe7ef53daaf17353cc3d481380354697",
+      "group": "js",
+      "lines": 249,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "99sbr/fastapi-template",
+      "commit": "84487d96e5b3e910affd6f0dc379b283a477b530",
+      "group": "python",
+      "lines": 741,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 1.35,
+      "by_rule": {
+        "SC-CODE-011": 1
+      }
+    },
+    {
+      "repo": "Donnype/fastapi-template",
+      "commit": "28271f64d9467dbd414ab4a89b7783ae0a59e5c9",
+      "group": "python",
+      "lines": 394,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 2.54,
+      "by_rule": {
+        "SC-WEB-001": 1
+      }
+    },
+    {
+      "repo": "natgluons/AI-docs-analyzer-API",
+      "commit": "ecee1cdebd7a553c9ad0af90f36f35b8311a33b9",
+      "group": "python",
+      "lines": 87,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "ema28pro/innovatex-hackathon",
+      "commit": "eb4f98b2b1ba7412e4cb8361ed14cd5e3d467ee4",
+      "group": "python",
+      "lines": 9747,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "lvthillo/python-flask-docker",
+      "commit": "2698e4136709b99d4889fbef60b9ad7c622e0664",
+      "group": "python",
+      "lines": 18,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "muhammadhammadtech/rock-paper-scissors-k8s",
+      "commit": "d2f4af89baebf08187769dc67d21e9b9eed47434",
+      "group": "python",
+      "lines": 112,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "jelmerdejong/simple-flask-s3-uploader",
+      "commit": "8dcd7759b96de7bd164673ef7e6af33cd3fdeb5d",
+      "group": "python",
+      "lines": 557,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Yousha-dev/django-saas-backend-template",
+      "commit": "593323cd7778db2ef3529b6bf2e4d032ab43fcbf",
+      "group": "python",
+      "lines": 64259,
+      "findings": 14,
+      "notices": 0,
+      "blocking": 11,
+      "per_kloc": 0.22,
+      "by_rule": {
+        "SC-CODE-004": 1,
+        "SC-CODE-008": 5,
+        "SC-SEC-003": 1,
+        "SC-TEST-001": 3,
+        "SC-WEB-001": 4
+      }
+    },
+    {
+      "repo": "mohamedBalkhi/codex-first-django-saas-starter",
+      "commit": "ea3ba65bd3b10c86642388804216609f4e1752cf",
+      "group": "python",
+      "lines": 1457,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.69,
+      "by_rule": {
+        "SC-SEC-003": 1
+      }
+    },
+    {
+      "repo": "iraelie251006/saas",
+      "commit": "873dae0123dd2fd0992e9aec424b6f4ebb0d028d",
+      "group": "python",
+      "lines": 272,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 3.68,
+      "by_rule": {
+        "SC-WEB-003": 1
+      }
+    }
+  ]
+}
