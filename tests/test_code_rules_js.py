@@ -269,3 +269,15 @@ def test_a_plain_js_class_stub_does_not_crash_the_rule():
     found = analyze([SourceFile("server/auth.js", src)]).findings
     assert "SC-META-003" not in {f.rule_id for f in found}
     assert [f.rule_id for f in found] == ["SC-CODE-003"]
+
+
+def test_an_all_stub_class_is_an_interface_unless_a_subclass_here_inherits_the_stub():
+    interface = (
+        "export class Store {\n"
+        '  load() { throw new Error("load() not implemented"); }\n'
+        '  save() { throw new Error("save() not implemented"); }\n'
+        "}\n"
+    )
+    assert run(UNFINISHED_CODE.id, interface) == []
+    inherited = interface + "class MemoryStore extends Store {\n  load() { return []; }\n}\n"
+    assert lines(run(UNFINISHED_CODE.id, inherited)) == [3]

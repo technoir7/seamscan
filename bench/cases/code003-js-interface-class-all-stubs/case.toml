@@ -1,0 +1,10 @@
+id = "code003-js-interface-class-all-stubs"
+description = "An adapter interface whose every method throws 'not implemented'; the real adapters live in other files"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

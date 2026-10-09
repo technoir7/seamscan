@@ -1033,6 +1033,43 @@ def _last_segment(name: str | None) -> str:
     return (name or "").rsplit(".", 1)[-1]
 
 
+def _stub_statement(stmt: ast.stmt) -> bool:
+    if isinstance(stmt, ast.Pass | ast.Raise):
+        return True
+    if isinstance(stmt, ast.Expr):
+        return is_constant(stmt.value, ...)
+    if isinstance(stmt, ast.Return):
+        value = stmt.value
+        return (
+            value is None
+            or isinstance(value, ast.Constant)
+            or (isinstance(value, ast.List | ast.Tuple | ast.Dict) and not ast.unparse(value)[1:-1])
+        )
+    return False
+
+
+def _all_stubs(cls: ast.ClassDef) -> bool:
+    """Two or more methods (dunders aside), every one a stub: empty, a constant answer or a
+    raise. That is an interface written without ABC, its implementations elsewhere. A
+    class with a single stub method is the stub itself, so it doesn't count."""
+    methods = [
+        s
+        for s in cls.body
+        if isinstance(s, ast.FunctionDef | ast.AsyncFunctionDef)
+        and not (s.name.startswith("__") and s.name.endswith("__"))
+    ]
+    if len(methods) < 2:
+        return False
+    for method in methods:
+        body = method.body
+        if isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
+            if isinstance(body[0].value.value, str):
+                body = body[1:]
+        if len(body) > 1 or (body and not _stub_statement(body[0])):
+            return False
+    return True
+
+
 def _is_interface(module: PyModule, cls: ast.ClassDef) -> bool:
     """Protocols, ABCs and Base*/Abstract* classes: their methods exist to be overridden."""
     words = name_words(cls.name)
@@ -1073,9 +1110,28 @@ def _meant_to_be_overridden(module: PyModule, fn: FunctionNode | None) -> bool:
         if _last_segment(qualified_name(module, target)) in _STUB_DECORATORS:
             return True
     parent = module.parents.get(id(fn))
-    return isinstance(parent, ast.ClassDef) and (
-        _is_interface(module, parent) or _overridden_in_module(module, parent, fn.name)
-    )
+    if not isinstance(parent, ast.ClassDef):
+        return False
+    if _is_interface(module, parent) or _overridden_in_module(module, parent, fn.name):
+        return True
+    # An all-stub class is an interface unless a subclass right here inherits this very
+    # stub: then calling it on the subclass hits the placeholder.
+    return _all_stubs(parent) and not _inherited_in_module(module, parent, fn.name)
+
+
+def _inherited_in_module(module: PyModule, cls: ast.ClassDef, method: str) -> bool:
+    for node in ast.walk(module.tree):
+        if isinstance(node, ast.ClassDef) and any(
+            _last_segment(qualified_name(module, b.value if isinstance(b, ast.Subscript) else b))
+            == cls.name
+            for b in node.bases
+        ):
+            if not any(
+                isinstance(s, ast.FunctionDef | ast.AsyncFunctionDef) and s.name == method
+                for s in node.body
+            ):
+                return True
+    return False
 
 
 def _raises_not_implemented(node: ast.Raise) -> bool:
@@ -1263,7 +1319,68 @@ def _js_meant_to_be_overridden(module: JsModule, fn: JsNode | None) -> bool:
         or "base" in words
         or "abstract" in words
         or _js_method_overridden(module, cls, method)
+        or (
+            body is not None
+            and _js_all_stubs(module, body)
+            and not _js_method_inherited(module, cls, method)
+        )
     )
+
+
+def _js_method_inherited(module: JsModule, cls: JsNode, method: str) -> bool:
+    """A subclass in the same file inherits the method instead of overriding it."""
+    base = _class_name(module, cls)
+    for other in _nodes(module, " ".join(_CLASS_TYPES)):
+        if base and base in _base_names(module, other):
+            body = other.child_by_field_name("body")
+            if body is None or not any(
+                m.type == "method_definition"
+                and _key_name(module, m.child_by_field_name("name")) == method
+                for m in body.named_children
+            ):
+                return True
+    return False
+
+
+_CONSTANT_TYPES = frozenset(
+    {"true", "false", "null", "undefined", "number", "string", "array", "object"}
+)
+
+
+def _js_stub_body(method: JsNode) -> bool:
+    body = method.child_by_field_name("body")
+    if body is None:
+        return False
+    statements = [c for c in body.named_children if c.type != "comment"]
+    if not statements:
+        return True
+    if len(statements) > 1:
+        return False
+    stmt = statements[0]
+    if stmt.type == "throw_statement":
+        return True
+    if stmt.type != "return_statement":
+        return False
+    value = next((c for c in stmt.named_children if c.type != "comment"), None)
+    if value is None:
+        return True
+    value = _bare(value)
+    return value.type in _CONSTANT_TYPES and not (
+        value.type in ("array", "object") and value.named_child_count
+    )
+
+
+def _js_all_stubs(module: JsModule, class_body: JsNode) -> bool:
+    """Two or more methods (the constructor aside), every one a stub: empty, a constant
+    answer or a throw. That is an interface (`AuthAdapter`), its implementations in other
+    files. A class with a single stub method is the stub itself, so it doesn't count."""
+    methods = [
+        m
+        for m in class_body.named_children
+        if m.type == "method_definition"
+        and _key_name(module, m.child_by_field_name("name")) != "constructor"
+    ]
+    return len(methods) >= 2 and all(map(_js_stub_body, methods))
 
 
 def _js_function_name(module: JsModule, fn: JsNode) -> tuple[str, JsNode] | None:

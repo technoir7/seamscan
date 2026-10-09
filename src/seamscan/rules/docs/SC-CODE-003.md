@@ -26,6 +26,14 @@ Not flagged:
   whatever it is called. A subclass that *inherits* the stub doesn't count, so
   `class StripeProvider(PaymentProvider)` without its own `refund` still leaves the
   base's `raise NotImplementedError` flagged.
+- **an all-stub class is an interface.** A class with two or more methods (dunders
+  aside) where every one is a stub (empty, `pass`/`...`, returning a constant, or
+  raising) is an interface written without `ABC`, its implementations in other files
+  (`class PaymentProvider` with `create_checkout`, `verify_webhook` and `cancel` all
+  stubbed). Its stubs aren't flagged, unless a subclass in the same file inherits that
+  stub (above). A class with a single stub method is the stub itself, so it is still
+  flagged. Measured: one such adapter interface produced 13 of this rule's 16 findings
+  across two noise studies (40 repositories), all false.
 - `.pyi` stub files, which are never analyzed
 - test files
 - `raise NotImplementedError("…")` with a message, inside an `if`/`elif`/`else` branch or
@@ -64,7 +72,9 @@ Not flagged:
   ${type}` ``: a dispatcher naming the input it rejects, after handling the supported
   ones
 - methods of an `abstract class`, of a class whose name has the word `Base` or
-  `Abstract`, or overridden by a subclass in the same file (as for Python)
+  `Abstract`, overridden by a subclass in the same file, or of an all-stub class
+  (constructor aside, every method empty, returning a constant, or throwing), as for
+  Python: `class AuthAdapter` whose methods all throw "not implemented"
 - interface members, overload signatures, `declare function` and `.d.ts` files: they
   have no body
 - a stub whose body has a comment giving a reason (`// Always run the middleware above,
@@ -165,8 +175,12 @@ really is an interface, make that explicit with `@abstractmethod`, a `Protocol`,
 - Stubs with other always-true shapes (`return 1`, `return not False`, `return user is
   not None or True`) are missed, and so are guard names outside the word list
   (`is_admin`, `can_edit`, `is_valid`).
-- A base class whose subclasses live in other files (common in libraries, rare in app
-  code) is flagged unless it is named `Base*`/`Abstract*` or derives from `ABC`.
+- A base class whose subclasses live in other files is flagged unless it is named
+  `Base*`/`Abstract*`, derives from `ABC`, or stubs every method: a class that mixes
+  real methods with one documented "override me" hook (`authorize` returning True) is
+  still reported.
+- An all-stub class that really is unfinished (every method a placeholder, nothing
+  implemented anywhere) is taken for an interface and not reported.
 - An override that deliberately does nothing (`def _check_scope(self, ...): pass  # always
   valid here`) is flagged.
 - `NotImplementedError` raised as a signal (from `__len__` to opt out of a protocol, or

@@ -1,0 +1,12 @@
+id = "code003-py-single-method-verifier-stub"
+description = "A one-method verifier class whose only method always returns True: the stub is the whole class"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "app/security/tokens.py"
+line = 2
