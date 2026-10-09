@@ -1,0 +1,24 @@
+id = "ind-dep001-py-dependency-groups-pep735"
+description = "PEP 735 [dependency-groups] dev group with an invented pytest plugin"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "pyproject.toml"
+line = 9
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:polars", "pypi:pyarrow", "pypi:pytest"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "pytest-fixture-autogen"
+exists = false
+

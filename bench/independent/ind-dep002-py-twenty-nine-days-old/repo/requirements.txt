@@ -1,0 +1,2 @@
+flask==3.0.3
+flask-limiter-redis-plus==0.2.0

@@ -1,0 +1,12 @@
+id = "ind-supa002-neg-restrictive"
+description = "A restrictive policy with USING (true) only narrows what permissive policies allow"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

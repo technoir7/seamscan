@@ -1,0 +1,17 @@
+id = "ind-test001-ts-rtl-standalone-queries-and-page-object"
+description = "Testing Library getBy as a statement, Playwright waitForURL, and a page-object method that expects"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:@playwright/test", "npm:@testing-library/react"]
+

@@ -1,0 +1,14 @@
+id = "ind-code001-ts-nodemailer-tls"
+description = "nodemailer transport with tls.rejectUnauthorized false"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "server/mailer.ts"
+line = 8

@@ -1,0 +1,8 @@
+{
+  "name": "api",
+  "private": true,
+  "dependencies": {
+    "hono": "^4.6.0",
+    "native-keychain-bridge": "^1.0.0"
+  }
+}

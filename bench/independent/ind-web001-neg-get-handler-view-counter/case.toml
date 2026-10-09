@@ -1,0 +1,12 @@
+id = "ind-web001-neg-get-handler-view-counter"
+description = "GET handler increments a view counter, but GET is out of scope; the POST is authenticated"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

@@ -1,0 +1,14 @@
+id = "ind-code003-py-validate-token-return-true-docstring"
+description = "validate_token returns True under a docstring"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "services/tokens.py"
+line = 1

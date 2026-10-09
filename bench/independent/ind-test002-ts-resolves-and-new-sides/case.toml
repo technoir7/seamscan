@@ -1,0 +1,17 @@
+id = "ind-test002-ts-resolves-and-new-sides"
+description = "Promise chains and new/await on both sides are not tautologies"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = []
+

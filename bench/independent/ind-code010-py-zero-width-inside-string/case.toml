@@ -1,0 +1,12 @@
+id = "ind-code010-py-zero-width-inside-string"
+description = "Zero-width non-joiner inside a Persian string literal"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-010"

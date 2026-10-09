@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Old test-mode rule, removed:
+    //   match /{document=**} { allow read, write: if request.time < timestamp.date(2026, 11, 7); }
+    /* allow read, write: if true; */
+    match /accounts/{uid} {
+      allow read, write: if request.auth.uid == uid;
+    }
+  }
+}

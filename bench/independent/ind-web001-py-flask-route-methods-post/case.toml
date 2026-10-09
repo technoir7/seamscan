@@ -1,0 +1,15 @@
+id = "ind-web001-py-flask-route-methods-post"
+description = "Flask @app.route with methods=['POST'] adds a row through db.session with no login check"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/views.py"
+line = 13
+tolerance = 2

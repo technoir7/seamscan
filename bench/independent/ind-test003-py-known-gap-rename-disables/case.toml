@@ -1,0 +1,15 @@
+id = "ind-test003-py-known-gap-rename-disables"
+description = "[known-gap] Test is disabled by renaming it so pytest no longer collects it"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "tests/test_search.py"
+line = 4
+

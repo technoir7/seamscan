@@ -1,0 +1,12 @@
+id = "ind-web002-py-neg-test-file"
+description = "pytest module fetching a URL taken from a fixture dict"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-002"

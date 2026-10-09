@@ -1,0 +1,17 @@
+id = "ind-meta004-py-offline-but-in-snapshot"
+description = "Offline run where every dependency is in the bundled snapshot, with a private index configured"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:fastapi", "pypi:sqlalchemy", "pypi:pytest"]
+

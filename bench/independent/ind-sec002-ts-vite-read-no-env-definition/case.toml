@@ -1,0 +1,14 @@
+id = "ind-sec002-ts-vite-read-no-env-definition"
+description = "Vite browser code reads VITE_OPENAI_API_KEY; only a placeholder .env.example is committed"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/lib/ai.ts"
+line = 6

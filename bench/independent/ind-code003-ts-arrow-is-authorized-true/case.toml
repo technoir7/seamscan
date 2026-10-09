@@ -1,0 +1,14 @@
+id = "ind-code003-ts-arrow-is-authorized-true"
+description = "Arrow function assigned to isAuthorized returning true"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "src/lib/access.ts"
+line = 3

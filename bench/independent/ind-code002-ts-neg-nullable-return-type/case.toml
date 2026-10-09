@@ -1,0 +1,12 @@
+id = "ind-code002-ts-neg-nullable-return-type"
+description = "return null from a function that declares | null as its return type"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-002"

@@ -1,0 +1,22 @@
+id = "ind-dep001-py-lookup-failed-503"
+description = "Registry answered HTTP 503 for one name: unknown is not missing"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:httpx"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "supabase-flows"
+problem = "HTTP 503"
+

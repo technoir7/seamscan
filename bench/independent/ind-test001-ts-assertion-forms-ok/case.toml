@@ -1,0 +1,17 @@
+id = "ind-test001-ts-assertion-forms-ok"
+description = "Jest tests asserting through snapshots, rejects, expect.assertions, supertest and chai should"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:@testing-library/react", "npm:supertest"]
+

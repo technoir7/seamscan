@@ -1,0 +1,15 @@
+id = "ind-code005-socketio-decode-user-data"
+description = "Socket.IO connection middleware stores unverified decoded token on socket.data.user"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "server/realtime.ts"
+line = 8
+

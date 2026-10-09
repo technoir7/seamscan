@@ -1,0 +1,12 @@
+id = "ind-supa003-neg-search-path-to-list"
+description = "SET search_path TO public, extensions counts as set"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

@@ -1,0 +1,15 @@
+id = "ind-code007-py-fstring-check-output-shell"
+description = "Git helper builds a log command in a variable and runs it with shell=True"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "deploy/gitinfo.py"
+line = 6
+

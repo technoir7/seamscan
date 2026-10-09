@@ -1,0 +1,5 @@
+{
+  "name": "tools",
+  "private": true,
+  "dependencies": { "ky": "^1.7.0", "form-data-lite-x": "^0.3.0" }
+}

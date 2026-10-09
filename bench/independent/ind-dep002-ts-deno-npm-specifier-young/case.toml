@@ -1,0 +1,26 @@
+id = "ind-dep002-ts-deno-npm-specifier-young"
+description = "Edge Function npm: specifier for a 6-day-old package"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "supabase/functions/notify/index.ts"
+line = 2
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:@supabase/supabase-js"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "email-template-edge"
+exists = true
+first_published = 2026-09-25T00:00:00Z
+weekly_downloads = 80
+

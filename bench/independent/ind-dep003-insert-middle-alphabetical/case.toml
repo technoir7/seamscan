@@ -1,0 +1,27 @@
+id = "ind-dep003-insert-middle-alphabetical"
+description = "Change inserts canvas-lite-native between existing entries; it declares an install script"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-003"
+path = "package.json"
+line = 6
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:axios", "npm:express", "npm:zod"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "canvas-lite-native"
+exists = true
+first_published = 2019-03-01T00:00:00Z
+weekly_downloads = 40000
+install_scripts = ["install"]
+

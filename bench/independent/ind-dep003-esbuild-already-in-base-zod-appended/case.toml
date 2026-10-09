@@ -1,0 +1,25 @@
+id = "ind-dep003-esbuild-already-in-base-zod-appended"
+description = "esbuild (install script) is already in base; the change appends zod after it, so esbuild's line only gains a comma"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:typescript", "npm:zod"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "esbuild"
+exists = true
+first_published = 2019-03-01T00:00:00Z
+weekly_downloads = 30000000
+install_scripts = ["postinstall"]
+

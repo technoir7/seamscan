@@ -1,0 +1,15 @@
+id = "ind-web003-ts-hono-cors-wildcard-credentials"
+description = "Hono cors on /api/* with origin '*' and credentials true"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-003"
+path = "src/index.ts"
+line = 6
+tolerance = 2

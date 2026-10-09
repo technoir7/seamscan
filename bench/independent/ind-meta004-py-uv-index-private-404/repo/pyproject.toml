@@ -1,0 +1,11 @@
+[project]
+name = "reports"
+version = "0.2.0"
+dependencies = [
+    "polars>=1.0",
+    "acme-warehouse-sdk>=3.1",
+]
+
+[[tool.uv.index]]
+name = "acme"
+url = "https://pypi.acme.dev/simple"

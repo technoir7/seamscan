@@ -1,0 +1,12 @@
+id = "ind-code011-restricted-unpickler-and-itsdangerous"
+description = "Restricted unpickler with allow-list and itsdangerous signed JSON"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-011"

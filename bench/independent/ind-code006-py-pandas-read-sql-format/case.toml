@@ -1,0 +1,15 @@
+id = "ind-code006-py-pandas-read-sql-format"
+description = "Reporting script feeds a .format() string to pandas.read_sql"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "reports/weekly.py"
+line = 12
+

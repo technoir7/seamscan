@@ -1,0 +1,14 @@
+id = "ind-sec004-env-multiline-private-key"
+description = "Committed .env with a multi-line quoted private key value"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env"
+line = 2

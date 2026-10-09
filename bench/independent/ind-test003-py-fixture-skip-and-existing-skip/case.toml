@@ -1,0 +1,13 @@
+id = "ind-test003-py-fixture-skip-and-existing-skip"
+description = "Fixture skips on a missing service; a pre-existing skip is only touched inside its body"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-003"
+

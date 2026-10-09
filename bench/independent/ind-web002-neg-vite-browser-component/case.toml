@@ -1,0 +1,12 @@
+id = "ind-web002-neg-vite-browser-component"
+description = "Vite/React component under src/ fetches a URL from the page's own query string; browser code is out of scope"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-002"

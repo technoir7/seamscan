@@ -1,0 +1,15 @@
+id = "ind-code008-ts-innerhtml-map-template"
+description = "Client script fills a results list with item titles through innerHTML"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "components/SearchResults.tsx"
+line = 8
+

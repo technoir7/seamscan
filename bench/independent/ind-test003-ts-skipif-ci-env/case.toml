@@ -1,0 +1,19 @@
+id = "ind-test003-ts-skipif-ci-env"
+description = "Vitest it.skipIf(process.env.CI) hides a failing upload test from CI"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "src/storage/upload.test.ts"
+line = 4
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:vitest"]
+

@@ -1,0 +1,15 @@
+id = "ind-test003-py-module-level-pytestmark-skip"
+description = "Whole test module disabled via pytestmark, plus pytest.param marks"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "tests/test_reports.py"
+line = 5
+

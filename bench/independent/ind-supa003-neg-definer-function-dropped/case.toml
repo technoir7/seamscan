@@ -1,0 +1,12 @@
+id = "ind-supa003-neg-definer-function-dropped"
+description = "Definer function and a definer-style view created, then both dropped in a later migration"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

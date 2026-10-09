@@ -1,0 +1,8 @@
+{
+  "name": "api",
+  "private": true,
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "libheif-wasm-fast": "^2.0.0"
+  }
+}

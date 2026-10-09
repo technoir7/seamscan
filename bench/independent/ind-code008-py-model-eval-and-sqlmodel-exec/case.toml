@@ -1,0 +1,12 @@
+id = "ind-code008-py-model-eval-and-sqlmodel-exec"
+description = "torch model.eval, DataFrame.eval and SQLModel session.exec are not builtins"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-008"

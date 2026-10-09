@@ -1,0 +1,15 @@
+id = "ind-supa003-view-security-barrier-only"
+description = "View with only security_barrier set: that option does not make it security invoker"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260306000000_view_barrier.sql"
+line = 4
+tolerance = 2

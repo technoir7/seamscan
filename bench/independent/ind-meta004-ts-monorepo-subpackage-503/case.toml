@@ -1,0 +1,24 @@
+id = "ind-meta004-ts-monorepo-subpackage-503"
+description = "Sub-package devDependency: npm answered HTTP 503"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-META-004"
+path = "packages/ui/package.json"
+line = 6
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:vitest"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "storybook-a11y-report"
+problem = "HTTP 503"
+

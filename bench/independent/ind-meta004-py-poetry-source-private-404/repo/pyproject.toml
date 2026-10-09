@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "ingest"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+boto3 = "^1.35"
+acme-telemetry = "^1.2"
+
+[[tool.poetry.source]]
+name = "acme"
+url = "https://pypi.acme.dev/simple"
+priority = "supplemental"

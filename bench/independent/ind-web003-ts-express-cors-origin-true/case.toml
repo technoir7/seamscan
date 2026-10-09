@@ -1,0 +1,15 @@
+id = "ind-web003-ts-express-cors-origin-true"
+description = "Express cors({ origin: true, credentials: true }) reflects every origin"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-003"
+path = "server/index.js"
+line = 7
+tolerance = 2

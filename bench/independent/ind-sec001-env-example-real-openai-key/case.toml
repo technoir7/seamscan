@@ -1,0 +1,14 @@
+id = "ind-sec001-env-example-real-openai-key"
+description = "A .env.example template has a real provider key pasted in under an unprefixed name"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = ".env.example"
+line = 3

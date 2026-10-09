@@ -1,0 +1,12 @@
+id = "ind-code008-ts-server-jsdom-innerhtml"
+description = "Server-side scraper uses jsdom and assigns innerHTML"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-008"

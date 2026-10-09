@@ -1,0 +1,12 @@
+id = "ind-web002-py-neg-settings-base-url"
+description = "Django view requests settings.INVENTORY_API plus a path and query"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-002"

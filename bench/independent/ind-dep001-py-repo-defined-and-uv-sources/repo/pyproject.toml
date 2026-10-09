@@ -1,0 +1,7 @@
+[project]
+name = "acme-platform"
+version = "0.1.0"
+dependencies = ["acme-billing", "acme-shared", "sqlalchemy>=2.0"]
+
+[tool.uv.sources]
+acme-shared = { path = "../shared", editable = true }

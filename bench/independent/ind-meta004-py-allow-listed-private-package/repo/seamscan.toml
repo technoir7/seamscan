@@ -1,0 +1,2 @@
+[deps]
+allow = ["acme-billing-client"]

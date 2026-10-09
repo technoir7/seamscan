@@ -1,0 +1,15 @@
+id = "ind-web001-py-django-function-view-post"
+description = "Django function view saves a profile when request.method == 'POST', no @login_required"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "profiles/views.py"
+line = 11
+tolerance = 2

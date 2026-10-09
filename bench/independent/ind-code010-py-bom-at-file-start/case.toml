@@ -1,0 +1,12 @@
+id = "ind-code010-py-bom-at-file-start"
+description = "BOM at the very start of the file is allowed"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-010"

@@ -1,0 +1,25 @@
+id = "ind-dep002-py-poetry-twenty-days"
+description = "Poetry dependency table lists a package first published 20 days ago"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "pyproject.toml"
+line = 8
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:httpx"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "scrapling-stealth"
+exists = true
+first_published = 2026-09-11T00:00:00Z
+

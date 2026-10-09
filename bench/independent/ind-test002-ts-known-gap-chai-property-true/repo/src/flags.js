@@ -1,0 +1,1 @@
+exports.loadFlags = (f) => f;

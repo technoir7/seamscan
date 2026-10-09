@@ -1,0 +1,12 @@
+id = "ind-supa001-neg-enabled-later-quoted"
+description = "Table created without RLS but a later migration enables it using quoted names"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-001"

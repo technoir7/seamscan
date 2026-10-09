@@ -1,0 +1,12 @@
+id = "ind-supa003-neg-private-schema-definer"
+description = "Definer helper lives in a private schema that the API does not expose"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

@@ -1,0 +1,3 @@
+--extra-index-url https://pypi.acme.dev/simple
+requests==2.32.3
+pyjwt-extras-lite==1.2.0

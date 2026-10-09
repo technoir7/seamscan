@@ -1,0 +1,25 @@
+id = "ind-dep003-added-dependency-without-scripts"
+description = "Added dependency declares no lifecycle scripts at all"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "date-fns"
+exists = true
+first_published = 2019-03-01T00:00:00Z
+weekly_downloads = 30000000
+install_scripts = []
+

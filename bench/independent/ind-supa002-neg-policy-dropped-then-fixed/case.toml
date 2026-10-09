@@ -1,0 +1,12 @@
+id = "ind-supa002-neg-policy-dropped-then-fixed"
+description = "An open policy from a prototype is dropped and replaced by an owner policy in a later migration"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

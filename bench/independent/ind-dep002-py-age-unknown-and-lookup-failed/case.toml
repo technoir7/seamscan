@@ -1,0 +1,27 @@
+id = "ind-dep002-py-age-unknown-and-lookup-failed"
+description = "One package has no first-published date, another timed out: missing data is not evidence"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:pydantic"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "mystery-parser"
+exists = true
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "slow-registry-lib"
+problem = "timeout"
+

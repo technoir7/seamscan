@@ -1,0 +1,17 @@
+id = "ind-dep001-py-underscore-case-names-resolve"
+description = "Flask_SQLAlchemy and python_dotenv normalise to real PyPI names"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:flask", "pypi:flask-sqlalchemy", "pypi:python-dotenv", "pypi:werkzeug"]
+

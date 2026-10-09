@@ -1,0 +1,12 @@
+id = "ind-code011-pickle-shipped-model-file"
+description = "Model pickled next to the module is loaded from a fixed path built from __file__"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-011"

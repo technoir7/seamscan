@@ -1,0 +1,14 @@
+id = "ind-sec001-py-docstring-aws-key"
+description = "A Python ops script has an AWS access key id pasted into its module docstring"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "scripts/rotate_logs.py"
+line = 5

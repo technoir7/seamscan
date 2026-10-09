@@ -1,0 +1,8 @@
+{
+  "name": "docs-site",
+  "private": true,
+  "dependencies": {
+    "astro": "^4.16.0",
+    "astro-shiki-lines": "^0.1.0"
+  }
+}

@@ -1,0 +1,10 @@
+[project]
+name = "etl-jobs"
+version = "0.1.0"
+dependencies = ["polars>=1.0", "pyarrow>=17"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-fixture-autogen>=0.2",
+]

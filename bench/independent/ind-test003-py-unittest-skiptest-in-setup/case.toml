@@ -1,0 +1,15 @@
+id = "ind-test003-py-unittest-skiptest-in-setup"
+description = "Django test adds self.skipTest in setUp with a vague reason"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "orders/tests.py"
+line = 8
+

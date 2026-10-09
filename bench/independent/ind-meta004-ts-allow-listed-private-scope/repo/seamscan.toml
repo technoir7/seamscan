@@ -1,0 +1,2 @@
+[deps]
+allow = ["@acme/design-tokens"]

@@ -1,0 +1,12 @@
+id = "ind-sec004-env-neg-gitignored"
+description = "A real .env exists but .gitignore covers it"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-004"

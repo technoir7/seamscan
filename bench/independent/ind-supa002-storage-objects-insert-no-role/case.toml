@@ -1,0 +1,15 @@
+id = "ind-supa002-storage-objects-insert-no-role"
+description = "storage.objects INSERT policy with no TO clause and CHECK ( true ): anyone can upload to any bucket"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260312000000_storage.sql"
+line = 3
+tolerance = 2

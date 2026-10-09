@@ -1,0 +1,15 @@
+id = "ind-code006-py-django-raw-concat"
+description = "Django view uses Manager.raw with string concatenation"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "accounts/views.py"
+line = 7
+

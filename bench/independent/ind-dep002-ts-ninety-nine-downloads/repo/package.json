@@ -1,0 +1,8 @@
+{
+  "name": "fleet-ui",
+  "private": true,
+  "dependencies": {
+    "react": "^18.3.1",
+    "map-cluster-glow": "^1.4.0"
+  }
+}

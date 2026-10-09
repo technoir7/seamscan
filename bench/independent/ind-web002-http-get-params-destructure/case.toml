@@ -1,0 +1,15 @@
+id = "ind-web002-http-get-params-destructure"
+description = "Node http.get against a host taken from req.body in an Express webhook tester"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "api/webhook-test.js"
+line = 8
+tolerance = 2

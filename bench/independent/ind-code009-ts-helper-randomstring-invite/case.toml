@@ -1,0 +1,15 @@
+id = "ind-code009-ts-helper-randomstring-invite"
+description = "Invite token filled from a same-file helper built on Math.random"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "server/invites.ts"
+line = 12
+

@@ -1,0 +1,14 @@
+id = "ind-code001-ts-package-json-script"
+description = "npm script runs node with NODE_TLS_REJECT_UNAUTHORIZED=0"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "package.json"
+line = 6

@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    match /notes/{noteId} {
+      allow read, write: if isOwner(resource.data.uid);
+      allow create: if isOwner(request.resource.data.uid);
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

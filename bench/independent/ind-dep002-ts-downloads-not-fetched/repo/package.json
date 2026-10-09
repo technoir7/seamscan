@@ -1,0 +1,5 @@
+{
+  "name": "svc",
+  "private": true,
+  "dependencies": { "pino": "^9.4.0", "csv-stream-merge": "^3.1.0" }
+}

@@ -1,0 +1,25 @@
+id = "ind-dep002-py-pipfile-five-days"
+description = "Pipfile [packages] entry first published 5 days ago"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "Pipfile"
+line = 8
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:django"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "django-htmx-forms-pro"
+exists = true
+first_published = 2026-09-26T00:00:00Z
+

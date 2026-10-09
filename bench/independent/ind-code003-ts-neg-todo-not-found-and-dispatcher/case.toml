@@ -1,0 +1,12 @@
+id = "ind-code003-ts-neg-todo-not-found-and-dispatcher"
+description = "'Todo not found' errors and a dispatcher with a substitution in its message"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-003"

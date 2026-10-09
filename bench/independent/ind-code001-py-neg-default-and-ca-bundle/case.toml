@@ -1,0 +1,12 @@
+id = "ind-code001-py-neg-default-and-ca-bundle"
+description = "requests with default verification and with a custom CA bundle path"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-001"

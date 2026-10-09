@@ -1,0 +1,12 @@
+id = "ind-web001-py-neg-loginrequiredmixin"
+description = "Class-based Django view with LoginRequiredMixin deletes an object"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

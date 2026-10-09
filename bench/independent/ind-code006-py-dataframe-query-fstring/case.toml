@@ -1,0 +1,12 @@
+id = "ind-code006-py-dataframe-query-fstring"
+description = "pandas DataFrame.query with an f-string is not SQL"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-006"

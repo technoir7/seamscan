@@ -1,0 +1,14 @@
+id = "ind-sec002-ts-vite-src-stripe-test-literal"
+description = "Vite src module has a Stripe test-mode secret literal (LOW) in client code"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/api/payments.ts"
+line = 1

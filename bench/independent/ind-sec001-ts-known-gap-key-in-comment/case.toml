@@ -1,0 +1,14 @@
+id = "ind-sec001-ts-known-gap-key-in-comment"
+description = "[known-gap] A live Stripe key is pasted into a comment above a Hono handler"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "src/server/index.ts"
+line = 4

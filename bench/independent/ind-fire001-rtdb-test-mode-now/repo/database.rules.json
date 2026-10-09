@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "messages": {
+      ".read": "now < 1793836800000",
+      ".write": "now < 1793836800000"
+    },
+    "users": {
+      "$uid": { ".read": "$uid === auth.uid", ".write": "$uid === auth.uid" }
+    }
+  }
+}

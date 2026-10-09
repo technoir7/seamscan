@@ -1,0 +1,23 @@
+id = "ind-dep002-ts-downloads-not-fetched"
+description = "Old package whose download count could not be fetched: missing data is not evidence"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:pino"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "csv-stream-merge"
+exists = true
+first_published = 2021-04-01T00:00:00Z
+

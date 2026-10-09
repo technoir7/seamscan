@@ -1,0 +1,22 @@
+id = "ind-meta004-ts-other-scope-mapped-unscoped-404"
+description = "Only @other is mapped in .npmrc, so a 404 for an unscoped package is not covered by it (SC-DEP-001)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:express"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "express-session-vault-x"
+exists = false
+

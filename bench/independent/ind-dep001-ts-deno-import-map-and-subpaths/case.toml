@@ -1,0 +1,17 @@
+id = "ind-dep001-ts-deno-import-map-and-subpaths"
+description = "Deno import-map keys (hono, @shared/) and subpath imports of declared packages are not unknown packages"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:lodash", "npm:@tanstack/react-query"]
+

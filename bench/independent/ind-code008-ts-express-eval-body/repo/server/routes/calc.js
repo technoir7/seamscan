@@ -1,0 +1,13 @@
+const express = require("express");
+const router = express.Router();
+
+router.post("/calc", (req, res) => {
+  try {
+    const result = eval(req.body.expression);
+    res.json({ result });
+  } catch (e) {
+    res.status(400).json({ error: String(e) });
+  }
+});
+
+module.exports = router;

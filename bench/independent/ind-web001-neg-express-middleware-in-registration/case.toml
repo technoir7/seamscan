@@ -1,0 +1,12 @@
+id = "ind-web001-neg-express-middleware-in-registration"
+description = "Express route registered with limiter and requireAuth before the handler"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

@@ -1,0 +1,15 @@
+id = "ind-code009-py-dict-key-temporary-password"
+description = "Admin script stores a temporary password from random in a dict key"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-009"
+path = "admin/provision.py"
+line = 9
+

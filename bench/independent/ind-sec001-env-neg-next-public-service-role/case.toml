@@ -1,0 +1,12 @@
+id = "ind-sec001-env-neg-next-public-service-role"
+description = "NEXT_PUBLIC_ env var holding a service_role JWT: SC-SEC-002's, SEC-001 skips it"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-001"

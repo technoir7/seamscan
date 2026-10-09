@@ -1,0 +1,24 @@
+id = "ind-test002-ts-expect-true-tobe-true"
+description = "Jest tests with expect(true).toBe(true) and expect(1).toBeTruthy()"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "src/utils/slug.test.ts"
+line = 10
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "src/utils/slug.test.ts"
+line = 15
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = []
+

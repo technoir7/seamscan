@@ -1,0 +1,12 @@
+id = "ind-web002-neg-endswith-hostname"
+description = "Hostname must end with .example.com before the fetch"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-002"

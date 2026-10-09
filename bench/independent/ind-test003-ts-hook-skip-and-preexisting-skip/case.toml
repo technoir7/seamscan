@@ -1,0 +1,17 @@
+id = "ind-test003-ts-hook-skip-and-preexisting-skip"
+description = "this.skip() in a before hook for a missing service; a pre-existing it.skip with an edited body"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-003"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = []
+

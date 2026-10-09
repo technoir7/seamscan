@@ -1,0 +1,14 @@
+id = "ind-code003-ts-todo-throw-in-route"
+description = "Hono route handler throws an Error containing the upper-case marker TODO"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "src/routes/export.ts"
+line = 6

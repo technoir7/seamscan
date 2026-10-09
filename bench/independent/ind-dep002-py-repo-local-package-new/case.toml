@@ -1,0 +1,17 @@
+id = "ind-dep002-py-repo-local-package-new"
+description = "A package defined in this repo, created last week, is local and never looked up"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:pydantic"]
+

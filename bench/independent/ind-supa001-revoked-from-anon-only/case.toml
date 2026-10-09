@@ -1,0 +1,15 @@
+id = "ind-supa001-revoked-from-anon-only"
+description = "Revoke all only from anon; authenticated can still reach the table through the API"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260601000000_notes.sql"
+line = 1
+tolerance = 2

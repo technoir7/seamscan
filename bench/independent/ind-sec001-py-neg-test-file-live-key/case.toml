@@ -1,0 +1,12 @@
+id = "ind-sec001-py-neg-test-file-live-key"
+description = "A pytest file contains a key-shaped value; test files are skipped"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-001"

@@ -1,0 +1,14 @@
+id = "ind-code002-py-bare-except-return-none"
+description = "Bare except around json.load returning None"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "utils/loaders.py"
+line = 8

@@ -1,0 +1,7 @@
+[project]
+name = "mailer"
+version = "0.1.0"
+dependencies = [
+    "httpx>=0.27",
+    "postmark-async>=0.3",
+]

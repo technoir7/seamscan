@@ -1,0 +1,14 @@
+id = "ind-sec004-env-known-gap-staging-name"
+description = "[known-gap] .env.staging with real database credentials is committed (name not in the checked list)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.staging"
+line = 1

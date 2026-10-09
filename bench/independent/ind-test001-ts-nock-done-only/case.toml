@@ -1,0 +1,17 @@
+id = "ind-test001-ts-nock-done-only"
+description = "[known-gap] Test whose only check is nock scope.done(), which really verifies the request was made"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:nock"]
+

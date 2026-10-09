@@ -1,0 +1,8 @@
+{
+  "name": "intranet",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.1",
+    "internal-ui-kit": "^7.0.0"
+  }
+}

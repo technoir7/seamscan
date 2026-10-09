@@ -1,0 +1,27 @@
+id = "ind-dep003-devdependency-preinstall"
+description = "A devDependency added in the change declares preinstall and postinstall"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-003"
+path = "package.json"
+line = 7
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:typescript", "npm:vite"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "storybook-chrome-shot"
+exists = true
+first_published = 2019-03-01T00:00:00Z
+weekly_downloads = 900
+install_scripts = ["preinstall", "postinstall"]
+

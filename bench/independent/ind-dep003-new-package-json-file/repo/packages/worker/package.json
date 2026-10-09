@@ -1,0 +1,8 @@
+{
+  "name": "@mono/worker",
+  "version": "0.0.1",
+  "dependencies": {
+    "bullmq": "^5.20.0",
+    "node-rdkafka-prebuilt": "^3.1.0"
+  }
+}

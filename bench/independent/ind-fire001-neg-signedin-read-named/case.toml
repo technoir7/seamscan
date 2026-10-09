@@ -1,0 +1,12 @@
+id = "ind-fire001-neg-signedin-read-named"
+description = "Any signed-in user may read products and categories (named paths), writes are admin only"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-FIRE-001"

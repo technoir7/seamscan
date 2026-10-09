@@ -1,0 +1,17 @@
+id = "ind-dep001-py-import-names-not-checked"
+description = "Python imports (cv2, bs4, yaml, dotenv) differ from distribution names and are not looked up"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:opencv-python-headless", "pypi:beautifulsoup4", "pypi:pyyaml", "pypi:python-dotenv"]
+

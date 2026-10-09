@@ -1,0 +1,15 @@
+id = "ind-code007-ts-execsync-concat"
+description = "Upload handler converts video with execSync and string concatenation"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "server/media/convert.js"
+line = 4
+

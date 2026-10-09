@@ -1,0 +1,12 @@
+id = "ind-web001-py-neg-test-file"
+description = "pytest module that writes fixtures through a session and posts to a client"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

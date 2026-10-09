@@ -1,0 +1,24 @@
+id = "ind-meta004-ts-all-lookups-succeed-offline-snapshot"
+description = "Snapshot names plus a looked-up young package: everything was verified (DEP-002 territory, not unverified)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react", "npm:swr"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "toast-ripple-ui"
+exists = true
+first_published = 2026-09-25T00:00:00Z
+weekly_downloads = 20
+

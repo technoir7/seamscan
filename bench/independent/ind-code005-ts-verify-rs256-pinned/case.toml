@@ -1,0 +1,12 @@
+id = "ind-code005-ts-verify-rs256-pinned"
+description = "Hono middleware verifies with jose jwtVerify pinned to HS256"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-005"

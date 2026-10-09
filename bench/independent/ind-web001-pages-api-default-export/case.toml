@@ -1,0 +1,15 @@
+id = "ind-web001-pages-api-default-export"
+description = "pages/api handler accepts every method and updates a user row without a session check"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "pages/api/profile.ts"
+line = 6
+tolerance = 2

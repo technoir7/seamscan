@@ -1,0 +1,14 @@
+{
+  "name": "acme-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@acme/ui": "workspace:*",
+    "acme-logger": "file:../acme-logger",
+    "acme-theme": "link:../theme",
+    "acme-auth": "git+https://github.com/acme/auth.git#v1.2.0",
+    "acme-icons": "acme/icons#main",
+    "acme-fonts": "https://assets.acme.dev/fonts-1.0.0.tgz",
+    "lodash4": "npm:lodash@^4.17.21",
+    "react": "^18.3.1"
+  }
+}

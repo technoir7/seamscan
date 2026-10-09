@@ -1,0 +1,15 @@
+id = "ind-supa001-quoted-leads-nextjs-client"
+description = "Quoted mixed-case \"public\".\"Leads\" table without RLS, queried from a use-client Next.js component"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260320083000_leads.sql"
+line = 1
+tolerance = 2

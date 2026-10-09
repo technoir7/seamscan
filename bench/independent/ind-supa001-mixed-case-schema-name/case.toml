@@ -1,0 +1,15 @@
+id = "ind-supa001-mixed-case-schema-name"
+description = "Public.Bookings written with odd casing and never protected; a server route is the only caller"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260610000000_bookings.sql"
+line = 1
+tolerance = 2

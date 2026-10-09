@@ -1,0 +1,14 @@
+id = "ind-code004-ts-form-element-password-value"
+description = "Browser login handler compares form.password.value to a literal"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "public/js/login.js"
+line = 5

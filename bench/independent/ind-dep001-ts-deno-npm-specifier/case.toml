@@ -1,0 +1,24 @@
+id = "ind-dep001-ts-deno-npm-specifier"
+description = "Supabase Edge Function imports npm:stripe-edge-sdk, which doesn't exist"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "supabase/functions/checkout/index.ts"
+line = 2
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = []
+
+[[registry.package]]
+ecosystem = "npm"
+name = "stripe-edge-sdk"
+exists = false
+

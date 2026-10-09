@@ -1,0 +1,11 @@
+[project]
+name = "acme-app"
+version = "1.0.0"
+dependencies = ["acme-common", "acme-vendor @ git+https://github.com/acme/vendor.git", "pydantic>=2"]
+
+[tool.uv.sources]
+acme-common = { path = "../common" }
+
+[[tool.uv.index]]
+name = "acme"
+url = "https://pypi.acme.dev/simple"

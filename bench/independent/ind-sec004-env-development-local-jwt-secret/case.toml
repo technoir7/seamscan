@@ -1,0 +1,14 @@
+id = "ind-sec004-env-development-local-jwt-secret"
+description = "Committed .env.development.local with a real JWT secret and an inline comment"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env.development.local"
+line = 2

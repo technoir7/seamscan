@@ -1,0 +1,15 @@
+id = "ind-code007-ts-bun-spawn-sh-c"
+description = "Bun.spawn runs sh -c with a pg_dump script built from a database name"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-007"
+path = "scripts/backup.ts"
+line = 2
+

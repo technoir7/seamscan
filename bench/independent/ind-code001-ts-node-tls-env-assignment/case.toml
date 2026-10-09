@@ -1,0 +1,14 @@
+id = "ind-code001-ts-node-tls-env-assignment"
+description = "Script sets process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-001"
+path = "scripts/import-orders.ts"
+line = 1

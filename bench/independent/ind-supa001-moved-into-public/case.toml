@@ -1,0 +1,15 @@
+id = "ind-supa001-moved-into-public"
+description = "Table created in a private schema without RLS, then moved to public with SET SCHEMA"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-001"
+path = "supabase/migrations/20260501000000_internal.sql"
+line = 2
+tolerance = 2

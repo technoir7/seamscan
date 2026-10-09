@@ -1,0 +1,26 @@
+id = "ind-dep002-ts-young-but-popular-downloads"
+description = "Three days old with 5000 weekly downloads: still too new"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "package.json"
+line = 6
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:astro"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "astro-shiki-lines"
+exists = true
+first_published = 2026-09-28T00:00:00Z
+weekly_downloads = 5000
+

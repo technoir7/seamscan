@@ -1,0 +1,9 @@
+{
+  "name": "spa",
+  "private": true,
+  "dependencies": {
+    "react": "^18.3.1",
+    "swr": "^2.2.5",
+    "toast-ripple-ui": "^0.1.0"
+  }
+}

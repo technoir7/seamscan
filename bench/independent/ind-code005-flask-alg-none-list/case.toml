@@ -1,0 +1,15 @@
+id = "ind-code005-flask-alg-none-list"
+description = "Flask decorator accepts HS256 or none algorithm in PyJWT decode"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "api/auth.py"
+line = 18
+

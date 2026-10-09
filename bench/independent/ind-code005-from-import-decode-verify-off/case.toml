@@ -1,0 +1,15 @@
+id = "ind-code005-from-import-decode-verify-off"
+description = "Bare imported decode with verify_signature False on a Starlette websocket handshake"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "chat/ws_auth.py"
+line = 10
+

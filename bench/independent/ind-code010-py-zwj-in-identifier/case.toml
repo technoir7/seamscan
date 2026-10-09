@@ -1,0 +1,15 @@
+id = "ind-code010-py-zwj-in-identifier"
+description = "Python function name with a zero-width joiner makes a look-alike of is_admin"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "app/roles.py"
+line = 5
+

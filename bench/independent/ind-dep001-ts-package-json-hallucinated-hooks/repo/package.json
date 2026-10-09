@@ -1,0 +1,13 @@
+{
+  "name": "club-dashboard",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "supabase-auth-react-hooks": "^1.3.0",
+    "zustand": "^5.0.1"
+  }
+}

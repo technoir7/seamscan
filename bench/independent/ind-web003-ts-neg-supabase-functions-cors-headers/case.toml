@@ -1,0 +1,12 @@
+id = "ind-web003-ts-neg-supabase-functions-cors-headers"
+description = "corsHeaders constant with wildcard origin and no credentials (Edge Function boilerplate)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-003"

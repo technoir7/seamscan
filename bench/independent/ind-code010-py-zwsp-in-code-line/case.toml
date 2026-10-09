@@ -1,0 +1,15 @@
+id = "ind-code010-py-zwsp-in-code-line"
+description = "Zero-width space in an assignment line outside any string"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-010"
+path = "settings/flags.py"
+line = 3
+

@@ -1,0 +1,14 @@
+id = "ind-sec004-env-redis-url-password-only"
+description = "Committed .env with a redis URL carrying only a password"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-004"
+path = ".env"
+line = 2

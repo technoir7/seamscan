@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.6.0",
+    "@shared/": "../_shared/"
+  }
+}

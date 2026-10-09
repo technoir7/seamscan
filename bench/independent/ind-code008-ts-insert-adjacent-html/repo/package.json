@@ -1,0 +1,1 @@
+{ "name": "chat-widget", "private": true, "dependencies": { "vite": "^5.4.0" } }

@@ -1,0 +1,8 @@
+{
+  "name": "web",
+  "private": true,
+  "dependencies": {
+    "react": "^18.3.1",
+    "tiny-toast-stack": "^1.0.0"
+  }
+}

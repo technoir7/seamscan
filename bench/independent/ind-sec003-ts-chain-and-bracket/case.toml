@@ -1,0 +1,14 @@
+id = "ind-sec003-ts-chain-and-bracket"
+description = "Hono app reads a chain of env vars ending in a literal, and a bracket-access variant"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "src/index.ts"
+line = 4

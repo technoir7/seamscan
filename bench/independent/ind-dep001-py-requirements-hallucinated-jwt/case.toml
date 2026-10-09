@@ -1,0 +1,24 @@
+id = "ind-dep001-py-requirements-hallucinated-jwt"
+description = "FastAPI requirements.txt lists fastapi-jwt-guard, which PyPI has never heard of"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "requirements.txt"
+line = 4
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:fastapi", "pypi:uvicorn", "pypi:pydantic"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "fastapi-jwt-guard"
+exists = false
+

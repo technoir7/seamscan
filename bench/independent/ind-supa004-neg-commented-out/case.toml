@@ -1,0 +1,12 @@
+id = "ind-supa004-neg-commented-out"
+description = "The DISABLE statement appears only in a line comment, a block comment and a string"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-004"

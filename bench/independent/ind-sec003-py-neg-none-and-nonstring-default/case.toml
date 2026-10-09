@@ -1,0 +1,12 @@
+id = "ind-sec003-py-neg-none-and-nonstring-default"
+description = "Defaults of None or non-strings for secret names"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-003"

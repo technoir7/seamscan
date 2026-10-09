@@ -1,0 +1,15 @@
+id = "ind-web001-server-action-drizzle-insert"
+description = "'use server' actions file: every exported function is a handler; createComment inserts without checking the user"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/actions.ts"
+line = 11
+tolerance = 2

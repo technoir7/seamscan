@@ -1,0 +1,17 @@
+id = "ind-dep001-ts-local-specs-and-real-alias"
+description = "workspace, file, link, git, GitHub shorthand and tarball specs, and an npm: alias to real lodash"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:lodash", "npm:react"]
+

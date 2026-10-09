@@ -1,0 +1,12 @@
+id = "ind-web001-py-neg-get-handler-writes"
+description = "FastAPI GET handler bumps a hit counter; a GET is out of scope"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

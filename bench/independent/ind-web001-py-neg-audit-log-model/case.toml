@@ -1,0 +1,12 @@
+id = "ind-web001-py-neg-audit-log-model"
+description = "Public beacon endpoint writing an AuditLog / page view model on purpose"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

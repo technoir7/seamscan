@@ -1,0 +1,14 @@
+id = "ind-sec002-js-cra-read-stripe-secret"
+description = "CRA app reads REACT_APP_STRIPE_SECRET_KEY in a src file; no .env with a value is committed"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/checkout.js"
+line = 6

@@ -1,0 +1,12 @@
+id = "ind-code006-py-literal-conditions-join"
+description = "Dynamic WHERE built from literal-only fragments joined with AND, values passed as params"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-006"

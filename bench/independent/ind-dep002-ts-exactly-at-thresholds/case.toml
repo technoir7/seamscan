@@ -1,0 +1,24 @@
+id = "ind-dep002-ts-exactly-at-thresholds"
+description = "Exactly 30 days old with exactly 100 weekly downloads: fine"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "tiny-toast-stack"
+exists = true
+first_published = 2026-09-01T00:00:00Z
+weekly_downloads = 100
+

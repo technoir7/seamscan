@@ -1,0 +1,15 @@
+id = "ind-supa002-select-using-true-low"
+description = "Public SELECT policy USING (true) on published articles (informational LOW finding)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260314000000_articles.sql"
+line = 8
+tolerance = 2

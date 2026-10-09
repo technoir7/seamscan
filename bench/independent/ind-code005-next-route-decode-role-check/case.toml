@@ -1,0 +1,15 @@
+id = "ind-code005-next-route-decode-role-check"
+description = "Next.js route handler decodes a bearer token with jsonwebtoken and checks role"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "app/api/admin/export/route.ts"
+line = 12
+

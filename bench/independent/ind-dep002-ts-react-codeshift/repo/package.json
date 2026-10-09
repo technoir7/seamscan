@@ -1,0 +1,9 @@
+{
+  "name": "migration-tools",
+  "private": true,
+  "devDependencies": {
+    "jscodeshift": "^17.0.0",
+    "react-codeshift": "^1.0.0",
+    "typescript": "^5.6.0"
+  }
+}

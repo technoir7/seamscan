@@ -1,0 +1,15 @@
+id = "ind-fire001-named-collection-open-write"
+description = "Public posts collection: reads public (LOW) but create/update/delete also open to anyone"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 6
+tolerance = 2

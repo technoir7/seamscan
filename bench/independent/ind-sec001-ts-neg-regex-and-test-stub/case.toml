@@ -1,0 +1,12 @@
+id = "ind-sec001-ts-neg-regex-and-test-stub"
+description = "A regex for key shapes, and a test file that stubs env with a test key"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-001"

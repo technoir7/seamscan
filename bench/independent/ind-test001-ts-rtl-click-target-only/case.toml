@@ -1,0 +1,19 @@
+id = "ind-test001-ts-rtl-click-target-only"
+description = "React Testing Library test clicks a button found by query and never checks the result"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "src/components/Counter.test.tsx"
+line = 11
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:@testing-library/react", "npm:@testing-library/user-event", "npm:react"]
+

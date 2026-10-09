@@ -1,0 +1,15 @@
+id = "ind-supa002-insert-authenticated-check-true"
+description = "INSERT policy for authenticated users with WITH CHECK (true), as the dashboard template generates"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-002"
+path = "supabase/migrations/20260311000000_posts.sql"
+line = 7
+tolerance = 2

@@ -1,0 +1,12 @@
+id = "ind-web002-py-neg-hostname-allowlist"
+description = "Flask: parsed hostname must be in ALLOWED_HOSTS or the request aborts"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-002"

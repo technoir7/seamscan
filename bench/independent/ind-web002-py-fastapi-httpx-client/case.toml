@@ -1,0 +1,15 @@
+id = "ind-web002-py-fastapi-httpx-client"
+description = "FastAPI link preview using an httpx AsyncClient on the 'url' query parameter"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "main.py"
+line = 10
+tolerance = 2

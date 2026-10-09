@@ -1,0 +1,17 @@
+id = "ind-test001-ts-not-run-and-no-throw-titles"
+description = "Todo/skipped/fixme tests, hooks, and the no-crash titles are not flagged"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:@playwright/test", "npm:@testing-library/react"]
+

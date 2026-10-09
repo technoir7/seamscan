@@ -1,0 +1,8 @@
+{
+  "name": "app",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.1",
+    "express-session-vault-x": "^1.0.0"
+  }
+}

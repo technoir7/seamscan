@@ -1,0 +1,15 @@
+id = "ind-code008-py-builtins-eval-param"
+description = "builtins.eval reached through the module with a function parameter"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "rules/engine.py"
+line = 5
+

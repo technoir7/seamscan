@@ -1,0 +1,12 @@
+id = "ind-code009-py-secrets-module"
+description = "Tokens, codes and salts from the secrets module and os.urandom"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-009"

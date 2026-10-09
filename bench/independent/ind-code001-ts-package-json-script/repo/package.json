@@ -1,0 +1,10 @@
+{
+  "name": "sync-worker",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 node dist/worker.js",
+    "lint": "eslint ."
+  },
+  "dependencies": { "node-fetch": "3.3.2" }
+}

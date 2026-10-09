@@ -1,0 +1,12 @@
+id = "ind-web001-py-neg-django-login-required"
+description = "Django function view decorated with @login_required before the POST write"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

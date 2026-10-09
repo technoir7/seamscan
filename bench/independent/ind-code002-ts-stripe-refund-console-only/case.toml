@@ -1,0 +1,14 @@
+id = "ind-code002-ts-stripe-refund-console-only"
+description = "stripe.refunds.create inside try with console.log-only catch (Express)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "src/routes/refund.ts"
+line = 10

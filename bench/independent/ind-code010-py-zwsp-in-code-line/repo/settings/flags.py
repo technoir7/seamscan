@@ -1,0 +1,3 @@
+DEBUG = False
+REQUIRE_MFA = True
+ALLOW_​ALL_ORIGINS = True

@@ -1,0 +1,25 @@
+id = "ind-dep003-unrelated-package-json-edit"
+description = "Change only bumps the project version and a script; the install-script dependency was already there and untouched"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:express"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "serialport"
+exists = true
+first_published = 2019-03-01T00:00:00Z
+weekly_downloads = 400000
+install_scripts = ["install"]
+

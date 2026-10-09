@@ -1,0 +1,8 @@
+{
+  "name": "kiosk-app",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.1",
+    "serial-label-printer": "^2.3.0"
+  }
+}

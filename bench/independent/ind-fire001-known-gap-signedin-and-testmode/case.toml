@@ -1,0 +1,15 @@
+id = "ind-fire001-known-gap-signedin-and-testmode"
+description = "[known-gap] Catch-all gated by 'signed in AND before a date' is still wide open to any new account until the date"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-FIRE-001"
+path = "firestore.rules"
+line = 5
+tolerance = 2

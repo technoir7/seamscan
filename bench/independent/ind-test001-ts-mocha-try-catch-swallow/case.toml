@@ -1,0 +1,19 @@
+id = "ind-test001-ts-mocha-try-catch-swallow"
+description = "Mocha test wraps the call in try/catch and swallows the error"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "test/orders.spec.js"
+line = 10
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:chai"]
+

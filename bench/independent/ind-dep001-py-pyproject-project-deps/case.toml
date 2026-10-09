@@ -1,0 +1,24 @@
+id = "ind-dep001-py-pyproject-project-deps"
+description = "Flask service pyproject.toml declares flask-oauth-sessions (invented) among real dependencies"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "pyproject.toml"
+line = 8
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:flask", "pypi:gunicorn", "pypi:pytest"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "flask-oauth-sessions"
+exists = false
+

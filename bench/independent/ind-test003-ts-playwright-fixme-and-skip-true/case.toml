@@ -1,0 +1,24 @@
+id = "ind-test003-ts-playwright-fixme-and-skip-true"
+description = "Playwright spec adds test.fixme and an unconditional test.skip(true, ...) inside a test"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "e2e/checkout.spec.ts"
+line = 3
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "e2e/checkout.spec.ts"
+line = 10
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:@playwright/test"]
+

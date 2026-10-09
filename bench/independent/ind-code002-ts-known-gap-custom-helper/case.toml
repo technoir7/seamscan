@@ -1,0 +1,14 @@
+id = "ind-code002-ts-known-gap-custom-helper"
+description = "[known-gap] Console-only catch around a custom persist helper (not on the sensitive list)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "server/checkout.ts"
+line = 6

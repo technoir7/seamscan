@@ -1,0 +1,12 @@
+id = "ind-code008-ts-json-parse-redis-eval"
+description = "JSON.parse and redis.eval with a Lua script constant"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-008"

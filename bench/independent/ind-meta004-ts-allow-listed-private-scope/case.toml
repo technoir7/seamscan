@@ -1,0 +1,22 @@
+id = "ind-meta004-ts-allow-listed-private-scope"
+description = "@acme/design-tokens is on the [deps] allow list: not looked up, not reported"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:next"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "@acme/design-tokens"
+exists = false
+

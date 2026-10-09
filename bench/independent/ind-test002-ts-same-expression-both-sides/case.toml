@@ -1,0 +1,24 @@
+id = "ind-test002-ts-same-expression-both-sides"
+description = "Vitest invoice test compares invoice.total with itself, and node assert with res.status twice"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "src/billing/invoice.test.ts"
+line = 7
+
+[[expected]]
+rule = "SC-TEST-002"
+path = "src/billing/invoice.test.ts"
+line = 12
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:vitest"]
+

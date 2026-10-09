@@ -1,0 +1,14 @@
+id = "ind-sec002-env-next-public-service-role"
+description = "Next.js .env.local exposes the Supabase service_role JWT under NEXT_PUBLIC_"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env.local"
+line = 2

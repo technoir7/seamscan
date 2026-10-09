@@ -1,0 +1,15 @@
+id = "ind-web002-known-gap-denylist-localhost"
+description = "[known-gap] Only a denylist on the hostname (localhost) guards the fetch; metadata IPs and internal hosts still pass"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "app/api/fetch-title/route.ts"
+line = 9
+tolerance = 2

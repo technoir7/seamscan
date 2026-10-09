@@ -1,0 +1,8 @@
+{
+  "name": "api",
+  "scripts": {
+    "start": "NODE_ENV=production node server.js",
+    "dev": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=1 nodemon server.js",
+    "test": "vitest run"
+  }
+}

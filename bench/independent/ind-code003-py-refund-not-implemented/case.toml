@@ -1,0 +1,14 @@
+id = "ind-code003-py-refund-not-implemented"
+description = "Payment provider class with refund raising NotImplementedError and a subclass that inherits it"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "payments/providers.py"
+line = 6

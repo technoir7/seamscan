@@ -1,0 +1,26 @@
+id = "ind-dep002-ts-undeclared-import-young"
+description = "Source imports json-diff-lite-kit, which no package.json declares and which is 9 days old"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "src/diff.ts"
+line = 2
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:commander"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "json-diff-lite-kit"
+exists = true
+first_published = 2026-09-22T00:00:00Z
+weekly_downloads = 30
+

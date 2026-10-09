@@ -1,0 +1,12 @@
+id = "ind-sec001-py-neg-publishable-and-anon"
+description = "Python settings hold only publishable Stripe and anon Supabase keys"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-001"

@@ -1,0 +1,14 @@
+id = "ind-code004-py-wtforms-password-data"
+description = "WTForms form.password.data compared against a literal"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "site/login.py"
+line = 5

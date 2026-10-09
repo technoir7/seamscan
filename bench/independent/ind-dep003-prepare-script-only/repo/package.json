@@ -1,0 +1,8 @@
+{
+  "name": "app",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.1",
+    "tiny-router-kit": "^2.2.0"
+  }
+}

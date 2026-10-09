@@ -1,0 +1,13 @@
+id = "ind-test001-py-does-not-raise-and-fixture"
+description = "No-assertion tests whose name or docstring says not raising is the point, plus a fixture named test_user"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+

@@ -1,0 +1,12 @@
+id = "ind-sec002-ts-vite-publishable-and-site-key"
+description = "Vite client code uses publishable Stripe key and a reCAPTCHA site key"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-002"

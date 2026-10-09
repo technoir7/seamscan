@@ -1,0 +1,12 @@
+id = "ind-sec002-tsx-use-client-server-only-var"
+description = "use client component reads an unprefixed server variable: undefined in the browser, no leak"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-002"

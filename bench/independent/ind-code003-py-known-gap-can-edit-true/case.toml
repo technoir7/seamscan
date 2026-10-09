@@ -1,0 +1,14 @@
+id = "ind-code003-py-known-gap-can-edit-true"
+description = "[known-gap] can_edit always returns True (guard name outside the word list)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "cms/rules.py"
+line = 1

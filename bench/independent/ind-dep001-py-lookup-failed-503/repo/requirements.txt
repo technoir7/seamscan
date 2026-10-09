@@ -1,0 +1,2 @@
+httpx==0.27.2
+supabase-flows==0.6.0

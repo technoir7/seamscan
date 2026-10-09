@@ -1,0 +1,8 @@
+{
+  "name": "orders-worker",
+  "private": true,
+  "dependencies": {
+    "bullmq": "^5.20.0",
+    "ioredis-lock-manager": "^2.0.0"
+  }
+}

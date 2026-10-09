@@ -1,0 +1,8 @@
+{
+  "name": "app",
+  "private": true,
+  "dependencies": {
+    "@acme/ui": "^3.0.0",
+    "react": "^18.3.1"
+  }
+}

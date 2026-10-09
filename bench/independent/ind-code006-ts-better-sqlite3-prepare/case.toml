@@ -1,0 +1,15 @@
+id = "ind-code006-ts-better-sqlite3-prepare"
+description = "better-sqlite3 prepare with a template literal containing user input in a Hono route"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-006"
+path = "api/notes.ts"
+line = 9
+

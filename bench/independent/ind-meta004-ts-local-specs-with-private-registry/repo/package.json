@@ -1,0 +1,10 @@
+{
+  "name": "web",
+  "private": true,
+  "dependencies": {
+    "@acme/ui": "workspace:*",
+    "acme-logger": "file:../acme-logger",
+    "acme-auth": "git+https://github.com/acme/auth.git#v1.2.0",
+    "react": "^18.3.1"
+  }
+}

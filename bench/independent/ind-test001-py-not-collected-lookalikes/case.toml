@@ -1,0 +1,13 @@
+id = "ind-test001-py-not-collected-lookalikes"
+description = "Look-alikes pytest would not collect: helper name, plain class, and a non-test script"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-001"
+

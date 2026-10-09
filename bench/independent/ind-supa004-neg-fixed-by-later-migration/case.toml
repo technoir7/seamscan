@@ -1,0 +1,12 @@
+id = "ind-supa004-neg-fixed-by-later-migration"
+description = "Prototype migration disabled RLS, a later migration turned it back on and added policies"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-004"

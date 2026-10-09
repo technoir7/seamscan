@@ -1,0 +1,12 @@
+id = "ind-sec002-env-public-by-design-names"
+description = "Public-by-design values under bundled prefixes: anon, publishable, pk_live, Firebase, Maps, Algolia search"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SEC-002"

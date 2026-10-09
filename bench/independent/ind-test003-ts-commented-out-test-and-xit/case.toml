@@ -1,0 +1,24 @@
+id = "ind-test003-ts-commented-out-test-and-xit"
+description = "A session test is commented out and another becomes xit"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "test/session.spec.js"
+line = 5
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "test/session.spec.js"
+line = 9
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:chai"]
+

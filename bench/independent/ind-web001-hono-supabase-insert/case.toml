@@ -1,0 +1,15 @@
+id = "ind-web001-hono-supabase-insert"
+description = "Hono POST route inserts orders through Supabase with no auth middleware"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "src/index.ts"
+line = 13
+tolerance = 2

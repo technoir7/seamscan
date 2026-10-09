@@ -1,0 +1,8 @@
+{
+  "name": "img-service",
+  "private": true,
+  "dependencies": {
+    "sharp": "^0.33.5",
+    "express": "^4.21.1"
+  }
+}

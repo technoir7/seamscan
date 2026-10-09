@@ -1,0 +1,15 @@
+id = "ind-web001-known-gap-unrelated-getuser"
+description = "[known-gap] Express PUT calls an unrelated db.getUser(id) lookup, which is not an auth check, then updates"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "server/accounts.ts"
+line = 10
+tolerance = 2

@@ -1,0 +1,12 @@
+id = "ind-web001-neg-msw-mock"
+description = "MSW request mock handlers that look like POST routes writing to fake stores"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

@@ -1,0 +1,27 @@
+id = "ind-dep002-ts-custom-min-downloads-1000"
+description = "Project sets min_weekly_downloads = 1000; an old package with 500 is flagged"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "package.json"
+line = 6
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:hono"]
+min_weekly_downloads = 1000
+
+[[registry.package]]
+ecosystem = "npm"
+name = "hono-rate-limit-kv"
+exists = true
+first_published = 2024-01-10T00:00:00Z
+weekly_downloads = 500
+

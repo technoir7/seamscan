@@ -1,0 +1,15 @@
+id = "ind-code005-pyjwt-verify-false-aliased"
+description = "Old PyJWT verify=False through an aliased import in a Celery worker task"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-005"
+path = "workers/tasks.py"
+line = 13
+

@@ -1,0 +1,15 @@
+id = "ind-web002-origin-not-fixed-path-concat"
+description = "https://api.example.com${path} is not a fixed origin: path comes from the query string"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-WEB-002"
+path = "server/proxy.ts"
+line = 7
+tolerance = 2

@@ -1,0 +1,4 @@
+--extra-index-url https://pypi.acme.dev/simple
+fastapi==0.115.6
+sqlalchemy==2.0.36
+pytest==8.3.3

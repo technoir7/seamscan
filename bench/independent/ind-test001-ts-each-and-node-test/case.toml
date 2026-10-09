@@ -1,0 +1,19 @@
+id = "ind-test001-ts-each-and-node-test"
+description = "test.each callback that only calls parse(), and a node:test case with no assert"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-001"
+path = "test/parser.test.js"
+line = 11
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = []
+

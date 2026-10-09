@@ -1,0 +1,12 @@
+id = "ind-web001-neg-getserversession-401"
+description = "Route handler checks getServerSession and returns 401 before creating the bookmark"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

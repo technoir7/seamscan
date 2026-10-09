@@ -1,0 +1,14 @@
+id = "ind-sec003-ts-express-jwt-single-quote"
+description = "Express auth middleware: const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "src/middleware/auth.js"
+line = 3

@@ -1,0 +1,15 @@
+id = "ind-supa004-later-migration-disables"
+description = "A table with owner policies has RLS switched off by a follow-up migration"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-004"
+path = "supabase/migrations/20260509000000_msgs_off.sql"
+line = 1
+tolerance = 2

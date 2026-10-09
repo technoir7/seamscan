@@ -1,0 +1,17 @@
+id = "ind-dep001-ts-aliases-and-protocols-not-looked-up"
+description = "Imports through @/, node:, virtual:, ~, #, tsconfig paths/baseUrl and a vite alias are not packages"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react", "npm:react-dom", "npm:vite", "npm:@vitejs/plugin-react", "npm:vite-plugin-pwa"]
+

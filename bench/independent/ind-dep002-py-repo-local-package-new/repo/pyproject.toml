@@ -1,0 +1,7 @@
+[project]
+name = "acme-core"
+version = "0.1.0"
+dependencies = ["acme-events", "pydantic>=2"]
+
+[tool.uv.sources]
+acme-events = { workspace = true }

@@ -1,0 +1,15 @@
+id = "ind-test003-py-commented-out-test"
+description = "A login test function is commented out in the change"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-TEST-003"
+path = "tests/test_auth.py"
+line = 1
+

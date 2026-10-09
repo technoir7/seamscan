@@ -1,0 +1,4 @@
+[project]
+name = "svc"
+version = "1.0"
+dependencies = ["pydantic>=2", "mystery-parser>=1.0", "slow-registry-lib>=2.0"]

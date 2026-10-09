@@ -1,0 +1,17 @@
+id = "ind-test003-ts-platform-and-browser-conditions"
+description = "Skips gated on process.platform, browserName and an isWindows constant are fine"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-TEST-003"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:@playwright/test", "npm:vitest"]
+

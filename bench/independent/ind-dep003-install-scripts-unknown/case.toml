@@ -1,0 +1,22 @@
+id = "ind-dep003-install-scripts-unknown"
+description = "Script metadata could not be fetched (timeout) for the added dependency: nothing is reported"
+mode = "scan"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:hono"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "native-keychain-bridge"
+problem = "timeout"
+

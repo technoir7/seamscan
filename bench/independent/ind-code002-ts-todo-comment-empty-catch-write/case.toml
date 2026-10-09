@@ -1,0 +1,14 @@
+id = "ind-code002-ts-todo-comment-empty-catch-write"
+description = "Empty catch with only a TODO comment around a Mongo updateOne"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "src/jobs/touch.ts"
+line = 6

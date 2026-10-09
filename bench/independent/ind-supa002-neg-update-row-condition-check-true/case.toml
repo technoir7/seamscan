@@ -1,0 +1,12 @@
+id = "ind-supa002-neg-update-row-condition-check-true"
+description = "UPDATE with a row condition in USING and WITH CHECK (true)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-002"

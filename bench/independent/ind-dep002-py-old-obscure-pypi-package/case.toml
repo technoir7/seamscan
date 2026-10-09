@@ -1,0 +1,23 @@
+id = "ind-dep002-py-old-obscure-pypi-package"
+description = "An old, obscure PyPI package: PyPI has no download signal, so only age counts"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["pypi:requests"]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "legacy-ftp-tools"
+exists = true
+first_published = 2017-05-04T00:00:00Z
+

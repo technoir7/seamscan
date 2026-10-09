@@ -1,0 +1,5 @@
+{
+  "name": "@mono/api",
+  "version": "0.0.1",
+  "dependencies": { "@mono/flags": "workspace:*", "fastify": "^5.0.0" }
+}

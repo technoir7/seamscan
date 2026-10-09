@@ -1,0 +1,5 @@
+{
+  "name": "ops",
+  "private": true,
+  "dependencies": { "express": "^4.21.1", "otel-express-lite": "^0.2.0" }
+}

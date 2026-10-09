@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "ledger-sync"
+version = "1.2.0"
+description = "Sync ledgers"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.1"
+httpx = "^0.27"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+pytest-snapshot-plus = "^0.9"

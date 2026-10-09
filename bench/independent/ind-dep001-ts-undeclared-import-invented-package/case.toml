@@ -1,0 +1,24 @@
+id = "ind-dep001-ts-undeclared-import-invented-package"
+description = "An import of react-pdf-invoice-generator that no package.json declares"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "src/components/InvoiceDownload.tsx"
+line = 2
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react", "npm:react-dom"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "react-pdf-invoice-generator"
+exists = false
+

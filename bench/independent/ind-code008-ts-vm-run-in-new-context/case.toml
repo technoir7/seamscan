@@ -1,0 +1,15 @@
+id = "ind-code008-ts-vm-run-in-new-context"
+description = "Playground API runs submitted code with vm.runInNewContext"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "server/sandbox.ts"
+line = 6
+

@@ -1,0 +1,12 @@
+id = "ind-code004-ts-neg-placeholder-check-missing-value"
+description = "Placeholder checks grouped with a missing value"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-CODE-004"

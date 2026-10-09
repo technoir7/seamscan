@@ -1,0 +1,12 @@
+id = "ind-web001-neg-withauth-wrapper"
+description = "Route exported through an auth-named wrapper: export const POST = withAuth(...)"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-WEB-001"

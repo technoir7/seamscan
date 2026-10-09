@@ -1,0 +1,15 @@
+id = "ind-supa003-view-security-invoker-off"
+description = "View created with security_invoker = off over an RLS table"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260305000000_view_off.sql"
+line = 5
+tolerance = 2

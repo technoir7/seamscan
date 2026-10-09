@@ -1,0 +1,12 @@
+id = "ind-supa004-neg-force-toggles"
+description = "NO FORCE / FORCE ROW LEVEL SECURITY only changes owner behaviour, not RLS"
+mode = "audit"
+split = "independent"
+
+[provenance]
+source = "original"
+model = "claude-sonnet-5-5"
+prompt = "independent-holdout"
+
+[[forbidden]]
+rule = "SC-SUPA-004"

@@ -1,0 +1,6 @@
+flask==3.0.3
+-e ./libs/shared
+./vendor/legacy_pricing-1.0-py3-none-any.whl
+acme-internal @ git+https://github.com/acme/internal-python.git@v2.1
+fx-rates @ https://downloads.acme.dev/fx_rates-3.2.tar.gz
+git+https://github.com/acme/audit-log.git#egg=audit-log

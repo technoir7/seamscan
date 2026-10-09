@@ -1,0 +1,2 @@
+requests==2.32.3
+legacy-ftp-tools==0.4.1
