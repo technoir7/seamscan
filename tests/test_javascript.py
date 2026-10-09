@@ -176,3 +176,24 @@ def test_deno_style_imports_resolve_to_package_names():
         "@supabase/supabase-js.createClient",
         "@panva/jose.decodeJwt",
     } <= names
+
+
+def test_a_bare_ampersand_in_jsx_text_or_attribute_is_not_a_syntax_error():
+    # React and TypeScript accept these; tree-sitter's JSX grammar wants an entity after &.
+    src = (
+        "export function Help() {\n"
+        '  return <a href="/x?a=1&b=2"><h3>Help & Support</h3>Q&A</a>;\n'
+        "}\n"
+    )
+    for path in ("app/help.jsx", "app/help.tsx"):
+        m = module(src, path)
+        assert not m.has_errors, path
+        assert len(m.source) == len(src.encode())
+
+
+def test_ampersand_repair_keeps_locations_and_leaves_real_errors():
+    m = module("const a = <p>Q & A</p>;\nconst b = fetch(url, { verify: });\n", "x.tsx")
+    assert m.has_errors  # the second line is genuinely broken
+    call = first(m, "(call_expression) @n")
+    assert location(m, call).start_line == 2
+    assert location(m, call).start_col == 11

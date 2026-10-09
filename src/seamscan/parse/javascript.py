@@ -191,7 +191,66 @@ def parse_js(file: SourceFile) -> JsModule:
     parser = _PARSERS.setdefault(dialect, Parser(_LANGUAGES[dialect]))
     source = file.text.encode("utf-8")
     tree = parser.parse(source)
+    if tree.root_node.has_error and dialect != "typescript":
+        source, tree = _repair_jsx_ampersands(parser, source, tree)
     return JsModule(file.path, source, tree, dialect, _aliases(dialect, source, tree.root_node))
+
+
+# A bare `&` in JSX text or a JSX attribute string ("Help & Support", href="/?a=1&b=2") is
+# valid for React and TypeScript, but tree-sitter's JSX grammar expects a character
+# reference after it, and recovery can then swallow the whole element. Common enough in
+# real apps to hide code from the rules and raise SC-META-002 on otherwise clean files.
+_LONE_AMPERSAND = re.compile(rb"(?<![&])&(?![&=]|#?[A-Za-z0-9]+;)")
+_MAX_CANDIDATES = 50
+
+
+def _repair_jsx_ampersands(parser: Parser, source: bytes, tree: Tree) -> tuple[bytes, Tree]:
+    """Reparse with lone `&`s inside error regions replaced by `+` (same byte length).
+
+    A replacement is kept only when the parse gets better, so a `&` that was code (a
+    bitwise and, a type intersection) stays, and so do genuine syntax errors. Locations
+    are unchanged because the replacement has the same length.
+    """
+    spans = [(e.start_byte, e.end_byte) for e in _errors(tree.root_node)]
+    candidates = [
+        m.start()
+        for m in _LONE_AMPERSAND.finditer(source)
+        if any(lo <= m.start() < hi for lo, hi in spans)
+    ][:_MAX_CANDIDATES]
+    if not candidates:
+        return source, tree
+    patched = _patch(source, candidates)
+    whole = parser.parse(patched)
+    if not whole.root_node.has_error:
+        return patched, whole
+    best = _error_size(tree.root_node)
+    for byte in candidates:  # some `&`s were code: keep only the replacements that help
+        trial = _patch(source, [byte])
+        trial_tree = parser.parse(trial)
+        size = _error_size(trial_tree.root_node)
+        if size < best:
+            source, tree, best = trial, trial_tree, size
+    return source, tree
+
+
+def _patch(source: bytes, positions: list[int]) -> bytes:
+    patched = bytearray(source)
+    for byte in positions:
+        patched[byte] = ord("+")
+    return bytes(patched)
+
+
+def _errors(node: Node) -> Iterator[Node]:
+    if node.type == "ERROR" or node.is_missing:
+        yield node
+        return
+    for child in node.children:
+        if child.has_error:
+            yield from _errors(child)
+
+
+def _error_size(root: Node) -> int:
+    return sum(max(e.end_byte - e.start_byte, 1) for e in _errors(root))
 
 
 # ------------------------------------------------------------------ locations
