@@ -4,10 +4,10 @@
     uv run python -m bench.wild STUDY sample [--size 100] [--seed 2026]
     uv run python -m bench.wild STUDY report
 
-STUDY is `first` (bench/wild/repos.toml, which shaped the noise pass and is now
-development data) or `fresh` (bench/wild/repos-fresh.toml, which gives the published
-numbers). `run` writes per-finding detail to bench/wild/findings[-fresh].local.json and
-per-repo counts to bench/results/wild[-fresh].json. Only the counts are committed: the
+STUDY is `first`, `fresh` or `third` (bench/wild/repos*.toml). Each set measures the
+code as it stood before it was first run; after that it is development data. `run`
+writes per-finding detail to bench/wild/findings[-STUDY].local.json and per-repo counts
+to bench/results/wild[-STUDY].json. Only the counts are committed: the
 detail points at possible vulnerabilities in other people's code, so it stays on the
 machine that ran the study (the *.local.* files are gitignored). `sample` draws the
 triage sample into bench/wild/triage[-fresh].local.toml, where each finding gets a
@@ -50,7 +50,11 @@ def _study(suffix: str, repos: str) -> Study:
     )
 
 
-STUDIES = {"first": _study("", "repos.toml"), "fresh": _study("-fresh", "repos-fresh.toml")}
+STUDIES = {
+    "first": _study("", "repos.toml"),
+    "fresh": _study("-fresh", "repos-fresh.toml"),
+    "third": _study("-third", "repos-third.toml"),
+}
 
 # Lines are counted in the files the rules read as code or config, not in docs or assets.
 CODE_SUFFIXES = (".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".sql", ".rules")
