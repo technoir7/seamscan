@@ -25,6 +25,7 @@ NOTES = {
     "SC-SUPA-001": " (CRITICAL when browser code reads it)",
     "SC-CODE-010": " (Trojan Source)",
     "SC-TEST-003": " (`scan` only)",
+    "SC-DEP-003": " (`scan` only, npm)",
 }
 
 

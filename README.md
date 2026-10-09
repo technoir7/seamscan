@@ -78,7 +78,11 @@ exit code come from the same decision.
 | [SC-CODE-009](src/seamscan/rules/docs/SC-CODE-009.md) | Predictable randomness for secrets | Py, TS/JS | MEDIUM | HIGH |
 | [SC-CODE-010](src/seamscan/rules/docs/SC-CODE-010.md) | Invisible or bidirectional Unicode in source (Trojan Source) | Py, TS/JS | HIGH | HIGH |
 | [SC-CODE-011](src/seamscan/rules/docs/SC-CODE-011.md) | Unsafe deserialization | Py | HIGH | MEDIUM |
+| [SC-DEP-001](src/seamscan/rules/docs/SC-DEP-001.md) | Dependency that doesn't exist | Py, TS/JS | HIGH | HIGH |
+| [SC-DEP-002](src/seamscan/rules/docs/SC-DEP-002.md) | Dependency too new or obscure to trust | Py, TS/JS | MEDIUM | MEDIUM |
+| [SC-DEP-003](src/seamscan/rules/docs/SC-DEP-003.md) | New dependency runs code at install (`scan` only, npm) | TS/JS | MEDIUM | HIGH |
 | [SC-FIRE-001](src/seamscan/rules/docs/SC-FIRE-001.md) | Open security rules | Firebase rules | CRITICAL | HIGH |
+| [SC-META-004](src/seamscan/rules/docs/SC-META-004.md) | Dependency not verified | Py, TS/JS | LOW | LOW |
 | [SC-SEC-001](src/seamscan/rules/docs/SC-SEC-001.md) | Provider secret in source | Py, TS/JS, `.env` | CRITICAL | HIGH |
 | [SC-SEC-002](src/seamscan/rules/docs/SC-SEC-002.md) | Secret reachable from the browser | TS/JS, `.env` | CRITICAL | HIGH |
 | [SC-SEC-003](src/seamscan/rules/docs/SC-SEC-003.md) | Hardcoded fallback for a secret | Py, TS/JS | HIGH | HIGH |

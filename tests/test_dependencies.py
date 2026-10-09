@@ -284,3 +284,70 @@ def test_toml_strings_comments_and_arrays_of_tables_dont_shift_lines():
         ("second", 10),
         ("third", 11),
     ]
+
+
+def test_names_that_must_never_reach_a_registry_are_not_checked():
+    files = [
+        SourceFile(
+            "apps/web/package.json",
+            json.dumps(
+                {
+                    "dependencies": {
+                        "@acme/ui": "workspace:*",
+                        "@acme/db": "^1.0.0",
+                        "local-lib": "file:../lib",
+                        "forked": "github:acme/forked",
+                        "tarball": "https://example.com/t.tgz",
+                        "react": "19",
+                    }
+                }
+            ),
+        ),
+        SourceFile("packages/db/package.json", json.dumps({"name": "@acme/db"})),
+        SourceFile("requirements.txt", "internal @ git+https://github.com/acme/internal\nflask\n"),
+    ]
+    assert dependencies_to_check(files, None) == frozenset({npm("react"), pypi("flask")})
+
+
+# --- What a change adds -------------------------------------------------------------
+
+from seamscan.facts.dependencies import added_in_change  # noqa: E402
+
+APPENDED = (
+    '{\n  "dependencies": {\n    "react": "19",\n    "sharp": "0.33",\n    "zod": "3"\n  }\n}\n'
+)
+
+
+def added(ranges: tuple[tuple[int, int], ...]) -> list[str]:
+    files = [SourceFile("package.json", APPENDED)]
+    change = ChangeSet(added={"package.json": ranges})
+    return [
+        d.ref.name for d in declared_dependencies(files) if added_in_change(d, change, APPENDED)
+    ]
+
+
+def test_appending_adds_a_comma_to_the_old_last_entry_but_does_not_add_it():
+    assert added(((4, 5),)) == ["zod"]
+
+
+def test_a_block_inserted_in_the_middle_is_all_new():
+    assert added(((3, 4),)) == ["react", "sharp"]
+
+
+def test_a_single_changed_line_counts_as_added():
+    assert added(((4, 4),)) == ["sharp"]
+
+
+def test_a_new_manifest_is_all_new():
+    from seamscan.model import WHOLE_FILE
+
+    assert added((WHOLE_FILE,)) == ["react", "sharp", "zod"]
+
+
+def test_appending_to_a_toml_array_too():
+    text = 'dependencies = [\n    "fastapi",\n    "httpx"\n]\n'
+    text = "[project]\n" + text
+    files = [SourceFile("pyproject.toml", text)]
+    change = ChangeSet(added={"pyproject.toml": ((3, 4),)})
+    deps = declared_dependencies(files)
+    assert [d.ref.name for d in deps if added_in_change(d, change, text)] == ["httpx"]

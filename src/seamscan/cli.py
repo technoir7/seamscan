@@ -116,7 +116,9 @@ def _load_config(root: Path) -> Config:
     if explicit is None and not path.exists():
         return Config()
     try:
-        return parse_config(_read(path, "config"), frozenset(r.meta.id for r in RULES))
+        # SC-META rules can't be disabled or re-ranked (§9.5), even the registered ones.
+        known = frozenset(r.meta.id for r in RULES if not r.meta.id.startswith("SC-META-"))
+        return parse_config(_read(path, "config"), known)
     except ConfigError as exc:
         _fail(f"{path}: {exc}")
 

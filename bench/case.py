@@ -89,6 +89,7 @@ _PACKAGE_KEYS = {
     "weekly_downloads",
     "install_scripts",
     "problem",
+    "popular",
 }
 
 
@@ -122,6 +123,7 @@ def _package(where: str, raw: Mapping[str, Any]) -> tuple[PackageRef, PackageFac
         weekly_downloads=raw.get("weekly_downloads"),
         install_scripts=None if scripts is None else tuple(cast(list[str], scripts)),
         problem=raw.get("problem", ""),
+        popular=bool(raw.get("popular", False)),
     )
     return PackageRef(ecosystem, name), facts
 
@@ -133,10 +135,13 @@ def _registry(directory: Path, raw: object) -> RegistryView | None:
     unknown = set(table) - _REGISTRY_KEYS
     if unknown:
         raise CaseError(f"{directory}: [registry] has unknown keys {sorted(unknown)}")
-    # `snapshot = ["npm:react", "pypi:fastapi"]`: popular packages the bundled snapshot
-    # knows. They exist, with no age or download data, as a snapshot hit gives them.
+    # `snapshot = ["npm:react", "pypi:fastapi"]`: packages the bundled snapshot knows. They
+    # exist and are popular, with no age or download data, as a snapshot hit gives them.
     entries = [
-        (f"registry.snapshot {item!r}", {"ecosystem": eco, "name": name, "exists": True})
+        (
+            f"registry.snapshot {item!r}",
+            {"ecosystem": eco, "name": name, "exists": True, "popular": True},
+        )
         for item in cast(list[str], table.get("snapshot", []))
         for eco, _, name in [item.partition(":")]
     ]

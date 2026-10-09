@@ -104,8 +104,8 @@ def test_snapshot_lists_popular_packages_compactly(tmp_path: Path):
     view = case_registry(load_case(write_case(tmp_path, toml, {})))
     assert view is not None
     assert view.packages == {
-        PackageRef(Ecosystem.NPM, "@types/node"): PackageFacts(exists=True),
-        PackageRef(Ecosystem.PYPI, "fastapi"): PackageFacts(exists=True),
+        PackageRef(Ecosystem.NPM, "@types/node"): PackageFacts(exists=True, popular=True),
+        PackageRef(Ecosystem.PYPI, "fastapi"): PackageFacts(exists=True, popular=True),
     }
 
 

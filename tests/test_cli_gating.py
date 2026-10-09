@@ -46,6 +46,15 @@ def test_disabled_rule_does_not_run(tmp_path: Path):
     assert "SC-CODE-001" not in result.stdout
 
 
+def test_meta_rules_cannot_be_disabled(tmp_path: Path):
+    # SC-META-004 runs as a registered rule, but hiding "not verified" would hide that a
+    # dependency was never checked (spec §9.5: SC-META can't be disabled or re-ranked).
+    (tmp_path / "seamscan.toml").write_text('[rules]\ndisable = ["SC-META-004"]\n')
+    result = audit(tmp_path)
+    assert result.exit_code == 2
+    assert "SC-META-004" in result.output
+
+
 def test_severity_override_applies_to_findings_and_the_gate(tmp_path: Path):
     (tmp_path / "client.py").write_text(TLS_OFF)
     (tmp_path / "seamscan.toml").write_text('[rules]\nseverity = { "SC-CODE-001" = "LOW" }\n')

@@ -645,17 +645,50 @@ def declared_dependencies(files: Iterable[SourceFile]) -> tuple[Dependency, ...]
     return tuple(d for d in registry_dependencies(files) if not d.imported)
 
 
+def added_in_change(dependency: Dependency, change: ChangeSet, text: str) -> bool:
+    """Whether the change adds this dependency, not just touches its line. `text` is the
+    text of the file the dependency is in.
+
+    Appending an entry to a JSON object or a TOML array adds a comma to the entry before
+    it, so a diff reports that old entry as changed too. Without the base text the two
+    can't be compared; instead, a changed block of several lines that starts with an entry
+    ending in "," and runs to the closing bracket is read as an append, and its first line
+    as the old last entry. A block inserted in the middle doesn't end at a bracket, so all
+    of it is new. (A version bump of the old last entry in the same edit is missed: a bump
+    isn't an added dependency either.)
+    """
+    line = dependency.location.start_line
+    block = next(
+        (
+            (start, end)
+            for start, end in change.added.get(dependency.location.path, ())
+            if start <= line <= end
+        ),
+        None,
+    )
+    if block is None:
+        return False
+    start, end = block
+    lines = text.splitlines()
+    if line != start or end == start or end >= len(lines):
+        return True
+    return not (
+        lines[line - 1].rstrip().endswith(",") and lines[end].lstrip().startswith(("}", "]"))
+    )
+
+
 def dependencies_to_check(
     files: Iterable[SourceFile], change: ChangeSet | None
 ) -> frozenset[PackageRef]:
-    """The packages worth a registry lookup: in scan mode, only those on added lines.
+    """The packages worth a registry lookup: in scan mode, only those the change adds.
 
     Pass every file of the repository, not only the changed ones (see
     `registry_dependencies`), with the same path excludes the analysis uses.
     """
+    files = tuple(files)
+    texts = {f.path: f.text for f in files}
     return frozenset(
         d.ref
         for d in registry_dependencies(files)
-        if change is None
-        or change.touches(d.location.path, d.location.start_line, d.location.end_line)
+        if change is None or added_in_change(d, change, texts[d.location.path])
     )

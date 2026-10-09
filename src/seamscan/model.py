@@ -126,6 +126,7 @@ class PackageFacts:
     weekly_downloads: int | None = None  # npm only
     install_scripts: tuple[str, ...] | None = None  # npm: hooks of the version checked
     problem: str = ""  # why `exists` is None, for the "not verified" finding
+    popular: bool = False  # in the bundled top-10k snapshot: never "too new or obscure"
 
 
 @dataclass(frozen=True)
