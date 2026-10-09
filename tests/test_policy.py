@@ -44,3 +44,15 @@ def test_known_findings_are_reported_but_never_block():
     v = decide([known], Policy(), known=frozenset({"abc"}))
     assert v.exit_code == 0 and not v.blocking and v.baselined == (known,)
     assert v.headline == "No new findings (1 in baseline)"
+
+
+def test_a_swallowed_write_is_reported_but_does_not_block():
+    # ADR-005: SC-CODE-002 measured 4 real of 14 on 40 public repositories, so its
+    # confidence is LOW: it shows up in every report and never fails a build alone.
+    from seamscan.analysis import analyze
+    from seamscan.model import SourceFile
+
+    src = "import stripe\n\ndef refund(cid):\n    try:\n        stripe.Refund.create(charge=cid)\n    except Exception:\n        pass\n    mark_refunded(cid)\n"
+    found = analyze([SourceFile("app/billing.py", src)]).findings
+    assert [f.rule_id for f in found] == ["SC-CODE-002"]
+    assert decide(found, Policy()).blocking == ()

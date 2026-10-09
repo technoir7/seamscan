@@ -294,7 +294,8 @@ SWALLOWED_EXCEPTION = meta(
     "SC-CODE-002",
     "Swallowed exception",
     Severity.HIGH,
-    Confidence.HIGH,
+    # Measured, not guessed (ADR-005): 4 of 14 real on 40 public repositories.
+    Confidence.LOW,
     ("CWE-390",),
     frozenset({"python", "javascript"}),
     "A write, payment or login fails and the error is thrown away, so the program carries "

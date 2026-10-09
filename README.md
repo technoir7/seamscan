@@ -74,7 +74,7 @@ exit code come from the same decision.
 | Rule | What it finds | Languages | Severity | Confidence |
 |---|---|---|---|---|
 | [SC-CODE-001](src/seamscan/rules/docs/SC-CODE-001.md) | TLS verification disabled | Py, TS/JS | HIGH | HIGH |
-| [SC-CODE-002](src/seamscan/rules/docs/SC-CODE-002.md) | Swallowed exception | Py, TS/JS | HIGH | HIGH |
+| [SC-CODE-002](src/seamscan/rules/docs/SC-CODE-002.md) | Swallowed exception | Py, TS/JS | HIGH | LOW |
 | [SC-CODE-003](src/seamscan/rules/docs/SC-CODE-003.md) | Unfinished code in a shipped path | Py, TS/JS | HIGH | HIGH |
 | [SC-CODE-004](src/seamscan/rules/docs/SC-CODE-004.md) | Hardcoded credential comparison | Py, TS/JS | HIGH | HIGH |
 | [SC-CODE-005](src/seamscan/rules/docs/SC-CODE-005.md) | JWT accepted without verification | Py, TS/JS | CRITICAL | HIGH |

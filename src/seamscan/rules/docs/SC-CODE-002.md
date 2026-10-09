@@ -1,6 +1,6 @@
 # SC-CODE-002 — Swallowed exception
 
-**Severity:** HIGH (MEDIUM for a bare `except:` that only ignores everything) · **Confidence:** HIGH · **CWE:** [CWE-390](https://cwe.mitre.org/data/definitions/390.html) · **Languages:** Python, TypeScript/JavaScript
+**Severity:** HIGH (MEDIUM for a bare `except:` that only ignores everything) · **Confidence:** LOW (measured; reported, never blocks on its own — [ADR-005](../../../../docs/decisions/ADR-005-field-calibrated-confidence.md)) · **CWE:** [CWE-390](https://cwe.mitre.org/data/definitions/390.html) · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
 
