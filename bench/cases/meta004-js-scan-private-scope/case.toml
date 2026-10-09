@@ -1,16 +1,13 @@
 id = "meta004-js-scan-private-scope"
-description = "scan: a privately scoped package added in this change gets a public 404 but .npmrc maps the scope"
+description = "scan: a package in a scope .npmrc maps to a private registry is never looked up, so nothing is reported"
 mode = "scan"
 split = "holdout"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-META-004"
-path = "package.json"
-line = 18
-tolerance = 0
 
 [[forbidden]]
 rule = "SC-DEP-001"

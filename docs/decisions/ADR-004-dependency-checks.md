@@ -29,9 +29,11 @@ runs reproducible for identical input and registry data.
 **Unknown is never "missing".** `exists=None` (offline and not in snapshot or cache,
 timeout, HTTP 5xx, HTTP 429 after backoff) produces SC-META-004 "Dependency not
 verified" (LOW/LOW), never SC-DEP-001. The same applies to a 404 when the repository
-configures a non-default registry (`.npmrc` `registry=` or a scope mapping;
+configures a non-default registry for that ecosystem (`.npmrc` `registry=`;
 `--index-url`/`--extra-index-url` in requirements; `[[tool.uv.index]]`,
-`[[tool.poetry.source]]`): the package may live there.
+`[[tool.poetry.source]]`): the package may live there. (Corrected 2026-10-09: this
+sentence also listed scope mappings, but a mapped scope is never looked up, below, so
+it is never reported; the independent-set adjudication caught the contradiction.)
 
 **What isn't looked up at all:** local and URL specs (`file:`, `link:`, `workspace:`,
 git, http, path deps), packages defined in the same repository (monorepo workspace

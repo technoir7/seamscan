@@ -10,9 +10,14 @@ reason, for example:
 - offline (`--offline`, pre-commit, the hook's fast path) and the name is in neither the
   bundled snapshot nor the cache
 - the registry timed out, returned a 5xx, or rate-limited the request (HTTP 429)
-- the public registry says 404, but the repository configures another registry for it
-  (`.npmrc` `registry=` or a scope mapping, `--index-url` / `--extra-index-url`,
+- the public registry says 404, but the repository also installs from another registry
+  of that kind (`.npmrc` `registry=`, `--index-url` / `--extra-index-url`,
   `[[tool.uv.index]]`, `[[tool.poetry.source]]`), so the package may live there
+
+Not reported at all: packages the repository says live elsewhere — a scope `.npmrc`
+maps to another registry (`@acme:registry=...`), a Poetry dependency pinned to a
+`source`, `[deps] allow` names. Their names are never sent to the public registry, so
+there is nothing to verify or report (ADR-004).
 
 **Decision: unknown is never "missing" (ADR-004).** These cases are not reported as
 [SC-DEP-001](SC-DEP-001.md), and age, downloads and install scripts are not judged

@@ -1,16 +1,13 @@
 id = "dep002-py-private-index-unverified"
-description = "Poetry private source: the package can't be verified, so no age claim either"
+description = "Poetry dependency pinned to a private source: never looked up publicly, so no finding of any kind (ADR-004)"
 mode = "audit"
 split = "dev"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-META-004"
-path = "pyproject.toml"
-line = 10
-tolerance = 0
 
 [[forbidden]]
 rule = "SC-DEP-002"

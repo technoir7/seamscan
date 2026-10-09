@@ -1,16 +1,13 @@
 id = "dep001-js-private-scope-404"
-description = ".npmrc maps @acme to a private registry; the public 404 is 'not verified', not 'missing'"
+description = ".npmrc maps @acme to a private registry: the name is never sent to public npm, so nothing is reported (ADR-004)"
 mode = "audit"
 split = "dev"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-META-004"
-path = "package.json"
-line = 21
-tolerance = 0
 
 [[forbidden]]
 rule = "SC-DEP-001"
