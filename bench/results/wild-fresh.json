@@ -1,0 +1,287 @@
+{
+  "seamscan": "0.7.0",
+  "date": "2026-10-09",
+  "offline": false,
+  "lines": 137471,
+  "findings": 74,
+  "notices": 4,
+  "blocking": 54,
+  "per_kloc": 0.54,
+  "by_rule": {
+    "SC-CODE-002": 29,
+    "SC-CODE-003": 13,
+    "SC-CODE-004": 5,
+    "SC-CODE-007": 1,
+    "SC-META-002": 4,
+    "SC-SEC-002": 3,
+    "SC-SEC-003": 4,
+    "SC-SEC-004": 1,
+    "SC-SUPA-001": 4,
+    "SC-SUPA-002": 2,
+    "SC-TEST-001": 6,
+    "SC-WEB-001": 2,
+    "SC-WEB-003": 4
+  },
+  "repos": [
+    {
+      "repo": "clonglam/HiyoRi-Ecommerce-Nextjs-Supabase",
+      "commit": "76ba895a583ee3131090f0859caba8174618bb08",
+      "group": "js",
+      "lines": 23512,
+      "findings": 6,
+      "notices": 0,
+      "blocking": 6,
+      "per_kloc": 0.26,
+      "by_rule": {
+        "SC-CODE-002": 6
+      }
+    },
+    {
+      "repo": "pixegami/task-app",
+      "commit": "60a0b1e56ee567cf8ff417c44139bbbd5fd7b137",
+      "group": "js",
+      "lines": 4343,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Barty-Bart/nextjs-supabase-shadcn-boilerplate",
+      "commit": "c5a5817959ec6fd1ecc0ef1c18c075e9c684c778",
+      "group": "js",
+      "lines": 2631,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "vinayakajith/fluence-international",
+      "commit": "5fbce50f6a212bf96f3f7871899f66374763c971",
+      "group": "js",
+      "lines": 3292,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Anuja-jayasinghe/Solar-Analytics-Dashboard",
+      "commit": "1655c5bc27f8ec1e297cc4bf5e02bd7542e1be93",
+      "group": "js",
+      "lines": 37124,
+      "findings": 17,
+      "notices": 3,
+      "blocking": 17,
+      "per_kloc": 0.46,
+      "by_rule": {
+        "SC-CODE-002": 4,
+        "SC-CODE-003": 13,
+        "SC-META-002": 3
+      }
+    },
+    {
+      "repo": "johnapost/nextjs-firebase-fns-demo",
+      "commit": "f558e1e20b9ef523c018ad35e46010403fbdb846",
+      "group": "js",
+      "lines": 82,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Ajay-056/Whatsapp-Clone-NextJS",
+      "commit": "c555daedc7a00ee666e8bd51a349782e39f8ecfb",
+      "group": "js",
+      "lines": 1475,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "salimi-my/instagram-clone",
+      "commit": "559a56445d13d82b4557cf0880e4f74716ca5eaa",
+      "group": "js",
+      "lines": 1965,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.51,
+      "by_rule": {
+        "SC-SEC-002": 1
+      }
+    },
+    {
+      "repo": "coffeefuelbump/AI-YouTube-Timestamps",
+      "commit": "abe7f0edd3db21afa63a9fb3185cfc418d4c939a",
+      "group": "js",
+      "lines": 1512,
+      "findings": 2,
+      "notices": 0,
+      "blocking": 2,
+      "per_kloc": 1.32,
+      "by_rule": {
+        "SC-SEC-002": 2
+      }
+    },
+    {
+      "repo": "dch133/Social-Media-App",
+      "commit": "482ea6ba88fa0799dd653fb5b914d730909817a0",
+      "group": "js",
+      "lines": 3526,
+      "findings": 6,
+      "notices": 0,
+      "blocking": 6,
+      "per_kloc": 1.7,
+      "by_rule": {
+        "SC-CODE-002": 6
+      }
+    },
+    {
+      "repo": "rednafi/fastapi-nano",
+      "commit": "bca432915f4464951f481ce583d7776953021c99",
+      "group": "python",
+      "lines": 616,
+      "findings": 2,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 3.25,
+      "by_rule": {
+        "SC-SEC-004": 1,
+        "SC-WEB-003": 1
+      }
+    },
+    {
+      "repo": "seapagan/fastapi-template",
+      "commit": "23fe83f2fe1ed934032737a301583fd47ec7d1e3",
+      "group": "python",
+      "lines": 21794,
+      "findings": 10,
+      "notices": 0,
+      "blocking": 5,
+      "per_kloc": 0.46,
+      "by_rule": {
+        "SC-CODE-004": 4,
+        "SC-CODE-007": 1,
+        "SC-TEST-001": 5
+      }
+    },
+    {
+      "repo": "daniel-carreon/SuperintelligenceURLs",
+      "commit": "f727266b0170845a8bdb54bc2fc6dbd2101b8ad9",
+      "group": "python",
+      "lines": 13321,
+      "findings": 12,
+      "notices": 1,
+      "blocking": 7,
+      "per_kloc": 0.9,
+      "by_rule": {
+        "SC-CODE-002": 4,
+        "SC-META-002": 1,
+        "SC-SUPA-001": 4,
+        "SC-SUPA-002": 2,
+        "SC-WEB-003": 2
+      }
+    },
+    {
+      "repo": "Risabkshetri/ventureai",
+      "commit": "12c7d871e0c94dfb935cbea8dc053a2aecc674cc",
+      "group": "python",
+      "lines": 4557,
+      "findings": 3,
+      "notices": 0,
+      "blocking": 3,
+      "per_kloc": 0.66,
+      "by_rule": {
+        "SC-CODE-002": 2,
+        "SC-CODE-004": 1
+      }
+    },
+    {
+      "repo": "jelmerdejong/flask-app-blueprint",
+      "commit": "f152e8d715e1330907087d78c4127d66ccdd2887",
+      "group": "python",
+      "lines": 1362,
+      "findings": 3,
+      "notices": 0,
+      "blocking": 3,
+      "per_kloc": 2.2,
+      "by_rule": {
+        "SC-SEC-003": 2,
+        "SC-WEB-001": 1
+      }
+    },
+    {
+      "repo": "toddbirchard/flasklogin-tutorial",
+      "commit": "0beb0b859b1dd5ff99848c8824b1e45e268e5e48",
+      "group": "python",
+      "lines": 379,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "bboe/flask-image-uploader",
+      "commit": "064678eb03b61f2e736f42b5b80176b3b605f97d",
+      "group": "python",
+      "lines": 401,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "abu-rayhan-alif/django-saas-kit",
+      "commit": "cc47eb2e83a2e8d059bb4e1719ac8908106460c1",
+      "group": "python",
+      "lines": 13220,
+      "findings": 9,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.68,
+      "by_rule": {
+        "SC-CODE-002": 7,
+        "SC-SEC-003": 1,
+        "SC-TEST-001": 1
+      }
+    },
+    {
+      "repo": "iamfoysal/Django-Saas-Application",
+      "commit": "a50fe8a93f67a146d9d321bbea22df55e3a492e0",
+      "group": "python",
+      "lines": 441,
+      "findings": 2,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 4.54,
+      "by_rule": {
+        "SC-SEC-003": 1,
+        "SC-WEB-003": 1
+      }
+    },
+    {
+      "repo": "seanpdinwiddie/django-saas",
+      "commit": "ad554ecbe84336ff0b2179c0f0dd3bfb7a3d3d54",
+      "group": "python",
+      "lines": 1918,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.52,
+      "by_rule": {
+        "SC-WEB-001": 1
+      }
+    }
+  ]
+}
