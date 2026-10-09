@@ -1,8 +1,10 @@
 # Checks only what the commit adds (spec §11.3). It reads the staged diff itself, so
-# pre-commit doesn't pass file names. `--offline` joins the entry with M5.
+# pre-commit doesn't pass file names. `--offline`: a commit must not wait on a registry;
+# new dependencies are checked against the cache and the bundled snapshot, and CI's
+# online scan settles the rest (ADR-004).
 - id: seamscan
   name: seamscan
   description: Block commits that add the security and correctness failures AI coding tools ship
-  entry: seamscan scan --staged
+  entry: seamscan scan --staged --offline
   language: python
   pass_filenames: false

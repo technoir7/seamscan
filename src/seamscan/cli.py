@@ -6,9 +6,11 @@ import difflib
 import os
 import sys
 import traceback
+from collections import Counter
 from collections.abc import Sequence
 from contextvars import ContextVar
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 from enum import StrEnum
 from importlib.resources import files as package_files
 from pathlib import Path
@@ -18,8 +20,10 @@ import typer
 
 from seamscan import __version__
 from seamscan.analysis import Analysis, analyze
+from seamscan.facts.dependencies import declared_dependencies, dependencies_to_check
+from seamscan.facts.registries import registry_config
 from seamscan.hooks.claude import EditCheck, HookInputError, read_input, respond
-from seamscan.model import ChangeSet, Finding, SourceFile
+from seamscan.model import ChangeSet, Ecosystem, Finding, PackageRef, RegistryView, SourceFile
 from seamscan.policy.baseline import (
     Baseline,
     BaselineError,
@@ -36,9 +40,12 @@ from seamscan.report.catalog import render_rule_json, render_rule_table
 from seamscan.report.json import render_json
 from seamscan.report.markdown import render_markdown
 from seamscan.report.sarif import render_sarif
-from seamscan.report.stats import render_stats
+from seamscan.report.stats import DependencyCounts, render_stats
 from seamscan.report.terminal import render_terminal
 from seamscan.rules.registry import ALL_META, RULES
+from seamscan.supply.http import fetch_url
+from seamscan.supply.registry import Source, lookup, pinned_version
+from seamscan.supply.snapshot import Snapshot, bundled_snapshot
 from seamscan.workspace.files import collect
 from seamscan.workspace.git import (
     GitError,
@@ -76,6 +83,13 @@ OutputOpt = Annotated[
 StatsOpt = Annotated[
     bool, typer.Option("--stats", help="Print files skipped, suppressions and counts to stderr")
 ]
+OfflineOpt = Annotated[
+    bool,
+    typer.Option(
+        "--offline",
+        help="Don't query package registries; use only the cache and the bundled snapshot",
+    ),
+]
 
 
 @dataclass(frozen=True)
@@ -85,6 +99,7 @@ class Outcome:
     analysis: Analysis
     verdict: Verdict
     skipped: tuple[tuple[str, str], ...]  # (path, reason) from file collection
+    dependencies: DependencyCounts = field(default_factory=DependencyCounts)
 
 
 @dataclass(frozen=True)
@@ -131,11 +146,80 @@ def _load_baseline(root: Path) -> Baseline:
         _fail(f"{path}: {exc}")
 
 
+def _cache_dir() -> Path:
+    base = os.environ.get("XDG_CACHE_HOME", "")
+    # The XDG spec says a relative value is invalid and must be ignored.
+    root = Path(base) if os.path.isabs(base) else Path.home() / ".cache"
+    return root / "seamscan" / "registry"
+
+
+def _pinned(files: Sequence[SourceFile], refs: frozenset[PackageRef]) -> dict[PackageRef, str]:
+    """npm refs whose every declaration pins one exact version; the rest check `latest`."""
+    specs: dict[PackageRef, set[str | None]] = {}
+    for d in declared_dependencies(files):
+        if d.ref in refs and d.ref.ecosystem is Ecosystem.NPM:
+            specs.setdefault(d.ref, set()).add(pinned_version(d.spec))
+    return {
+        ref: v
+        for ref, versions in specs.items()
+        if len(versions) == 1 and (v := next(iter(versions)))
+    }
+
+
+def _registry(
+    config: Config,
+    files: Sequence[SourceFile],
+    change: ChangeSet | None,
+    context: Sequence[SourceFile],
+    offline: bool,
+) -> tuple[RegistryView, DependencyCounts]:
+    """Look up the dependencies in scope (ADR-004). Network trouble becomes data in the
+    view; nothing here raises for it."""
+    in_scope = [f for f in files if not config.excludes(f.path)]
+    # Registry settings are facts about the whole repository, even in scan mode.
+    repo = registry_config({f.path: f for f in [*context, *files]}.values())
+    wanted = dependencies_to_check(in_scope, change)
+    refs = frozenset(r for r in wanted if not config.deps.allows(r) and not repo.is_private(r))
+    now = datetime.now(UTC)
+    found = lookup(
+        refs,
+        offline=offline,
+        cache_dir=_cache_dir(),
+        fetch=fetch_url,
+        now=now,
+        snapshot=bundled_snapshot() if refs else Snapshot({}),
+        # Scan mode's refs are only the dependencies the change adds: the ones whose
+        # install scripts matter (SC-DEP-003). An audit doesn't pay for them.
+        install_scripts=change is not None,
+        versions=_pinned(in_scope, refs),
+        other_registries=repo.other_registries,
+    )
+    for warning in found.warnings:
+        typer.echo(f"seamscan: {warning}", err=True)
+    # An answer that left the package unverified (a 404 next to a private registry, say)
+    # counts as unverified, whatever source gave it.
+    by_source = Counter(
+        Source.NONE if found.packages[ref].exists is None else source
+        for ref, source in found.sources.items()
+    )
+    counts = DependencyCounts(
+        network=by_source[Source.NETWORK],
+        cache=by_source[Source.CACHE],
+        snapshot=by_source[Source.SNAPSHOT],
+        unverified=by_source[Source.NONE],
+        not_looked_up=len(wanted - refs),
+    )
+    deps = config.deps
+    view = RegistryView(found.packages, now, deps.min_age_days, deps.min_weekly_downloads)
+    return view, counts
+
+
 def _analyze(
     config: Config,
     files: Sequence[SourceFile],
     change: ChangeSet | None = None,
     context: Sequence[SourceFile] = (),
+    registry: RegistryView | None = None,
 ) -> Analysis:
     """`analyze` under the repository's config: rules off, paths excluded, severities set."""
     analysis = analyze(
@@ -143,6 +227,7 @@ def _analyze(
         change=change,
         rules=tuple(r for r in RULES if r.meta.id not in config.disabled),
         context=[f for f in context if not config.excludes(f.path)],
+        registry=registry,
     )
     # `replace`, so any other Analysis fields pass through untouched.
     return replace(
@@ -165,6 +250,7 @@ def _run(
     skipped: tuple[tuple[str, str], ...],
     change: ChangeSet | None = None,
     context: Sequence[SourceFile] = (),
+    offline: bool = False,
 ) -> Outcome:
     """The one path from files to a verdict, shared by every command.
 
@@ -173,9 +259,11 @@ def _run(
     """
     config = _load_config(root)
     known = _load_baseline(root).fingerprints()
-    analysis = _analyze(config, files, change, context)
+    registry, dependencies = _registry(config, files, change, context, offline)
+    analysis = _analyze(config, files, change, context, registry)
     verdict = decide(analysis.findings, config.policy, known)
-    return Outcome(analysis, verdict, tuple(s for s in skipped if not config.excludes(s[0])))
+    kept = tuple(s for s in skipped if not config.excludes(s[0]))
+    return Outcome(analysis, verdict, kept, dependencies)
 
 
 def _render(outcome: Outcome, fmt: Format) -> str:
@@ -207,7 +295,12 @@ def _emit(outcome: Outcome, fmt: Format, output: Path | None, stats: bool = Fals
         a = outcome.analysis
         sys.stderr.write(
             render_stats(
-                a.findings, outcome.verdict, a.suppressed, a.files_analyzed, outcome.skipped
+                a.findings,
+                outcome.verdict,
+                a.suppressed,
+                a.files_analyzed,
+                outcome.skipped,
+                outcome.dependencies,
             )
         )
     if output:
@@ -223,17 +316,20 @@ def audit(
     fmt: FormatOpt = Format.terminal,
     output: OutputOpt = None,
     stats: StatsOpt = False,
+    offline: OfflineOpt = False,
 ) -> None:
     """Check a whole repository."""
     root = path.resolve()
     fileset = collect(root)
-    _emit(_run(root, fileset.files, fileset.skipped), fmt, output, stats)
+    _emit(_run(root, fileset.files, fileset.skipped, offline=offline), fmt, output, stats)
 
 
-def _scan_change(root: Path, change: ChangeSet) -> Outcome:
+def _scan_change(root: Path, change: ChangeSet, offline: bool) -> Outcome:
     fileset = collect(root)
     changed = tuple(f for f in fileset.files if f.path in change.added)
-    return _run(root, changed, fileset.skipped, change=change, context=fileset.files)
+    return _run(
+        root, changed, fileset.skipped, change=change, context=fileset.files, offline=offline
+    )
 
 
 def _repo_relative(root: Path, paths: Sequence[str | Path], base: Path) -> list[str | None]:
@@ -267,6 +363,7 @@ def scan(
     fmt: FormatOpt = Format.terminal,
     output: OutputOpt = None,
     stats: StatsOpt = False,
+    offline: OfflineOpt = False,
 ) -> None:
     """Check only what a change introduced (working tree vs HEAD by default)."""
     root = Path.cwd()
@@ -291,7 +388,7 @@ def scan(
     except GitError as exc:
         typer.echo(f"seamscan: {exc}", err=True)
         raise typer.Exit(code=2) from exc
-    _emit(_scan_change(root, change), fmt, output, stats)
+    _emit(_scan_change(root, change, offline), fmt, output, stats)
 
 
 hook_app = typer.Typer(no_args_is_help=True, help="Adapters for coding-agent hooks.")
@@ -318,7 +415,10 @@ def _claude_hook(raw: str) -> str | None:
         change = read_changeset(root, paths=limit)
     else:
         change = read_changeset(root)
-    return respond(plan, _scan_change(root, change).verdict)
+    # After an edit the hook has a 1 s budget, so registries wait for Stop, when an agent
+    # that added a hallucinated package can still be told before it finishes (ADR-004).
+    offline = isinstance(plan, EditCheck)
+    return respond(plan, _scan_change(root, change, offline).verdict)
 
 
 @hook_app.command("claude")
@@ -383,7 +483,11 @@ def _current_findings(root: Path) -> tuple[Finding, ...]:
     a baseline written now would be incomplete, and pruning would drop live entries.
     """
     fileset = collect(root)
-    findings = _analyze(_load_config(root), fileset.files).findings
+    config = _load_config(root)
+    # Looked up as `audit` does, or the baseline would lack the dependency findings that
+    # the next audit then reports as new.
+    registry, _ = _registry(config, fileset.files, None, (), offline=False)
+    findings = _analyze(config, fileset.files, registry=registry).findings
     crashed = [f for f in findings if f.rule_id in INTERNAL_ERROR_RULES]
     for f in crashed:
         typer.echo(f"seamscan: {f.message}", err=True)
