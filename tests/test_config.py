@@ -1,7 +1,7 @@
 import pytest
 
-from seamscan.model import Confidence, Finding, Location, Severity
-from seamscan.policy.config import Config, ConfigError, parse_config
+from seamscan.model import Confidence, Ecosystem, Finding, Location, PackageRef, Severity
+from seamscan.policy.config import Config, ConfigError, DepsPolicy, parse_config
 from seamscan.policy.verdict import Policy
 
 KNOWN = frozenset({"SC-CODE-001", "SC-CODE-002", "SC-SUPA-001", "SC-TEST-003"})
@@ -59,6 +59,13 @@ exclude = ["scripts/legacy/**"]
         ("[paths]\nexclude = ['scripts/']\n", "paths.exclude"),
         ("[paths]\nexclude = ['a/b**/c']\n", "paths.exclude"),
         ("[paths]\nexclude = ['']\n", "paths.exclude"),
+        ("[deps]\nmin_age = 30\n", "unknown key deps.min_age"),
+        ("[deps]\nmin_age_days = '30'\n", "deps.min_age_days"),
+        ("[deps]\nmin_age_days = -1\n", "deps.min_age_days"),
+        ("[deps]\nmin_age_days = true\n", "deps.min_age_days"),
+        ("[deps]\nmin_weekly_downloads = 1.5\n", "deps.min_weekly_downloads"),
+        ("[deps]\nallow = '@acme/*'\n", "deps.allow"),
+        ("[deps]\nallow = ['']\n", "deps.allow"),
     ],
 )
 def test_errors_name_the_exact_key(text: str, complaint: str):
@@ -119,3 +126,30 @@ def test_severity_override_wins_over_a_rule_raising_severity_per_finding():
         [finding("SC-SUPA-001", Severity.CRITICAL), finding("SC-CODE-001", Severity.HIGH)]
     )
     assert [f.severity for f in found] == [Severity.MEDIUM, Severity.HIGH]
+
+
+def test_deps_defaults_match_the_spec():
+    assert Config().deps == DepsPolicy(min_age_days=30, min_weekly_downloads=100, allow=())
+
+
+def test_deps_section():
+    config = parse(
+        "[deps]\nmin_age_days = 14\nmin_weekly_downloads = 0\nallow = ['@acme/*', 'acme_*']\n"
+    )
+    assert config.deps == DepsPolicy(14, 0, ("@acme/*", "acme_*"))
+
+
+@pytest.mark.parametrize(
+    ("ecosystem", "name", "allowed"),
+    [
+        (Ecosystem.NPM, "@acme/ui", True),
+        (Ecosystem.NPM, "@acme/ui/extra", False),  # `*` stays within one segment
+        (Ecosystem.NPM, "@acmex/ui", False),
+        (Ecosystem.NPM, "acme-core", False),  # npm names compare as written
+        (Ecosystem.PYPI, "acme-core", True),  # PyPI names compare normalized
+        (Ecosystem.PYPI, "acmecore", False),
+    ],
+)
+def test_deps_allow_globs_match_package_names(ecosystem: Ecosystem, name: str, allowed: bool):
+    config = parse("[deps]\nallow = ['@acme/*', 'Acme.*']\n")
+    assert config.deps.allows(PackageRef(ecosystem, name)) is allowed
