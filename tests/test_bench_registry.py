@@ -141,3 +141,21 @@ def test_a_case_config_the_harness_cannot_apply_is_an_error(tmp_path: Path):
     files = {"app.py": "x = 1\n", "seamscan.toml": '[rules]\ndisable = ["SC-CODE-001"]\n'}
     with pytest.raises(CaseError, match="seamscan.toml"):
         case_registry(load_case(write_case(tmp_path, toml, files)))
+
+
+def test_a_public_404_is_inconclusive_when_the_repo_uses_another_index_as_in_the_cli(
+    tmp_path: Path,
+):
+    toml = """
+[registry]
+now = 2026-10-01T00:00:00Z
+[[registry.package]]
+ecosystem = "pypi"
+name = "acme-billing"
+exists = false
+"""
+    files = {"requirements.txt": "--index-url https://pypi.acme.internal/simple\nacme-billing\n"}
+    view = case_registry(load_case(write_case(tmp_path, toml, files)))
+    assert view is not None
+    facts = view.packages[PackageRef(Ecosystem.PYPI, "acme-billing")]
+    assert facts.exists is None and facts.problem

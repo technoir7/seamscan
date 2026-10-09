@@ -265,7 +265,15 @@ def case_registry(case: Case) -> RegistryView | None:
     missing = sorted(f"{r.ecosystem}:{r.name}" for r in wanted - case.registry.packages.keys())
     if missing:
         raise CaseError(f"{case.id}: no registry fixture for {', '.join(missing)}")
+
+    # As lookup does (supply.registry.lookup): a public 404 proves nothing when the
+    # repository also installs from another registry of that ecosystem.
+    def answered(ref: PackageRef, facts: PackageFacts) -> PackageFacts:
+        if facts.exists is False and ref.ecosystem in repo.other_registries:
+            return PackageFacts(exists=None, problem="not on the public registry; another is used")
+        return facts
+
     return replace(
         case.registry,
-        packages={r: f for r, f in case.registry.packages.items() if looked_up(r)},
+        packages={r: answered(r, f) for r, f in case.registry.packages.items() if looked_up(r)},
     )

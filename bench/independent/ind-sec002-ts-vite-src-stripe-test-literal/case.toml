@@ -8,7 +8,10 @@ source = "original"
 model = "claude-sonnet-5-5"
 prompt = "independent-holdout"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-SEC-002"
+
+[[expected]]
+rule = "SC-SEC-001"
 path = "src/api/payments.ts"
 line = 1
