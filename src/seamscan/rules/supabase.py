@@ -178,7 +178,8 @@ def _rls_tables(schema: SupabaseSchema) -> set[tuple[str, str]]:
 def _check_unsafe_definer(ctx: RuleContext) -> Iterator[Finding]:
     for schema in ctx.project.supabase:
         for f in schema.definer_functions:
-            if f.schema != EXPOSED_SCHEMA or f.search_path_set:
+            # A body with nothing to look up gives a hostile search_path nothing to shadow.
+            if f.schema != EXPOSED_SCHEMA or f.search_path_set or f.path_independent:
                 continue
             name = _qualified(f.schema, f.name)
             yield finding(

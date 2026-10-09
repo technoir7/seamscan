@@ -13,6 +13,14 @@ of Supabase's splinter lints 0011 and 0010:
    later `alter function|procedure ... set search_path ...` adds one. An empty path
    (`set search_path = ''`) counts as set, and so does `set search_path to public,
    extensions`. An unqualified function name is in `public`.
+
+   **Decision: a body with nothing to look up is safe (2026-10-09).** A SQL or PL/pgSQL
+   body that names every table and function with its schema (`public.profiles`,
+   `auth.uid()`) and uses no operator, cast or dynamic SQL (`execute`) has nothing a
+   hostile path could shadow, so it isn't reported. The check is strict on purpose:
+   whoever sets the path can shadow even built-in functions and operators (`=`, `->>`)
+   by listing `pg_catalog` after their own schema, so any of those keeps the finding.
+   `NEW`/`OLD` fields, `is null`, `and`/`or` and `:=` are syntax, not lookups.
 2. **A view without `security_invoker` that reads an RLS-protected table.** `create
    [or replace] view` is reported when its query names (after `FROM` or `JOIN`) a table
    that has RLS on once all migrations have run. `with (security_invoker = true)`,
@@ -45,7 +53,11 @@ Flagged:
 create function public.handle_new_user()
 returns trigger language plpgsql
 security definer
-as $$ begin insert into public.profiles (id) values (new.id); return new; end; $$;
+as $$ begin
+  insert into profiles (id, full_name)                       -- unqualified table
+  values (new.id, new.raw_user_meta_data ->> 'full_name');   -- and an operator
+  return new;
+end; $$;
 
 create view public.leaderboard as
   select p.username, sum(s.points) from public.scores s join public.profiles p on ...;
@@ -59,6 +71,12 @@ create function public.handle_new_user() returns trigger language plpgsql
   security definer set search_path = '' as $$ ... $$;
 
 alter function public.handle_new_user() set search_path = '';   -- the advisor's fix
+
+create function public.set_owner() returns trigger language plpgsql security definer as $$
+begin
+  if new.owner_id is null then new.owner_id := auth.uid(); end if;   -- nothing to look up
+  return new;
+end; $$;
 
 create view public.my_orders with (security_invoker = true) as select ... from public.orders;
 
@@ -86,12 +104,16 @@ False negatives:
   0002).
 - Materialized views (which can't use `security_invoker`) are not checked.
 - Overloaded functions with the same name are tracked as one.
+- The "nothing to look up" check doesn't read types: a type named in a PL/pgSQL
+  `declare` block is looked up through the path too.
 
 False positives:
 
 - A view's table list is read lexically, so `extract(year from created_at)` reads as a
   relation named `created_at`. That only matters if a table of that name has RLS on.
-- A definer function that never resolves an unqualified name is still reported.
+- The "nothing to look up" check is lexical and errs towards reporting: a body that
+  uses any operator (even `=`), a cast, a variable after `into`, or a call it can't
+  place is reported, though many of those are only theoretically shadowable.
 
 ## References
 

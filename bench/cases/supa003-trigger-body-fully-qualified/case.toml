@@ -1,0 +1,11 @@
+id = "supa003-trigger-body-fully-qualified"
+description = "SECURITY DEFINER trigger without a fixed search_path whose body uses only NEW and schema-qualified auth.uid(): nothing in it is looked up through the path, so nothing can be shadowed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "minimal rewrite of noise-study dev data (imbhargav5/nextbase-nextjs-supabase-starter)"
+
+[[forbidden]]
+rule = "SC-SUPA-003"

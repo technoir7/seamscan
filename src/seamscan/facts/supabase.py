@@ -21,6 +21,7 @@ from dataclasses import dataclass, replace
 
 from seamscan.model import Location, SourceFile
 from seamscan.parse.sql import Statement, Token, TokenKind, statements
+from seamscan.parse.sql import tokens as sql_tokens
 
 __all__ = [
     "API_ROLES",
@@ -72,6 +73,9 @@ class DefinerFunction:
     name: str
     search_path_set: bool  # SET search_path in the definition or a later ALTER FUNCTION
     location: Location
+    # The body names every table and function with its schema and uses no operator, cast
+    # or dynamic SQL, so nothing in it is looked up through the search_path.
+    path_independent: bool = False
 
 
 @dataclass(frozen=True)
@@ -233,6 +237,52 @@ def _truthy(token: Token | None) -> bool:
     return value in ("1", "on") or any(word.startswith(value) for word in ("true", "yes"))
 
 
+_SQL_LANGUAGES = frozenset({"sql", "plpgsql"})
+# Words that stand before "(" as syntax, not as a call that is looked up by name.
+_SYNTAX_BEFORE_PAREN = frozenset(
+    {"if", "elsif", "while", "and", "or", "not", "exists", "in", "values", "return"}
+    | {"returning", "case", "when", "then", "else", "select", "where", "on", "any", "all"}
+    | {"some", "array", "row", "filter", "over", "coalesce", "nullif", "greatest", "least"}
+    | {"perform", "for", "using", "into", "with", "as", "by", "is", "between", "default"}
+)
+# Words followed by a table name.
+_RELATION_BEFORE = frozenset({"from", "join", "into", "update", "table", "truncate", "using"})
+_PATH_FREE_SYMBOLS = frozenset("(),.[]$")
+
+
+def _path_free(body: str) -> bool:
+    """Nothing in `body` is resolved through the search_path: every table and function is
+    schema-qualified, and there are no operators, casts or dynamic SQL, since whoever sets
+    the path can shadow even pg_catalog's (by listing it after their own schema).
+    Lexical and conservative: anything it can't place makes the body path-dependent."""
+    toks = sql_tokens(body)
+    for i, t in enumerate(toks):
+        prev = toks[i - 1] if i else None
+        nxt = toks[i + 1] if i + 1 < len(toks) else None
+        if t.kind is TokenKind.SYMBOL:
+            assignment = (t.text == ":" and nxt is not None and nxt.text == "=") or (
+                t.text == "=" and prev is not None and prev.text == ":"
+            )
+            if not assignment and t.text not in _PATH_FREE_SYMBOLS:
+                return False
+            continue
+        if t.kind not in (TokenKind.WORD, TokenKind.QUOTED):
+            continue
+        if t.kind is TokenKind.WORD and t.text == "execute":
+            return False
+        qualified = prev is not None and prev.kind is TokenKind.SYMBOL and prev.text == "."
+        syntax = t.kind is TokenKind.WORD and t.text in _SYNTAX_BEFORE_PAREN
+        if nxt is not None and nxt.text == "(" and nxt.kind is TokenKind.SYMBOL:
+            if not qualified and not syntax:
+                return False
+        if t.kind is TokenKind.WORD and t.text in _RELATION_BEFORE and nxt is not None:
+            after = toks[i + 2] if i + 2 < len(toks) else None
+            names_relation = nxt.kind in (TokenKind.WORD, TokenKind.QUOTED)
+            if names_relation and not (after is not None and after.text == "."):
+                return False
+    return True
+
+
 _NOT_AN_ALIAS = frozenset(
     {"where", "join", "inner", "left", "right", "full", "cross", "natural", "lateral", "on"}
     | {"using", "group", "order", "limit", "offset", "having", "window", "union", "except"}
@@ -365,6 +415,7 @@ class _Replay:
             return False
         c.skip_parens()
         definer = search_path = False
+        language, body = "sql", None
         for i in c.top_level():
             t = c.tokens[i]
             if t.kind is not TokenKind.WORD:
@@ -373,7 +424,14 @@ class _Replay:
                 definer = c.tokens[i + 1].text == "definer"
             elif t.text == "set" and c.is_word("search_path", ahead=1):
                 search_path = True
-        self.functions[key] = DefinerFunction(key[0], key[1], search_path, loc)
+            elif t.text == "language" and i + 1 < len(c.tokens):
+                language = c.tokens[i + 1].text.lower()
+            elif t.text == "as" and i + 1 < len(c.tokens) and body is None:
+                after = c.tokens[i + 1]
+                if after.kind in (TokenKind.DOLLAR, TokenKind.STRING):
+                    body = after.text
+        independent = body is not None and language in _SQL_LANGUAGES and _path_free(body)
+        self.functions[key] = DefinerFunction(key[0], key[1], search_path, loc, independent)
         self.definer[key] = definer
         return True
 

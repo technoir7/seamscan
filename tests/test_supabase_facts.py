@@ -222,6 +222,43 @@ def test_definer_functions_and_search_path():
     }
 
 
+def test_a_body_with_nothing_to_resolve_through_the_search_path_is_path_independent():
+    # Whoever sets the search_path can shadow any unqualified table, function, type or
+    # operator, even pg_catalog's (by listing pg_catalog after their own schema). A body
+    # that names everything with its schema and uses only syntax gives them nothing.
+    schema = replay(
+        "create function public.stamp() returns trigger language plpgsql security definer"
+        " as $$ begin if new.owner_id is null and auth.uid() is not null then"
+        " new.owner_id := auth.uid(); end if; return new; end $$;"
+        "create function public.ins() returns trigger language plpgsql security definer"
+        " as $$ begin insert into public.profiles (id) values (new.id); return new; end $$;"
+        "create function public.who() returns text language sql security definer"
+        " as $$ select role from profiles where id = auth.uid() $$;"
+        "create function public.eq() returns boolean language sql security definer"
+        " as $$ select auth.uid() = $1 $$;"
+        "create function public.call() returns int language sql security definer"
+        " as $$ select helper() $$;"
+        "create function public.cast() returns int language sql security definer"
+        " as $$ select public.n()::int $$;"
+        "create function public.dyn() returns void language plpgsql security definer"
+        " as $$ begin execute 'select 1'; end $$;"
+        "create function public.ext() returns int language c security definer as 'lib', 'f';"
+        "create function public.one() returns int security definer as 'select 1';"
+    )
+    found = {f.name: f.path_independent for f in schema.definer_functions}
+    assert found == {
+        "stamp": True,
+        "ins": True,
+        "who": False,  # unqualified table, and an operator
+        "eq": False,  # an operator
+        "call": False,  # an unqualified function
+        "cast": False,  # a type cast
+        "dyn": False,  # dynamic SQL
+        "ext": False,  # not SQL at all
+        "one": True,
+    }
+
+
 def test_definer_text_inside_bodies_does_not_count():
     schema = replay(
         "create function f() returns int language plpgsql as $$ begin"

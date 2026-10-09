@@ -1,0 +1,12 @@
+id = "supa003-trigger-body-uses-operator"
+description = "SECURITY DEFINER sign-up trigger without a fixed search_path: its tables are qualified, but ->> is an operator looked up through the path, so a caller's schema can still shadow it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SUPA-003"
+path = "supabase/migrations/20260214094500_profiles_on_signup.sql"
+line = 7
