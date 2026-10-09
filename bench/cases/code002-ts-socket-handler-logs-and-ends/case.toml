@@ -1,0 +1,10 @@
+id = "code002-ts-socket-handler-logs-and-ends"
+description = "socket handlers log a failed save; the handler ends, so nothing carries on as if it worked"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

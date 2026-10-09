@@ -383,13 +383,51 @@ def _sensitive_call(module: PyModule, body: list[ast.stmt]) -> str | None:
     return None
 
 
+# Tool directives aren't reasons: a `noqa: BLE001` says a linter was silenced, not why.
+_DIRECTIVE = re.compile(
+    r"pragma:\s*no\s*cover|noqa(?::\s*[\w, ]+)?|type:\s*ignore(?:\[[^\]]*\])?|nosec(?:\s+B\d+)?"
+    r"|pylint:\s*disable=[\w,-]+",
+    re.IGNORECASE,
+)
+
+
+def _comments_by_line(source: str) -> dict[int, str]:
+    """Comment text per line. `ast` drops comments; tokenize keeps them."""
+    out: dict[int, str] = {}
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type == tokenize.COMMENT:
+                out[tok.start[0]] = tok.string.lstrip("#").strip()
+    except (tokenize.TokenError, SyntaxError):
+        return out
+    return out
+
+
+def _gives_reason(comment: str) -> bool:
+    rest = _DIRECTIVE.sub("", comment)
+    return bool(re.search(r"[A-Za-z]{2}", rest)) and not _UNFINISHED_NOTE.search(rest)
+
+
+def _explained_handler(comments: dict[int, str], handler: ast.ExceptHandler) -> bool:
+    """A comment on the `except` line or in its body that says why, as in JS
+    (`except Exception:  # HEIC support is best-effort`). A reviewer reads it like an
+    inline suppression's reason."""
+    last = handler.end_lineno or handler.lineno
+    return any(_gives_reason(comments[n]) for n in range(handler.lineno, last + 1) if n in comments)
+
+
 def _swallowed_exceptions_python(ctx: RuleContext) -> Iterator[Finding]:
     for module in _shipped(ctx):
+        comments: dict[int, str] | None = None
         for node in ast.walk(module.tree):
             if not isinstance(node, (ast.Try, ast.TryStar)):
                 continue
             for handler in node.handlers:
                 if not _is_broad(module, handler) or not all(map(_does_nothing, handler.body)):
+                    continue
+                if comments is None:
+                    comments = _comments_by_line(module.source)
+                if _explained_handler(comments, handler):
                     continue
                 header = _source_line(module.source, handler.lineno)
                 loc = Location(
@@ -682,6 +720,53 @@ def _swallow_finding(
     )
 
 
+_LOOPS = frozenset({"for_statement", "for_in_statement", "while_statement", "do_statement"})
+_BLOCKS = frozenset({"statement_block", "program", "switch_case", "switch_default"})
+
+
+_ROUTE_EXPORTS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
+
+
+def _outcome_unused(module: JsModule, fn: JsNode) -> bool:
+    """Nobody acts on whether `fn` succeeded: a callback handed to a call (`socket.on(…)`,
+    `cron.schedule(…)`, `router.post(…)`) or written inline in JSX, an event handler named
+    `handle…`/`on…`, or a Next.js route export. A named helper's caller, by contrast,
+    carries on as if the call it made worked."""
+    parent = fn.parent
+    if parent is not None and parent.type in ("arguments", "jsx_expression"):
+        return True
+    named = _js_function_name(module, fn)
+    if named is None:
+        return False
+    name = named[0]
+    return name in _ROUTE_EXPORTS or name_words(name)[:1] in (("handle",), ("on",))
+
+
+def _carries_on(module: JsModule, statement: JsNode) -> bool:
+    """Code runs after `statement`: a later statement at any enclosing level of its
+    function, the next turn of an enclosing loop, or the caller of a function whose
+    outcome someone uses. A bare `return;` doesn't count. When a logged failure just ends
+    a handler (a socket event, a button's click), nothing proceeds as if the call worked;
+    the noise study found that pattern behind most of this rule's false alarms
+    (rules/docs/SC-CODE-002.md)."""
+    node = statement
+    while node.parent is not None and node.type not in js.FUNCTION_TYPES:
+        parent = node.parent
+        if parent.type in _LOOPS:
+            return True
+        if parent.type in _BLOCKS:
+            later = parent.named_children[parent.named_children.index(node) + 1 :]
+            if any(
+                s.type not in ("comment", "empty_statement")
+                and not (s.type == "return_statement" and not s.named_children)
+                for s in later
+            ):
+                return True
+        node = parent
+    # Module top level: whoever imports the module carries on.
+    return node.type not in js.FUNCTION_TYPES or not _outcome_unused(module, node)
+
+
 def _is_script(path: str) -> bool:
     parts = path.split("/")
     return bool(_SCRIPT_DIRS.intersection(parts[:-1]) or _SCRIPT_NAME.match(parts[-1]))
@@ -725,6 +810,13 @@ def _swallowed_exceptions_js(module: JsModule) -> Iterator[Finding]:
                 module.source[prop.start_byte : node.end_byte].decode("utf-8", "replace")
             )
         if effect is None or (effect == _LOGGED and script):
+            continue
+        if (
+            effect == _LOGGED
+            and node.type == "catch_clause"
+            and node.parent is not None
+            and not _carries_on(module, node.parent)
+        ):
             continue
         sensitive = _js_sensitive_call(module, tried)
         if node.type == "call_expression" and sensitive is None:
@@ -821,6 +913,32 @@ def _raises_not_implemented(node: ast.Raise) -> bool:
     return isinstance(exc, ast.Name) and exc.id == "NotImplementedError"
 
 
+def _rejects_unsupported(module: PyModule, node: ast.Raise) -> bool:
+    """`else: raise NotImplementedError(f"Unknown database engine {engine}")`: a branch
+    that names the input it rejects after handling the supported ones, like the JS
+    template-message exemption. A message that says the work isn't done still counts."""
+    if not isinstance(node.exc, ast.Call) or not node.exc.args:
+        return False
+    message = node.exc.args[0]
+    if isinstance(message, ast.Constant) and isinstance(message.value, str):
+        text = message.value
+    elif isinstance(message, ast.JoinedStr):
+        parts = (v.value for v in message.values if isinstance(v, ast.Constant))
+        text = "".join(p for p in parts if isinstance(p, str))
+    else:
+        return False
+    if _UNFINISHED_MESSAGE.search(text) or _TODO_MARKER.search(text):
+        return False
+    parent = module.parents.get(id(node))
+    while parent is not None and not isinstance(
+        parent, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda | ast.ClassDef
+    ):
+        if isinstance(parent, ast.If | ast.match_case):
+            return True
+        parent = module.parents.get(id(parent))
+    return False
+
+
 def _placeholder(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
     """How the check is stubbed out, when its body (ignoring a docstring) is a placeholder."""
     body = fn.body
@@ -840,8 +958,18 @@ def _placeholder(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
     return None
 
 
+# A liveness or readiness probe answers "is the process up", and returning True is that
+# answer working: `health_check`, `readinessCheck`, `ping`.
+_PROBE_WORDS = frozenset({"health", "healthz", "liveness", "readiness", "ping", "alive", "ready"})
+
+
 def _is_guard_name(name: str) -> bool:
-    return name not in _GUARD_EXEMPT and any(_GUARD_WORD.fullmatch(w) for w in name_words(name))
+    words = name_words(name)
+    return (
+        name not in _GUARD_EXEMPT
+        and not _PROBE_WORDS.intersection(words)
+        and any(_GUARD_WORD.fullmatch(w) for w in words)
+    )
 
 
 def _unfinished_code_python(ctx: RuleContext) -> Iterator[Finding]:
@@ -849,7 +977,7 @@ def _unfinished_code_python(ctx: RuleContext) -> Iterator[Finding]:
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Raise) and _raises_not_implemented(node):
                 fn = enclosing_function(module, node)
-                if _meant_to_be_overridden(module, fn):
+                if _meant_to_be_overridden(module, fn) or _rejects_unsupported(module, node):
                     continue
                 where = (
                     f"`{fn.name}`"

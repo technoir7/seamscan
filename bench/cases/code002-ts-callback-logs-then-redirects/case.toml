@@ -1,0 +1,12 @@
+id = "code002-ts-callback-logs-then-redirects"
+description = "auth callback logs a failed code exchange, then redirects to the dashboard as if signed in"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/auth/callback/route.ts"
+line = 11

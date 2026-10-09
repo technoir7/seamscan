@@ -1,12 +1,10 @@
 id = "code002-tsx-login-console-error"
-description = "login handler only console.errors a failed sign-in"
+description = "login handler only console.errors a failed sign-in; the user stays on the login page, so nothing carries on as if it worked (noise study, 2026-10-09)"
 mode = "audit"
 split = "dev"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-CODE-002"
-path = "src/pages/Login.tsx"
-line = 15

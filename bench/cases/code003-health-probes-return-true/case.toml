@@ -1,0 +1,10 @@
+id = "code003-health-probes-return-true"
+description = "liveness and readiness probes that return True are the probe working, not a skipped check"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"

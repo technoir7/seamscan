@@ -1,0 +1,10 @@
+id = "code002-py-comment-gives-reason"
+description = "broad excepts that say why in a comment, on the except line or in the body"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"
