@@ -26,7 +26,11 @@ should never be silent. The list is short and explicit:
 - a function or method whose name contains `auth`, `login`, `verify`, `charge` or
   `refund`
 
-Test files are skipped.
+Not flagged: a handler with a comment that gives a reason, on the `except` line or in
+its body (`except Exception:  # HEIC support is best-effort`), as in JS below. A comment
+mentioning `TODO`, `FIXME`, `XXX`, `implement`, `for now`, `placeholder` or `stub` is not
+a reason, and neither is a bare tool directive (`noqa: BLE001`, `pragma: no cover`,
+`type: ignore`, `nosec`, `pylint: disable=…`). Test files are skipped.
 
 ### TypeScript and JavaScript
 
@@ -38,8 +42,18 @@ when the `try` block makes a sensitive call (below).
 
 **A `catch` block that only writes to the console** (`console.log`, `.info`, `.debug`,
 `.trace`, `.error`, `.warn`, optionally followed by one of the statements above):
-flagged **only when the `try` block makes a sensitive call**, at HIGH. Elsewhere it
-counts as logging, the way `logger.warning(...)` does in Python.
+flagged **only when the `try` block makes a sensitive call and the code carries on**,
+at HIGH. Elsewhere it counts as logging, the way `logger.warning(...)` does in Python.
+The code carries on when something runs after the `try` statement: a later statement
+at any enclosing level of the function (a bare `return;` doesn't count), the next turn
+of an enclosing loop, or the caller of a function whose result is used. A function
+that just ends after logging is not a finding when nobody acts on its outcome: a
+callback handed to a call (`socket.on("join", async () => …)`, `cron.schedule(…)`,
+`router.post(…)`) or written inline in JSX, an event handler named `handle…` or `on…`,
+or a Next.js route export (`GET`, `POST`, …). There the failed call simply isn't
+followed by its success step: the user stays on the login page, the broadcast isn't
+sent. A named helper or method (`async function forwardOrder(order)`) still counts,
+because its caller carries on as if the call worked.
 
 **A promise `.catch(handler)`** whose handler does nothing or only logs
 (`() => {}`, `() => null`, `() => undefined`, `(e) => console.error(e)`,
@@ -76,9 +90,8 @@ nearly always a deliberate fire-and-forget (`audio.play().catch(() => {})`).
 
 - a block whose comments give a reason: `catch { /* non-fatal: keeps the default
   title */ }`. A comment mentioning `TODO`, `FIXME`, `XXX`, `implement`, `for now`,
-  `placeholder` or `stub` doesn't count as a reason. Python can't see comments; in JS
-  they are part of the tree and a reviewer reads them, so they work like a suppression
-  with a reason.
+  `placeholder` or `stub` doesn't count as a reason. A reviewer reads the comment, so
+  it works like a suppression with a reason (Python too, above).
 - `return null` (or `undefined`) when null is already one of the function's answers:
   its declared return type includes `null`/`undefined`, or another `return` in it can
   produce null (`return row ?? null`). Callers must handle null anyway, like the
@@ -104,6 +117,16 @@ The 957 are mostly console-logged failed reads in React components: a spinner th
 or a list that stays empty. That is a UX problem, not lost data, so the rule keeps to
 the case where it matters: a write, payment or login that failed while the code carries
 on as if it succeeded.
+
+The 2026-10-09 noise study (20 other public repositories, 102k lines, every finding
+triaged by a separate reviewer reading the code) judged **26 of 30** of this rule's
+findings false. Most were console-only catches around a write whose handler simply
+ended (socket events, click handlers, cron callbacks: the success step is skipped and
+nothing pretends otherwise), and broad Python excepts with a comment explaining a
+best-effort call. Requiring the code to carry on, and honouring Python comments,
+removed 13 of those 26 on that corpus and none of the 4 true findings. What remains
+is mostly deliberate best-effort cleanup that says so only in a docstring, and named
+helpers called fire-and-forget from timers, which would need call-site analysis.
 
 ## Why it matters
 

@@ -1,0 +1,17 @@
+id = "code002-ts-route-stripe-cancel-logs-then-continues"
+description = "account deletion logs a failed Stripe cancel, then marks the account deleted anyway"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/api/user/delete/route.ts"
+line = 19
+
+[[expected]]
+rule = "SC-WEB-001"
+path = "app/api/user/delete/route.ts"
+line = 26

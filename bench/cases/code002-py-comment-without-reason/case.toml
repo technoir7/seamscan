@@ -1,0 +1,17 @@
+id = "code002-py-comment-without-reason"
+description = "a TODO or a lint directive on a broad except is not a reason"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/billing.py"
+line = 10
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/billing.py"
+line = 17

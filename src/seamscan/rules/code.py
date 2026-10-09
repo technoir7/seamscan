@@ -383,13 +383,51 @@ def _sensitive_call(module: PyModule, body: list[ast.stmt]) -> str | None:
     return None
 
 
+# Tool directives aren't reasons: a `noqa: BLE001` says a linter was silenced, not why.
+_DIRECTIVE = re.compile(
+    r"pragma:\s*no\s*cover|noqa(?::\s*[\w, ]+)?|type:\s*ignore(?:\[[^\]]*\])?|nosec(?:\s+B\d+)?"
+    r"|pylint:\s*disable=[\w,-]+",
+    re.IGNORECASE,
+)
+
+
+def _comments_by_line(source: str) -> dict[int, str]:
+    """Comment text per line. `ast` drops comments; tokenize keeps them."""
+    out: dict[int, str] = {}
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type == tokenize.COMMENT:
+                out[tok.start[0]] = tok.string.lstrip("#").strip()
+    except (tokenize.TokenError, SyntaxError):
+        return out
+    return out
+
+
+def _gives_reason(comment: str) -> bool:
+    rest = _DIRECTIVE.sub("", comment)
+    return bool(re.search(r"[A-Za-z]{2}", rest)) and not _UNFINISHED_NOTE.search(rest)
+
+
+def _explained_handler(comments: dict[int, str], handler: ast.ExceptHandler) -> bool:
+    """A comment on the `except` line or in its body that says why, as in JS
+    (`except Exception:  # HEIC support is best-effort`). A reviewer reads it like an
+    inline suppression's reason."""
+    last = handler.end_lineno or handler.lineno
+    return any(_gives_reason(comments[n]) for n in range(handler.lineno, last + 1) if n in comments)
+
+
 def _swallowed_exceptions_python(ctx: RuleContext) -> Iterator[Finding]:
     for module in _shipped(ctx):
+        comments: dict[int, str] | None = None
         for node in ast.walk(module.tree):
             if not isinstance(node, (ast.Try, ast.TryStar)):
                 continue
             for handler in node.handlers:
                 if not _is_broad(module, handler) or not all(map(_does_nothing, handler.body)):
+                    continue
+                if comments is None:
+                    comments = _comments_by_line(module.source)
+                if _explained_handler(comments, handler):
                     continue
                 header = _source_line(module.source, handler.lineno)
                 loc = Location(
@@ -682,6 +720,53 @@ def _swallow_finding(
     )
 
 
+_LOOPS = frozenset({"for_statement", "for_in_statement", "while_statement", "do_statement"})
+_BLOCKS = frozenset({"statement_block", "program", "switch_case", "switch_default"})
+
+
+_ROUTE_EXPORTS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
+
+
+def _outcome_unused(module: JsModule, fn: JsNode) -> bool:
+    """Nobody acts on whether `fn` succeeded: a callback handed to a call (`socket.on(…)`,
+    `cron.schedule(…)`, `router.post(…)`) or written inline in JSX, an event handler named
+    `handle…`/`on…`, or a Next.js route export. A named helper's caller, by contrast,
+    carries on as if the call it made worked."""
+    parent = fn.parent
+    if parent is not None and parent.type in ("arguments", "jsx_expression"):
+        return True
+    named = _js_function_name(module, fn)
+    if named is None:
+        return False
+    name = named[0]
+    return name in _ROUTE_EXPORTS or name_words(name)[:1] in (("handle",), ("on",))
+
+
+def _carries_on(module: JsModule, statement: JsNode) -> bool:
+    """Code runs after `statement`: a later statement at any enclosing level of its
+    function, the next turn of an enclosing loop, or the caller of a function whose
+    outcome someone uses. A bare `return;` doesn't count. When a logged failure just ends
+    a handler (a socket event, a button's click), nothing proceeds as if the call worked;
+    the noise study found that pattern behind most of this rule's false alarms
+    (rules/docs/SC-CODE-002.md)."""
+    node = statement
+    while node.parent is not None and node.type not in js.FUNCTION_TYPES:
+        parent = node.parent
+        if parent.type in _LOOPS:
+            return True
+        if parent.type in _BLOCKS:
+            later = parent.named_children[parent.named_children.index(node) + 1 :]
+            if any(
+                s.type not in ("comment", "empty_statement")
+                and not (s.type == "return_statement" and not s.named_children)
+                for s in later
+            ):
+                return True
+        node = parent
+    # Module top level: whoever imports the module carries on.
+    return node.type not in js.FUNCTION_TYPES or not _outcome_unused(module, node)
+
+
 def _is_script(path: str) -> bool:
     parts = path.split("/")
     return bool(_SCRIPT_DIRS.intersection(parts[:-1]) or _SCRIPT_NAME.match(parts[-1]))
@@ -725,6 +810,13 @@ def _swallowed_exceptions_js(module: JsModule) -> Iterator[Finding]:
                 module.source[prop.start_byte : node.end_byte].decode("utf-8", "replace")
             )
         if effect is None or (effect == _LOGGED and script):
+            continue
+        if (
+            effect == _LOGGED
+            and node.type == "catch_clause"
+            and node.parent is not None
+            and not _carries_on(module, node.parent)
+        ):
             continue
         sensitive = _js_sensitive_call(module, tried)
         if node.type == "call_expression" and sensitive is None:
