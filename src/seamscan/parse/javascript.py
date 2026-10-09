@@ -7,7 +7,7 @@ py-tree-sitter (its query API changed in 0.25 and 0.26) touches one file.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from functools import cache
 
@@ -108,6 +108,13 @@ def _query(dialect: str, source: str) -> Query:
 
 def _captures(dialect: str, node: Node, query: str) -> dict[str, list[Node]]:
     return QueryCursor(_query(dialect, query)).captures(node)
+
+
+def known_node_types(module: JsModule, types: Iterable[str]) -> list[str]:
+    """The node types `module`'s grammar has. TypeScript-only types (an abstract class)
+    make a JavaScript query invalid as a whole, so a query shared by both drops them."""
+    language = _LANGUAGES[module.dialect]
+    return [t for t in types if language.id_for_node_kind(t, True)]
 
 
 def captures(module: JsModule, query: str, node: Node | None = None) -> dict[str, list[Node]]:

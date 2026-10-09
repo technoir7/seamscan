@@ -87,7 +87,7 @@ def _tls_disabled_python(ctx: RuleContext) -> Iterator[Finding]:
 
 def _nodes(module: JsModule, types: str, within: JsNode | None = None) -> list[JsNode]:
     """Nodes of the given types (`"pair"`, `"catch_clause throw_statement"`), in source order."""
-    query = "[" + " ".join(f"({t})" for t in types.split()) + "] @n"
+    query = "[" + " ".join(f"({t})" for t in js.known_node_types(module, types.split())) + "] @n"
     return js.captures(module, query, within).get("n", [])
 
 

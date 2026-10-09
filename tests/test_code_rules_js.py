@@ -260,3 +260,12 @@ def test_emoji_joiner_in_a_comment_is_not_flagged_but_a_stray_one_is():
     for path, comment in (("lib/a.ts", "//"), ("app/a.py", "#")):
         src = f"{comment} 🧑{ZWJ}⚕️ care team\n{comment} ca{ZWJ}re\n"
         assert lines(run(INVISIBLE_UNICODE.id, src, path)) == [2], path
+
+
+def test_a_plain_js_class_stub_does_not_crash_the_rule():
+    # The class lookup named a TypeScript-only node type, and a JS grammar rejects the
+    # whole query (found by the second noise study).
+    src = "export class AuthService {\n  verifyToken(token) {\n    return true;\n  }\n}\n"
+    found = analyze([SourceFile("server/auth.js", src)]).findings
+    assert "SC-META-003" not in {f.rule_id for f in found}
+    assert [f.rule_id for f in found] == ["SC-CODE-003"]

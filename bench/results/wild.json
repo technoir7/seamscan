@@ -3,27 +3,25 @@
   "date": "2026-10-09",
   "offline": false,
   "lines": 102210,
-  "findings": 77,
+  "findings": 47,
   "notices": 15,
-  "blocking": 49,
-  "per_kloc": 0.75,
+  "blocking": 29,
+  "per_kloc": 0.46,
   "by_rule": {
-    "SC-CODE-002": 30,
-    "SC-CODE-003": 3,
+    "SC-CODE-002": 19,
+    "SC-CODE-003": 1,
     "SC-CODE-004": 1,
-    "SC-CODE-008": 7,
-    "SC-DEP-001": 1,
+    "SC-CODE-008": 1,
     "SC-DEP-002": 4,
     "SC-FIRE-001": 1,
     "SC-META-002": 15,
-    "SC-SEC-001": 1,
     "SC-SEC-002": 1,
     "SC-SEC-003": 3,
     "SC-SEC-004": 1,
     "SC-SUPA-002": 6,
     "SC-SUPA-003": 1,
-    "SC-TEST-001": 10,
-    "SC-WEB-001": 6,
+    "SC-TEST-001": 2,
+    "SC-WEB-001": 5,
     "SC-WEB-003": 1
   },
   "repos": [
@@ -32,12 +30,12 @@
       "commit": "513a8f0ca6e405725dcf98eab1fc5cd6468b5f10",
       "group": "js",
       "lines": 6863,
-      "findings": 9,
+      "findings": 7,
       "notices": 0,
-      "blocking": 9,
-      "per_kloc": 1.31,
+      "blocking": 7,
+      "per_kloc": 1.02,
       "by_rule": {
-        "SC-CODE-002": 4,
+        "SC-CODE-002": 2,
         "SC-CODE-008": 1,
         "SC-WEB-001": 4
       }
@@ -47,16 +45,14 @@
       "commit": "00ad2da857b84322ff359db098cbf1cb4f4b7282",
       "group": "js",
       "lines": 13349,
-      "findings": 6,
+      "findings": 4,
       "notices": 0,
-      "blocking": 3,
-      "per_kloc": 0.45,
+      "blocking": 1,
+      "per_kloc": 0.3,
       "by_rule": {
         "SC-CODE-002": 1,
-        "SC-CODE-008": 1,
         "SC-SUPA-002": 2,
-        "SC-SUPA-003": 1,
-        "SC-WEB-001": 1
+        "SC-SUPA-003": 1
       }
     },
     {
@@ -90,13 +86,12 @@
       "commit": "2bae5e672bf8e9f81275bc1ec2bf1ed49b0fc7bd",
       "group": "js",
       "lines": 9167,
-      "findings": 6,
+      "findings": 5,
       "notices": 0,
-      "blocking": 4,
-      "per_kloc": 0.65,
+      "blocking": 3,
+      "per_kloc": 0.55,
       "by_rule": {
-        "SC-CODE-002": 5,
-        "SC-DEP-001": 1
+        "SC-CODE-002": 5
       }
     },
     {
@@ -115,12 +110,12 @@
       "commit": "7bed8aa4e00fbe287b95f6eb0c9b451aa60e0cb4",
       "group": "js",
       "lines": 5935,
-      "findings": 2,
+      "findings": 1,
       "notices": 0,
-      "blocking": 2,
-      "per_kloc": 0.34,
+      "blocking": 1,
+      "per_kloc": 0.17,
       "by_rule": {
-        "SC-CODE-002": 2
+        "SC-CODE-002": 1
       }
     },
     {
@@ -154,12 +149,12 @@
       "commit": "de0df52e77e32ce69730bef87a16c671000b6bbe",
       "group": "js",
       "lines": 5043,
-      "findings": 11,
+      "findings": 5,
       "notices": 0,
-      "blocking": 10,
-      "per_kloc": 2.18,
+      "blocking": 4,
+      "per_kloc": 0.99,
       "by_rule": {
-        "SC-CODE-002": 10,
+        "SC-CODE-002": 4,
         "SC-CODE-004": 1
       }
     },
@@ -192,13 +187,11 @@
       "commit": "1acfbe345e31310683575bfe1ffda6a9b02e98b1",
       "group": "python",
       "lines": 1056,
-      "findings": 5,
+      "findings": 3,
       "notices": 0,
-      "blocking": 3,
-      "per_kloc": 4.73,
+      "blocking": 1,
+      "per_kloc": 2.84,
       "by_rule": {
-        "SC-CODE-003": 1,
-        "SC-SEC-001": 1,
         "SC-SEC-004": 1,
         "SC-TEST-001": 2
       }
@@ -283,15 +276,13 @@
       "commit": "46899bcde450d36dc1f926d2c255a7afa7a609dc",
       "group": "python",
       "lines": 36919,
-      "findings": 20,
+      "findings": 4,
       "notices": 0,
-      "blocking": 8,
-      "per_kloc": 0.54,
+      "blocking": 2,
+      "per_kloc": 0.11,
       "by_rule": {
-        "SC-CODE-002": 4,
-        "SC-CODE-003": 2,
-        "SC-CODE-008": 5,
-        "SC-TEST-001": 8,
+        "SC-CODE-002": 2,
+        "SC-CODE-003": 1,
         "SC-WEB-001": 1
       }
     }
