@@ -1,4 +1,5 @@
 """Format check for independent cases. Runs no detection rule."""
+
 import sys
 from pathlib import Path
 
