@@ -59,6 +59,30 @@ def js_dialect(path: str) -> str | None:
     return _EXTENSIONS.get(name[dot:]) if dot >= 0 else None
 
 
+# Minified build output. Measured on 6,192 JS/TS files (44 public repositories and the
+# benchmark corpus): median average line length 32 characters, 99th percentile 60; above
+# 300 were only a vendored bundle, base64 image data and a 607-byte one-line constant,
+# which the size floor keeps.
+MINIFIED_AVG_LINE = 300
+MINIFIED_MIN_BYTES = 2_000
+
+
+def minified(file: SourceFile) -> bool:
+    """Build output, not the project's code: a `.min.js` name, or a JS/TS file whose lines
+    average more than MINIFIED_AVG_LINE characters. Its text is still scanned for secrets."""
+    if file.path.endswith(".min.js"):
+        return True
+    text = file.text
+    if js_dialect(file.path) is None or len(text) < MINIFIED_MIN_BYTES:
+        return False
+    return len(text) / (text.count("\n") + 1) > MINIFIED_AVG_LINE
+
+
+def source_dialect(file: SourceFile) -> str | None:
+    """The grammar to parse `file` as code with, or None: not JS/TS, or minified."""
+    return None if minified(file) else js_dialect(file.path)
+
+
 @dataclass(frozen=True)
 class JsModule:
     path: str

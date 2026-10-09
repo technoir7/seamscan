@@ -13,7 +13,9 @@ function or at module level (spec §6.3).
   flagged.
 - `exec(compile(src, ...))` is reported once, at the `compile` call. The code object
   isn't reported again.
-- Test files are skipped.
+- Test files are skipped, and so is minified build output (a `.min.js` name, or JS whose
+  lines average more than 300 characters, such as a vendored `tour.iife.js`): its
+  `innerHTML` writes are the library's, not the app's. `--stats` lists such files.
 
 Not matched, because they aren't the builtins: `ast.literal_eval`, `re.compile`
 (including `from re import compile`), `model.eval()`, `DataFrame.eval`, and

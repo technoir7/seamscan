@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from seamscan.facts.project import build_project
 from seamscan.facts.secrets import find_secrets, redact
 from seamscan.model import ChangeSet, Finding, Location, RegistryView, SourceFile, with_fingerprints
-from seamscan.parse.javascript import JsModule, js_dialect, parse_js
+from seamscan.parse.javascript import JsModule, js_dialect, minified, parse_js
 from seamscan.parse.python import ParseFailure, PyModule, parse_python
 from seamscan.policy.suppress import Suppressed, apply_suppressions
 from seamscan.rules.base import Rule, RuleContext, finding
@@ -21,14 +21,20 @@ class _Parsed:
     python: tuple[PyModule, ...]
     js: tuple[JsModule, ...]
     failures: list[Finding]
+    not_parsed: tuple[tuple[str, str], ...]
 
 
 def _parse(files: Sequence[SourceFile]) -> _Parsed:
     python: list[PyModule] = []
     js: list[JsModule] = []
     failures: list[Finding] = []
+    not_parsed: list[tuple[str, str]] = []
     for f in files:
-        if f.path.endswith(".py"):
+        if minified(f):
+            # Build output, not the project's code: rules that read code would report the
+            # bundler's patterns. Text-based rules (secrets) still see it.
+            not_parsed.append((f.path, "minified: checked for secrets only"))
+        elif f.path.endswith(".py"):
             parsed = parse_python(f)
             if isinstance(parsed, ParseFailure):
                 failures.append(
@@ -55,7 +61,7 @@ def _parse(files: Sequence[SourceFile]) -> _Parsed:
                         "",
                     )
                 )
-    return _Parsed(tuple(python), tuple(js), failures)
+    return _Parsed(tuple(python), tuple(js), failures, tuple(not_parsed))
 
 
 def _run(rule: Rule, ctx: RuleContext) -> list[Finding]:
@@ -87,6 +93,7 @@ class Analysis:
     findings: tuple[Finding, ...]  # what the verdict is decided on
     suppressed: tuple[Suppressed, ...]  # hidden by a reasoned inline suppression; still reported
     files_analyzed: int
+    not_parsed: tuple[tuple[str, str], ...] = ()  # (path, reason): read as text only
 
 
 def _redact_secrets(text: str) -> str:
@@ -157,4 +164,4 @@ def analyze(
     if change is not None:
         kept = tuple(f for f in kept if _in_scope(f, change))
         suppressed = tuple(s for s in suppressed if _in_scope(s.finding, change))
-    return Analysis(kept, suppressed, len(ordered))
+    return Analysis(kept, suppressed, len(ordered), parsed.not_parsed)

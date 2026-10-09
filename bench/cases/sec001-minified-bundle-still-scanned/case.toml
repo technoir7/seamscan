@@ -1,0 +1,12 @@
+id = "sec001-minified-bundle-still-scanned"
+description = "a committed minified bundle inlines a live Stripe key; minified files are still scanned for secrets"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-001"
+path = "public/assets/index-3f9a2c.js"
+line = 2

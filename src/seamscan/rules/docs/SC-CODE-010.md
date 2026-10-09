@@ -5,7 +5,7 @@
 ## What it finds
 
 Characters in a `.py`, `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs` or `.cjs` file (also
-`.mts`/`.cts`; not `.d.ts` or `.min.js`, which aren't analyzed) that change how code
+`.mts`/`.cts`; not `.d.ts` or minified files, which aren't parsed) that change how code
 looks without being visible:
 
 - **Bidirectional controls** anywhere: U+202A–U+202E (embeddings and overrides),

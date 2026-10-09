@@ -34,6 +34,11 @@ Stripe test-mode keys (`sk_test_`) are reported at LOW severity. Publishable val
   server actions, Edge Functions, Node scripts, shared `lib/` modules), Python, and
   `.env*` values under unprefixed names.
 
+Minified files (a `.min.js` name, or JS/TS whose lines average more than 300 characters)
+aren't parsed as code, but their text is still searched: a committed bundle that inlines
+a key ships it all the same. The finding is this rule's, or SC-SEC-002's when the bundle
+sits where browser code lives.
+
 Test files are skipped in both languages: `test_*.py`, `*_test.py`, `conftest.py`,
 `*.test.*`, `*.spec.*`, and anything under `tests/`, `test/`, `__tests__/`, `e2e/` or
 `cypress/`.

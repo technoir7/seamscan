@@ -134,6 +134,17 @@ def _js_literal_secrets(module: js.JsModule) -> Iterator[tuple[Location, SecretM
                 yield loc, m
 
 
+def _minified_secrets(ctx: RuleContext) -> Iterator[tuple[Location, SecretMatch, Role]]:
+    """Secrets in minified files, which aren't parsed (build output): found in the raw
+    text, since a bundle that inlines a key ships it all the same."""
+    for file in ctx.files:
+        if js.minified(file):
+            role = ctx.project.role(file.path)
+            for m in find_secrets(file.text):
+                if _reportable(m):
+                    yield _span(file.path, 1, 1, file.text, m.start, m.end), m, role
+
+
 def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
     for module in ctx.python:
         if role_of(module.path) is Role.TEST:
@@ -149,6 +160,9 @@ def _provider_secrets(ctx: RuleContext) -> Iterator[Finding]:
         if ctx.project.js_role(module) not in (Role.TEST, Role.CLIENT):
             for loc, m in _js_literal_secrets(module):
                 yield _secret_finding(loc, m)
+    for loc, m, role in _minified_secrets(ctx):
+        if role not in (Role.TEST, Role.CLIENT):
+            yield _secret_finding(loc, m)
     for file in ctx.files:
         if not _is_env_file(file.path):
             continue
@@ -557,6 +571,9 @@ def _client_exposure(ctx: RuleContext) -> Iterator[Finding]:
         if ctx.project.js_role(module) is Role.CLIENT:
             for loc, m in _js_literal_secrets(module):
                 yield _client_literal_finding(loc, m)
+    for loc, m, role in _minified_secrets(ctx):
+        if role is Role.CLIENT:
+            yield _client_literal_finding(loc, m)
 
     reads = _bundled_reads(ctx)
     defined: set[str] = set()

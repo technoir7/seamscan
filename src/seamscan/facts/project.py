@@ -15,7 +15,7 @@ from seamscan.facts.roles import PackageKind, Role, role_of
 from seamscan.facts.supabase import SupabaseSchema, build_supabase_schemas
 from seamscan.model import Location, SourceFile
 from seamscan.parse.envfile import parse_env
-from seamscan.parse.javascript import JsModule, directive, js_dialect
+from seamscan.parse.javascript import JsModule, directive, source_dialect
 
 __all__ = ["EnvValue", "Package", "PackageKind", "ProjectModel", "TableReference", "build_project"]
 
@@ -147,7 +147,7 @@ def build_project(files: Iterable[SourceFile]) -> ProjectModel:
         name = f.path.rsplit("/", 1)[-1]
         if name.startswith(".env"):
             env.extend(EnvValue(f.path, e.key, e.value, e.line, e.col) for e in parse_env(f.text))
-        elif js_dialect(f.path) is not None:
+        elif source_dialect(f) is not None:
             role = partial.role(f.path, _first_directive(f.text))
             for m in _FROM_CALL.finditer(f.text):
                 line, col = _line_col(f.text, m.start())
