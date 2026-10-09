@@ -1,0 +1,29 @@
+id = "dep001-jsx-docs-page-code-sample"
+description = "a docs page shows SDK sample code in a template literal; the sample's import is text, not an import (seen in the noise study)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern from a public Vite app's API docs page)"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react", "npm:react-dom", "npm:lucide-react", "npm:vite"]
+
+# The sample's package doesn't exist: if the text were read as an import, SC-DEP-001 fires.
+[[registry.package]]
+ecosystem = "npm"
+name = "@clipdrop/sdk"
+exists = false
+
+[[registry.package]]
+ecosystem = "npm"
+name = "clipdrop-node"
+exists = false
