@@ -50,3 +50,6 @@ Thumbs.db
 # Noise-study detail about other people's code; only counts are committed (bench/wild.py).
 bench/wild/*.local.*
 bench/results/*.local.*
+
+# Agent worktrees.
+.claude/worktrees/
