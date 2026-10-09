@@ -1,14 +1,17 @@
 """Noise study (spec §8.4): audit 20 pinned public repositories and triage a sample.
 
-    uv run python -m bench.wild run --checkout DIR [--offline]
-    uv run python -m bench.wild sample [--size 100] [--seed 2026]
-    uv run python -m bench.wild report
+    uv run python -m bench.wild STUDY run --checkout DIR [--offline]
+    uv run python -m bench.wild STUDY sample [--size 100] [--seed 2026]
+    uv run python -m bench.wild STUDY report
 
-`run` writes per-finding detail to bench/wild/findings.local.json and per-repo counts to
-bench/results/wild.json. Only the counts are committed: the detail points at possible
-vulnerabilities in other people's code, so it stays on the machine that ran the study
-(the *.local.* files are gitignored). `sample` draws the triage sample into
-bench/wild/triage.local.toml, where each finding gets a verdict by hand.
+STUDY is `first` (bench/wild/repos.toml, which shaped the noise pass and is now
+development data) or `fresh` (bench/wild/repos-fresh.toml, which gives the published
+numbers). `run` writes per-finding detail to bench/wild/findings[-fresh].local.json and
+per-repo counts to bench/results/wild[-fresh].json. Only the counts are committed: the
+detail points at possible vulnerabilities in other people's code, so it stays on the
+machine that ran the study (the *.local.* files are gitignored). `sample` draws the
+triage sample into bench/wild/triage[-fresh].local.toml, where each finding gets a
+verdict by hand.
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ import subprocess
 import sys
 import tomllib
 from collections import Counter
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -27,10 +31,26 @@ from typing import Any
 from seamscan.workspace.files import collect
 
 HERE = Path(__file__).resolve().parent
-REPOS = HERE / "wild" / "repos.toml"
-DETAIL = HERE / "wild" / "findings.local.json"
-TRIAGE = HERE / "wild" / "triage.local.toml"
-COUNTS = HERE / "results" / "wild.json"
+
+
+@dataclass(frozen=True)
+class Study:
+    repos: Path
+    detail: Path
+    triage: Path
+    counts: Path
+
+
+def _study(suffix: str, repos: str) -> Study:
+    return Study(
+        HERE / "wild" / repos,
+        HERE / "wild" / f"findings{suffix}.local.json",
+        HERE / "wild" / f"triage{suffix}.local.toml",
+        HERE / "results" / f"wild{suffix}.json",
+    )
+
+
+STUDIES = {"first": _study("", "repos.toml"), "fresh": _study("-fresh", "repos-fresh.toml")}
 
 # Lines are counted in the files the rules read as code or config, not in docs or assets.
 CODE_SUFFIXES = (".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".sql", ".rules")
@@ -97,8 +117,8 @@ def _lines(root: Path) -> int:
     )
 
 
-def run(checkout: Path, offline: bool) -> None:
-    repos = tomllib.loads(REPOS.read_text())["repo"]
+def run(study: Study, checkout: Path, offline: bool) -> None:
+    repos = tomllib.loads(study.repos.read_text())["repo"]
     checkout.mkdir(parents=True, exist_ok=True)
     detail: list[dict[str, Any]] = []
     per_repo: list[dict[str, Any]] = []
@@ -151,14 +171,14 @@ def run(checkout: Path, offline: bool) -> None:
         "by_rule": dict(sorted(Counter(f["rule"] for f in detail).items())),
         "repos": per_repo,
     }
-    COUNTS.write_text(json.dumps(counts, indent=2) + "\n")
-    DETAIL.write_text(json.dumps(detail, indent=2) + "\n")
+    study.counts.write_text(json.dumps(counts, indent=2) + "\n")
+    study.detail.write_text(json.dumps(detail, indent=2) + "\n")
 
 
-def sample(size: int, seed: int) -> None:
-    if TRIAGE.exists():
-        raise SystemExit(f"{TRIAGE} exists; the sample is drawn once. Delete it to redraw.")
-    problems = [f for f in json.loads(DETAIL.read_text()) if not is_notice(f)]
+def sample(study: Study, size: int, seed: int) -> None:
+    if study.triage.exists():
+        raise SystemExit(f"{study.triage} exists; the sample is drawn once. Delete it to redraw.")
+    problems = [f for f in json.loads(study.detail.read_text()) if not is_notice(f)]
     chosen = draw_sample(problems, size, seed)
     head = f"# Triage sample: {len(chosen)} findings, seed {seed}. verdict: {VERDICTS}\n"
     entries = [
@@ -169,13 +189,13 @@ def sample(size: int, seed: int) -> None:
         + 'verdict = ""\nnote = ""\n'
         for f in chosen
     ]
-    TRIAGE.write_text(head + "".join(entries))
+    study.triage.write_text(head + "".join(entries))
 
 
-def report() -> None:
-    counts = json.loads(COUNTS.read_text())
+def report(study: Study) -> None:
+    counts = json.loads(study.counts.read_text())
     triage: list[dict[str, Any]] = (
-        tomllib.loads(TRIAGE.read_text())["finding"] if TRIAGE.exists() else []
+        tomllib.loads(study.triage.read_text())["finding"] if study.triage.exists() else []
     )
     undecided = [t for t in triage if t["verdict"] not in VERDICTS]
     if undecided:
@@ -196,6 +216,7 @@ def report() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bench.wild")
+    parser.add_argument("study", choices=sorted(STUDIES))
     sub = parser.add_subparsers(dest="command", required=True)
     run_p = sub.add_parser("run")
     run_p.add_argument("--checkout", type=Path, required=True)
@@ -205,12 +226,13 @@ def main(argv: list[str] | None = None) -> int:
     sample_p.add_argument("--seed", type=int, default=2026)
     sub.add_parser("report")
     args = parser.parse_args(argv)
+    study = STUDIES[args.study]
     if args.command == "run":
-        run(args.checkout, args.offline)
+        run(study, args.checkout, args.offline)
     elif args.command == "sample":
-        sample(args.size, args.seed)
+        sample(study, args.size, args.seed)
     else:
-        report()
+        report(study)
     return 0
 
 

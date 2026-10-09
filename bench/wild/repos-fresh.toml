@@ -1,0 +1,129 @@
+# Second noise study (spec §8.4): 20 fresh repositories, pinned before seamscan ever
+# ran on them. The first study's 20 (repos.toml) shaped the noise pass of 2026-10-09, so
+# they are development data now; these give the published numbers.
+#
+# Same rule as repos.toml, applied 2026-10-09: the next qualifying results down the same
+# searches, skipping everything in repos.toml and the 24 development repositories.
+# Skipped as not applications: wilwaldon/claudemd (docs), kmbhm1/supabase-pydantic and
+# zeekay/flask-uwsgi-websocket (libraries), ydaniels/django-saas-billing (a reusable
+# Django app), saaspegasus/pegasus-skills (docs), Experto-AI/quickscale (a generator).
+
+[[repo]]
+name = "clonglam/HiyoRi-Ecommerce-Nextjs-Supabase"
+commit = "76ba895a583ee3131090f0859caba8174618bb08"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "pixegami/task-app"
+commit = "60a0b1e56ee567cf8ff417c44139bbbd5fd7b137"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "Barty-Bart/nextjs-supabase-shadcn-boilerplate"
+commit = "c5a5817959ec6fd1ecc0ef1c18c075e9c684c778"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "vinayakajith/fluence-international"
+commit = "5fbce50f6a212bf96f3f7871899f66374763c971"
+group = "js"
+query = "vite supabase"
+
+[[repo]]
+name = "Anuja-jayasinghe/Solar-Analytics-Dashboard"
+commit = "1655c5bc27f8ec1e297cc4bf5e02bd7542e1be93"
+group = "js"
+query = "vite supabase"
+
+[[repo]]
+name = "johnapost/nextjs-firebase-fns-demo"
+commit = "f558e1e20b9ef523c018ad35e46010403fbdb846"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "Ajay-056/Whatsapp-Clone-NextJS"
+commit = "c555daedc7a00ee666e8bd51a349782e39f8ecfb"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "salimi-my/instagram-clone"
+commit = "559a56445d13d82b4557cf0880e4f74716ca5eaa"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "coffeefuelbump/AI-YouTube-Timestamps"
+commit = "abe7f0edd3db21afa63a9fb3185cfc418d4c939a"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "dch133/Social-Media-App"
+commit = "482ea6ba88fa0799dd653fb5b914d730909817a0"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "rednafi/fastapi-nano"
+commit = "bca432915f4464951f481ce583d7776953021c99"
+group = "python"
+query = "fastapi template"
+
+[[repo]]
+name = "seapagan/fastapi-template"
+commit = "23fe83f2fe1ed934032737a301583fd47ec7d1e3"
+group = "python"
+query = "fastapi template"
+
+[[repo]]
+name = "daniel-carreon/SuperintelligenceURLs"
+commit = "f727266b0170845a8bdb54bc2fc6dbd2101b8ad9"
+group = "python"
+query = "fastapi supabase"
+
+[[repo]]
+name = "Risabkshetri/ventureai"
+commit = "12c7d871e0c94dfb935cbea8dc053a2aecc674cc"
+group = "python"
+query = "fastapi supabase"
+
+[[repo]]
+name = "jelmerdejong/flask-app-blueprint"
+commit = "f152e8d715e1330907087d78c4127d66ccdd2887"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "toddbirchard/flasklogin-tutorial"
+commit = "0beb0b859b1dd5ff99848c8824b1e45e268e5e48"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "bboe/flask-image-uploader"
+commit = "064678eb03b61f2e736f42b5b80176b3b605f97d"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "abu-rayhan-alif/django-saas-kit"
+commit = "cc47eb2e83a2e8d059bb4e1719ac8908106460c1"
+group = "python"
+query = "django saas"
+
+[[repo]]
+name = "iamfoysal/Django-Saas-Application"
+commit = "a50fe8a93f67a146d9d321bbea22df55e3a492e0"
+group = "python"
+query = "django saas"
+
+[[repo]]
+name = "seanpdinwiddie/django-saas"
+commit = "ad554ecbe84336ff0b2179c0f0dd3bfb7a3d3d54"
+group = "python"
+query = "django saas"
