@@ -76,12 +76,25 @@ def test_js_fallback_forms():
         'const c = process.env["SESSION_SECRET"] ?? "dev";\n'
         'const d = import.meta.env.VITE_API_KEY ?? "dev";\n'
         'const e = Deno.env.get("WEBHOOK_SECRET") ?? "dev";\n'
-        'const f = opts.token ?? process.env.GITHUB_TOKEN ?? "dev";\n'
-        'const { DB_PASSWORD = "postgres", PORT = "3000" } = process.env;\n'
+        'const f = opts.token ?? process.env.CRON_TOKEN ?? "dev";\n'
+        'const { AUTH_PASSWORD = "admin", PORT = "3000" } = process.env;\n'
         'const { ADMIN_TOKEN: admin = "x" } = process.env;\n'
     )
     # Line 4 reads VITE_API_KEY: bundled into the browser, so not a fallback secret.
     assert lines({"server/config.ts": src}) == [1, 2, 3, 5, 6, 7, 8]
+
+
+def test_js_fallbacks_for_other_services_credentials_fail_closed():
+    src = (
+        'const a = process.env.DATABASE_PASSWORD ?? "postgres";\n'
+        'const { REDIS_PASSWORD = "redis" } = process.env;\n'
+        'const c = process.env.GITHUB_TOKEN ?? process.env.SESSION_SECRET ?? "dev";\n'
+        'const d = process.env.STRIPE_WEBHOOK_SECRET || "dev";\n'
+    )
+    # Line 3's chain is named after its first secret the app holds, SESSION_SECRET.
+    findings = run(SECRET_FALLBACK.id, {"server/config.ts": src})
+    assert [f.location.start_line for f in findings] == [3, 4]
+    assert "SESSION_SECRET" in findings[0].message
 
 
 def test_js_fallback_resolves_imported_env():

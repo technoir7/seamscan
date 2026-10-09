@@ -1,0 +1,19 @@
+id = "sec003-ts-outbound-credential-defaults"
+description = "server config: webhook and session secrets the app verifies with are reported; credentials it sends to other services fail closed"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "server/config.ts"
+line = 6
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "server/config.ts"
+line = 7
+

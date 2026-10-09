@@ -1,0 +1,14 @@
+id = "sec002-cra-openai-key-in-sdk-options"
+description = "an apiKey option that isn't a Firebase web config (no authDomain/projectId beside it) still ships a secret-named key"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = "src/lib/ai.js"
+line = 4
+

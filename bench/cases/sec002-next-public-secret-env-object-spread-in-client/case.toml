@@ -1,0 +1,14 @@
+id = "sec002-next-public-secret-env-object-spread-in-client"
+description = "the secret is read only by an API route, but a client component spreads process.env, which can carry every NEXT_PUBLIC_ value"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env.example"
+line = 1
+

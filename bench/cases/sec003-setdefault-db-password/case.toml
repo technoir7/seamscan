@@ -1,12 +1,10 @@
 id = "sec003-setdefault-db-password"
-description = "a seed script plants a database password with os.environ.setdefault"
+description = "a seed script plants a database password with os.environ.setdefault: an outbound credential, so a wrong default fails closed (relabelled 2026-10-09: SC-SEC-003 now covers only secrets the app signs or verifies with)"
 mode = "audit"
 split = "dev"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-SEC-003"
-path = "scripts/seed_db.py"
-line = 6

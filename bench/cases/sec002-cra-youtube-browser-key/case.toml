@@ -1,0 +1,12 @@
+id = "sec002-cra-youtube-browser-key"
+description = "a YouTube Data API key read in the browser: Google issues these for browser use, restricted by HTTP referrer"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[forbidden]]
+rule = "SC-SEC-002"
+

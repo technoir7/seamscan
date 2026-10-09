@@ -1,0 +1,14 @@
+id = "sec002-next-public-secret-read-in-client-too"
+description = "the same NEXT_PUBLIC_ secret also read by a client component: now it ships to every visitor"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[expected]]
+rule = "SC-SEC-002"
+path = ".env.example"
+line = 1
+

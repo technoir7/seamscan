@@ -31,6 +31,33 @@ The literal may be a string or a template literal without `${}` substitutions.
 In both languages, `X` must name a secret: its **last** `_`-separated word is one of `SECRET`, `KEY`,
 `TOKEN`, `PASSWORD`, `PASS`, `PWD`, `JWT`, `SALT`, `CREDENTIALS` or `APIKEY`.
 
+**Decision: only secrets the app itself trusts.** A fallback matters when the app signs,
+verifies or encrypts with the secret: with a known default anyone can forge its session
+cookies, tokens or webhook calls (`SECRET_KEY`, `JWT_SECRET`, `SESSION_SECRET`,
+`NEXTAUTH_SECRET`, `STRIPE_WEBHOOK_SECRET`, `ADMIN_PASSWORD`, `API_KEY` it checks callers
+against). A credential the app *presents to another service* fails closed instead: the
+database, mail server or API rejects a wrong one, so the app breaks rather than running
+insecurely. Those are not reported. A name is such a credential when one of its words
+names a service:
+
+- databases, caches and brokers: `DB`, `DATABASE`, `POSTGRES`, `POSTGRESQL`, `PG`,
+  `PGPASSWORD`, `MYSQL`, `MARIADB`, `MONGO`, `MONGODB`, `REDIS`, `MEMCACHED`, `ELASTIC`,
+  `ELASTICSEARCH`, `OPENSEARCH`, `RABBITMQ`, `AMQP`, `BROKER`, `KAFKA`, `CELERY`
+- mail: `MAIL`, `SMTP`, `EMAIL`, `SENDGRID`, `MAILGUN`, `RESEND`, `POSTMARK`, `SES`
+- third-party APIs: `OPENAI`, `ANTHROPIC`, `GEMINI`, `GOOGLE`, `GROQ`, `MISTRAL`,
+  `COHERE`, `HUGGINGFACE`, `HF`, `REPLICATE`, `OPENROUTER`, `PINECONE`, `STRIPE`,
+  `PAYPAL`, `TWILIO`, `SLACK`, `DISCORD`, `TELEGRAM`, `GITHUB`, `GH`, `GITLAB`, `HUBSPOT`,
+  `SUPABASE`, `FIREBASE`, `AWS`, `AZURE`, `CLOUDINARY`, `SENTRY`, `ALGOLIA`, `NOTION`,
+  `AIRTABLE`, `SHOPIFY`, `PUSHER`, `ELEVENLABS`, `DEEPSEEK`
+
+unless another word says the app holds it to sign or verify: `WEBHOOK`, `SIGNING`,
+`SIGNATURE`, `JWT`, `SESSION`, `COOKIE`, `CSRF`, `HMAC`, `ENCRYPTION`, `ENCRYPT`,
+`CIPHER`, `VERIFICATION`, `VERIFY` (`STRIPE_WEBHOOK_SECRET`, `SUPABASE_JWT_SECRET` and
+`EMAIL_VERIFICATION_SECRET` are reported). On the noise study (spec §8.4), the five
+fallbacks for database and mail passwords were all judged harmless, and the two for
+`SECRET_KEY` were both real. A real-looking credential literal is still SC-SEC-001's
+finding, whatever variable it is the default for.
+
 Not reported:
 
 - names whose last word is something else: `JWT_ALGORITHM`,
@@ -115,6 +142,16 @@ throws when it is missing (TS/JS), or validate the environment at startup with a
   `SECRET_KEY_BASE`, is missed.
 - A `KEY` name that is not a credential but ends in `KEY` (`SORT_KEY`, `S3_OBJECT_KEY`)
   with a string default is reported.
+- Fails closed only if the other service was not set up with the same default. A local
+  Postgres started with `POSTGRES_PASSWORD=postgres` accepts a `"postgres"` fallback;
+  that is the database's configuration, and it isn't reported (false negative).
+- A service the list doesn't name is treated like the app's own secret, so
+  `WEATHER_API_KEY` or `PAYMENTS_API_KEY` with a default is still reported (false
+  positive when it really is another service's key).
+- A name mentioning a service the app also signs for, without a signing word
+  (`GITHUB_APP_PRIVATE_KEY`, used to sign JWTs to GitHub), is skipped (false negative).
+- Settings modules that never run the app (a `mypy.py` settings file for type checking)
+  are checked like any other.
 
 ## References
 

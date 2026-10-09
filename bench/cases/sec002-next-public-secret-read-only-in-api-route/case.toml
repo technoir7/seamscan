@@ -1,0 +1,12 @@
+id = "sec002-next-public-secret-read-only-in-api-route"
+description = "NEXT_PUBLIC_-named NextAuth secret that only an API route reads: Next.js inlines a variable only into bundles that reference it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[forbidden]]
+rule = "SC-SEC-002"
+

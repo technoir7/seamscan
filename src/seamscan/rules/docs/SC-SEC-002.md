@@ -51,10 +51,26 @@ the value is still reported):
 
 - `*_ANON_KEY`, `*_PUBLISHABLE_KEY`, `*_PUBLIC_KEY`, `*_PUBLIC_TOKEN`, `*_SITE_KEY`
   (reCAPTCHA, Turnstile, hCaptcha)
-- names containing `FIREBASE` (web config), `MAPS` (Google Maps browser keys),
-  `MAPBOX` (public `pk.` tokens), `POSTHOG` (project key), `SEGMENT` (write key),
-  `REVENUECAT` (public SDK keys), or `SEARCH` (Algolia's search-only key)
+- names containing `FIREBASE` (web config), `MAPS`, `PLACES` or `YOUTUBE` (Google
+  browser API keys, restricted by HTTP referrer; the risk is quota, not data), `MAPBOX`
+  (public `pk.` tokens), `POSTHOG` (project key), `SEGMENT` (write key), `REVENUECAT`
+  (public SDK keys), or `SEARCH` (Algolia's search-only key)
 - `ADMIN` on its own (`NEXT_PUBLIC_ADMIN_EMAIL`): it needs a credential word too.
+- any name whose every browser read is the `apiKey` of a Firebase web config: an object
+  that also has `authDomain`, `projectId`, `storageBucket`, `messagingSenderId` or
+  `appId` (`apiKey: process.env.REACT_APP_API_KEY` beside them). The web config is
+  public by design, whatever the variable is called. An `apiKey` option of another SDK
+  (`new OpenAI({ apiKey: ... })`) doesn't count.
+
+**Decision: a variable only server code reads doesn't reach the browser.** Next.js,
+Vite and Create React App inline a prefixed variable only into the bundles that
+reference it. When the repository reads a variable only in server files (an API route,
+a `"use server"` module, an Edge Function), its `.env*` definition is not reported, even
+under a secret name. The prefix is still a hazard: the first browser read would ship it,
+so rename it. This holds only while no browser code takes the env object as a whole
+(`{ ...process.env }`, `const env = import.meta.env`), which can carry every prefixed
+variable along. A variable no code reads at all is still reported: the reader may live
+outside the repository.
 
 `sb_publishable_` keys, anon JWTs and `pk_live_`/`pk_test_` keys are publishable values
 and are never reported.

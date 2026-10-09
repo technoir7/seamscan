@@ -195,6 +195,43 @@ def _names_a_secret(name: str) -> bool:
     return not (words[-1] == "KEY" and len(words) > 1 and words[-2] in _PUBLIC_KEY_QUALIFIERS)
 
 
+# A fallback matters for a secret the app itself trusts: it signs, verifies or encrypts
+# with it, so a known default lets anyone forge what it checks. A credential the app
+# presents to another service fails closed instead: the database, mail server or API
+# rejects a wrong one. These words name such services.
+_OUTBOUND_SERVICES = frozenset(
+    {
+        # databases, caches, brokers
+        *("DB", "DATABASE", "POSTGRES", "POSTGRESQL", "PG", "PGPASSWORD", "MYSQL"),
+        *("MARIADB", "MONGO", "MONGODB", "REDIS", "MEMCACHED", "ELASTIC"),
+        *("ELASTICSEARCH", "OPENSEARCH", "RABBITMQ", "AMQP", "BROKER", "KAFKA", "CELERY"),
+        # mail
+        *("MAIL", "SMTP", "EMAIL", "SENDGRID", "MAILGUN", "RESEND", "POSTMARK", "SES"),
+        # third-party APIs
+        *("OPENAI", "ANTHROPIC", "GEMINI", "GOOGLE", "GROQ", "MISTRAL", "COHERE"),
+        *("HUGGINGFACE", "HF", "REPLICATE", "OPENROUTER", "PINECONE", "STRIPE", "PAYPAL"),
+        *("TWILIO", "SLACK", "DISCORD", "TELEGRAM", "GITHUB", "GH", "GITLAB", "HUBSPOT"),
+        *("SUPABASE", "FIREBASE", "AWS", "AZURE", "CLOUDINARY", "SENTRY", "ALGOLIA"),
+        *("NOTION", "AIRTABLE", "SHOPIFY", "PUSHER", "ELEVENLABS", "DEEPSEEK"),
+    }
+)
+# What the app does with the secret itself, which overrides a service name:
+# STRIPE_WEBHOOK_SECRET verifies Stripe's calls, SUPABASE_JWT_SECRET verifies tokens.
+_SELF_HELD = frozenset(
+    {"WEBHOOK", "SIGNING", "SIGNATURE", "JWT", "SESSION", "COOKIE", "CSRF", "HMAC"}
+    | {"ENCRYPTION", "ENCRYPT", "CIPHER", "VERIFICATION", "VERIFY"}
+)
+
+
+def _outbound_credential(name: str) -> bool:
+    words = {w for w in name.upper().split("_") if w}
+    return bool(words & _OUTBOUND_SERVICES) and not words & _SELF_HELD
+
+
+def _fallback_matters(name: str) -> bool:
+    return _names_a_secret(name) and not _outbound_credential(name)
+
+
 def _hardcoded_value(value: str | None) -> bool:
     return (
         value is not None
@@ -220,7 +257,7 @@ def _hardcoded(node: ast.expr | None) -> bool:
 
 
 def _env_lookup(module: PyModule, node: ast.expr) -> tuple[str, str, ast.expr | None] | None:
-    """(function, variable name, default) for an env read of a secret-named variable."""
+    """(function, variable name, default) for an env read of a secret the app trusts."""
     if not isinstance(node, ast.Call):
         return None
     func = qualified_name(module, node.func)
@@ -229,7 +266,7 @@ def _env_lookup(module: PyModule, node: ast.expr) -> tuple[str, str, ast.expr | 
     name = node.args[0]
     if not (isinstance(name, ast.Constant) and isinstance(name.value, str)):
         return None
-    if not _names_a_secret(name.value):
+    if not _fallback_matters(name.value):
         return None
     default = node.args[1] if len(node.args) > 1 else keyword(node, "default")
     return func, name.value, default
@@ -316,9 +353,9 @@ def _js_env_name(module: js.JsModule, node: JsNode) -> tuple[str, str] | None:
 
 
 def _js_env_read(module: js.JsModule, node: JsNode) -> tuple[str, str] | None:
-    """(how it is read, variable name) for an env read of a secret-named variable."""
+    """(how it is read, variable name) for an env read of a secret the app trusts."""
     read = _js_env_name(module, node)
-    if read is None or not _names_a_secret(read[1]) or _bundled_public(read[1]):
+    if read is None or not _fallback_matters(read[1]) or _bundled_public(read[1]):
         return None
     return read
 
@@ -384,7 +421,7 @@ def _js_destructured_fallbacks(module: js.JsModule) -> Iterator[Finding]:
                 continue
             name = js.string_value(module, key) or js.text(module, key)
             if (
-                _names_a_secret(name)
+                _fallback_matters(name)
                 and not _bundled_public(name)
                 and _js_hardcoded(module, default)
             ):
@@ -470,7 +507,11 @@ def _committed_env_files(ctx: RuleContext) -> Iterator[Finding]:
 _EXPOSED_SECRET_WORDS = frozenset({"SECRET", "PRIVATE"})
 # Providers that issue these keys for browser use: security rules, referrer limits or a
 # write-only scope do the gatekeeping. A credential word above still overrides them.
-_PUBLIC_BY_DESIGN = frozenset({"FIREBASE", "MAPS", "MAPBOX", "POSTHOG", "SEGMENT", "REVENUECAT"})
+# Google issues Maps, Places and YouTube Data API keys for browsers, restricted by HTTP
+# referrer; the risk is quota, not data.
+_PUBLIC_BY_DESIGN = frozenset(
+    {"FIREBASE", "MAPS", "PLACES", "YOUTUBE", "MAPBOX", "POSTHOG", "SEGMENT", "REVENUECAT"}
+)
 # The word before the last saying the key is the public half: `*_PUBLIC_TOKEN`,
 # `*_SITE_KEY` (reCAPTCHA, Turnstile, hCaptcha). Extends SC-SEC-003's `*_PUBLIC_KEY`.
 _PUBLIC_QUALIFIERS = _PUBLIC_KEY_QUALIFIERS | {"SITE"}
@@ -560,23 +601,83 @@ class _EnvRead:
     shown: str
     location: Location
     role: Role
+    firebase_config: bool  # the `apiKey` of a Firebase web config, public by design
+
+
+@dataclass(frozen=True)
+class _BundledReads:
+    browser: list[_EnvRead]  # in code that may run in a browser
+    server: frozenset[str]  # names read in server code
+    wholesale: bool  # browser code reads the env object as a whole (`{...process.env}`)
 
 
 _ENV_ACCESS_QUERY = "[(member_expression) (subscript_expression)] @r"
+# Keys that only a Firebase web config has beside `apiKey`.
+_FIREBASE_CONFIG_KEYS = frozenset(
+    {"authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"}
+)
+_VALUE_WRAPPERS = frozenset(
+    {"binary_expression", "as_expression", "non_null_expression", "parenthesized_expression"}
+)
 
 
-def _bundled_reads(ctx: RuleContext) -> list[_EnvRead]:
-    """Reads of bundled-public variables in code that may run in a browser."""
-    reads: list[_EnvRead] = []
+def _key_name(module: js.JsModule, key: JsNode | None) -> str | None:
+    if key is None:
+        return None
+    return js.string_value(module, key) if key.type == "string" else js.text(module, key)
+
+
+def _firebase_api_key(module: js.JsModule, node: JsNode) -> bool:
+    """`apiKey: process.env.X` in an object that also has a Firebase web config key."""
+    value = node
+    while value.parent is not None and value.parent.type in _VALUE_WRAPPERS:
+        value = value.parent
+    pair = value.parent
+    if pair is None or pair.type != "pair" or pair.parent is None:
+        return False
+    if _key_name(module, pair.child_by_field_name("key")) != "apiKey":
+        return False
+    siblings = {
+        _key_name(module, p.child_by_field_name("key"))
+        for p in pair.parent.named_children
+        if p.type == "pair"
+    }
+    return bool(siblings & _FIREBASE_CONFIG_KEYS)
+
+
+def _wholesale_env(module: js.JsModule, node: JsNode) -> bool:
+    """The env object itself used as a value, not as the object of a single read."""
+    if js.qualified_name(module, node) not in _JS_ENV_OBJECTS:
+        return False
+    parent = node.parent
+    if parent is not None and parent.type in ("member_expression", "subscript_expression"):
+        obj = parent.child_by_field_name("object")
+        return obj is None or obj.id != node.id
+    return True
+
+
+def _bundled_reads(ctx: RuleContext) -> _BundledReads:
+    """Reads of bundled-public variables, split by where the code runs."""
+    browser: list[_EnvRead] = []
+    server: set[str] = set()
+    wholesale = False
     for module in ctx.js:
         role = ctx.project.js_role(module)
-        if role in (Role.SERVER, Role.TEST):
+        if role is Role.TEST:
             continue
         for node in js.captures(module, _ENV_ACCESS_QUERY).get("r", []):
+            if role is not Role.SERVER and _wholesale_env(module, node):
+                wholesale = True
             read = _js_env_name(module, node)
-            if read is not None and _bundled_public(read[1]):
-                reads.append(_EnvRead(read[1], read[0], js.location(module, node), role))
-    return reads
+            if read is None or not _bundled_public(read[1]):
+                continue
+            if role is Role.SERVER:
+                server.add(read[1])
+            else:
+                loc = js.location(module, node)
+                firebase = _firebase_api_key(module, node)
+                browser.append(_EnvRead(read[1], read[0], loc, role, firebase))
+    return _BundledReads(browser, frozenset(server), wholesale)
 
 
 def _client_exposure(ctx: RuleContext) -> Iterator[Finding]:
@@ -588,14 +689,26 @@ def _client_exposure(ctx: RuleContext) -> Iterator[Finding]:
         if role is Role.CLIENT:
             yield _client_literal_finding(loc, m)
 
-    reads = _bundled_reads(ctx)
+    found = _bundled_reads(ctx)
+    reads = found.browser
+    browser_names = {r.name for r in reads}
+    # Read only as a Firebase web config's apiKey: public by design whatever it's named.
+    firebase_only = browser_names - {r.name for r in reads if not r.firebase_config}
+    # Next.js, Vite and CRA inline a variable only into the bundles that reference it, so
+    # one that only server code reads never reaches the browser. Unless browser code
+    # takes the env object whole, which can carry every prefixed variable with it.
+    server_only = frozenset[str]() if found.wholesale else found.server - browser_names
     defined: set[str] = set()
     for entry in ctx.project.env:
         if not _bundled_public(entry.key):
             continue
         if _real_value(entry.value):
             defined.add(entry.key)
+        if entry.key in server_only:
+            continue
         why = _exposure(entry.key, entry.value)
+        if isinstance(why, Severity) and entry.key in firebase_only:
+            continue
         if why is not None:
             # The browser code that uses it, so a change adding such a read brings an
             # unchanged .env into scope (ADR-002).
@@ -606,7 +719,7 @@ def _client_exposure(ctx: RuleContext) -> Iterator[Finding]:
     # is committed), the name is all there is, and the read in browser code is the bug.
     reported: set[tuple[str, str]] = set()
     for r in reads:
-        if r.role is not Role.CLIENT or r.name in defined:
+        if r.role is not Role.CLIENT or r.name in defined or r.name in firebase_only:
             continue
         severity = _name_exposure(r.name)
         if severity is None or (r.location.path, r.name) in reported:

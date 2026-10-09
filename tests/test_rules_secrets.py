@@ -68,11 +68,28 @@ def test_fallback_needs_a_secret_word_last_in_the_name():
         "import os\n"
         'A = os.getenv("JWT_SECRET_KEY", "x")\n'
         'B = os.getenv("SECRET_KEY_ROTATION_DAYS", "30")\n'
-        'C = os.getenv("STRIPE_APIKEY", "x")\n'
+        'C = os.getenv("INTERNAL_APIKEY", "x")\n'
         'D = os.getenv("PUBLIC_KEY", "x")\n'
-        'E = os.getenv("db_pass", "x")\n'
+        'E = os.getenv("admin_pass", "x")\n'
     )
     assert [f.location.start_line for f in run(SECRET_FALLBACK.id, {"app.py": src})] == [2, 4, 6]
+
+
+def test_fallback_skips_credentials_for_other_services():
+    # A wrong database, mail or API credential is rejected by that service: it fails
+    # closed. A secret the app signs or verifies with is reported even under a service's
+    # name (STRIPE_WEBHOOK_SECRET verifies Stripe's calls).
+    src = (
+        "import os\n"
+        'A = os.getenv("POSTGRES_PASSWORD", "postgres")\n'
+        'B = os.getenv("SMTP_PASS", "x")\n'
+        'C = os.getenv("OPENAI_API_KEY", "x")\n'
+        'D = os.getenv("STRIPE_WEBHOOK_SECRET", "x")\n'
+        'E = os.getenv("SUPABASE_JWT_SECRET", "x")\n'
+        'F = os.getenv("EMAIL_VERIFICATION_SECRET", "x")\n'
+        'G = os.getenv("SECRET_KEY", "x")\n'
+    )
+    assert [f.location.start_line for f in run(SECRET_FALLBACK.id, {"app.py": src})] == [5, 6, 7, 8]
 
 
 def test_fallback_ignores_non_string_defaults_and_other_lookups():

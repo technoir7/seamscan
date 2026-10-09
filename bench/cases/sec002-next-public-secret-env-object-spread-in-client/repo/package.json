@@ -1,0 +1,8 @@
+{
+  "name": "photos",
+  "private": true,
+  "dependencies": {
+    "next": "14.2.5",
+    "next-auth": "^4.24.7"
+  }
+}

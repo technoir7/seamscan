@@ -1,0 +1,14 @@
+id = "sec003-outbound-credential-defaults"
+description = "Flask config: SECRET_KEY's fallback is reported; database, mail, cache and third-party API credentials fail closed"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "config.py"
+line = 5
+

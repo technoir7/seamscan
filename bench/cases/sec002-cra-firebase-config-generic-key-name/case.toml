@@ -1,0 +1,12 @@
+id = "sec002-cra-firebase-config-generic-key-name"
+description = "Firebase web config reads its apiKey from REACT_APP_API_KEY: the web config is public by design whatever the variable is called"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern only, code rewritten)"
+
+[[forbidden]]
+rule = "SC-SEC-002"
+
