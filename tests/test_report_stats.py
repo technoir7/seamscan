@@ -41,3 +41,26 @@ def test_stats_with_nothing_found():
     a = analyze([SourceFile("ok.py", "x = 1\n")])
     out = render_stats(a.findings, decide(a.findings, Policy()), a.suppressed, 1, ())
     assert "  findings: 0\n" in out and "  suppressed: 0\n" in out
+
+
+def test_stats_say_where_dependency_facts_came_from():
+    from seamscan.report.stats import DependencyCounts
+
+    a = analyze([SourceFile("ok.py", "x = 1\n")])
+    counts = DependencyCounts(network=3, cache=2, snapshot=30, unverified=1, not_looked_up=4)
+    out = render_stats(a.findings, decide(a.findings, Policy()), a.suppressed, 1, (), counts)
+    assert out.endswith(
+        "  dependencies checked: 36 (network 3, cache 2, snapshot 30)\n"
+        "    not verified: 1\n"
+        "    not looked up (allowed or private): 4\n"
+    )
+
+
+def test_stats_without_dependencies_say_so():
+    from seamscan.report.stats import DependencyCounts
+
+    a = analyze([SourceFile("ok.py", "x = 1\n")])
+    out = render_stats(
+        a.findings, decide(a.findings, Policy()), a.suppressed, 1, (), DependencyCounts()
+    )
+    assert out.endswith("  dependencies checked: 0\n")

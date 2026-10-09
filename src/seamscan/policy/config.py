@@ -13,13 +13,14 @@ from dataclasses import dataclass, field, replace
 from functools import cache
 from typing import Any, TypeVar, cast
 
-from seamscan.model import Confidence, Finding, Severity
+from seamscan.model import Confidence, Ecosystem, Finding, PackageRef, Severity
 from seamscan.policy.verdict import Policy
 
 _KEYS = {
     "policy": ("fail_on_severity", "fail_on_confidence"),
     "rules": ("disable", "severity"),
     "paths": ("exclude",),
+    "deps": ("min_age_days", "min_weekly_downloads", "allow"),
 }
 
 
@@ -31,11 +32,30 @@ class ConfigError(ValueError):
 
 
 @dataclass(frozen=True)
+class DepsPolicy:
+    """`[deps]`: thresholds for the dependency rules, and names never looked up (ADR-004)."""
+
+    min_age_days: int = 30
+    min_weekly_downloads: int = 100
+    allow: tuple[str, ...] = ()  # globs over package names
+
+    def allows(self, ref: PackageRef) -> bool:
+        name = ref.name
+        patterns = self.allow
+        if ref.ecosystem is Ecosystem.PYPI:
+            # PyPI names arrive PEP 503-normalized, so a pattern written as the project
+            # spells it (Acme_Core) must be normalized the same way to match.
+            patterns = tuple(re.sub(r"[-_.]+", "-", p).lower() for p in patterns)
+        return any(_glob(p).fullmatch(name) for p in patterns)
+
+
+@dataclass(frozen=True)
 class Config:
     policy: Policy = Policy()
     disabled: frozenset[str] = frozenset()  # rule ids that don't run
     severity: Mapping[str, Severity] = field(default_factory=dict[str, Severity])
     exclude: tuple[str, ...] = ()  # globs over repo-relative POSIX paths
+    deps: DepsPolicy = DepsPolicy()
 
     def excludes(self, path: str) -> bool:
         return any(_glob(p).fullmatch(path) for p in self.exclude)
@@ -103,6 +123,13 @@ def _level(kind: type[_Level], value: object, key: str) -> _Level:
     return kind[value]
 
 
+def _count(value: object, key: str) -> int:
+    # bool is an int in Python; `true` is never a meant number.
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ConfigError(f"{key} must be a whole number of 0 or more; got {value!r}")
+    return value
+
+
 def _rule_id(rule: str, known: Collection[str], key: str) -> str:
     if rule not in known:
         raise ConfigError(f"{key}: unknown rule id {rule!r}")
@@ -122,6 +149,7 @@ def parse_config(text: str, known_rules: Collection[str]) -> Config:
     policy = _table(doc.get("policy", {}), "policy")
     rules = _table(doc.get("rules", {}), "rules")
     paths = _table(doc.get("paths", {}), "paths")
+    deps = _table(doc.get("deps", {}), "deps")
 
     default = Policy()
     fail_on = Policy(
@@ -156,4 +184,17 @@ def parse_config(text: str, known_rules: Collection[str]) -> Config:
         if problem:
             raise ConfigError(f"paths.exclude: {pattern!r} {problem}")
 
-    return Config(fail_on, disabled, severity, exclude)
+    allow = tuple(_strings(deps.get("allow", []), "deps.allow"))
+    if "" in allow:
+        raise ConfigError("deps.allow: '' is empty")
+    default_deps = DepsPolicy()
+    deps_policy = DepsPolicy(
+        _count(deps.get("min_age_days", default_deps.min_age_days), "deps.min_age_days"),
+        _count(
+            deps.get("min_weekly_downloads", default_deps.min_weekly_downloads),
+            "deps.min_weekly_downloads",
+        ),
+        allow,
+    )
+
+    return Config(fail_on, disabled, severity, exclude, deps_policy)

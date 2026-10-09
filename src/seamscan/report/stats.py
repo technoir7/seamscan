@@ -7,10 +7,35 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from seamscan.model import Finding, Severity
 from seamscan.policy.suppress import Suppressed
 from seamscan.policy.verdict import Verdict
+
+
+@dataclass(frozen=True)
+class DependencyCounts:
+    """Registry lookups in a run (ADR-004): where each package's facts came from."""
+
+    network: int = 0
+    cache: int = 0
+    snapshot: int = 0
+    unverified: int = 0  # nothing answered: offline miss, timeout, 5xx, 429
+    not_looked_up: int = 0  # `[deps] allow` or a privately mapped name
+
+    def lines(self) -> list[str]:
+        checked = self.network + self.cache + self.snapshot + self.unverified
+        sources = f" (network {self.network}, cache {self.cache}, snapshot {self.snapshot})"
+        return [
+            f"  dependencies checked: {checked}" + (sources if checked else ""),
+            *([f"    not verified: {self.unverified}"] if self.unverified else []),
+            *(
+                [f"    not looked up (allowed or private): {self.not_looked_up}"]
+                if self.not_looked_up
+                else []
+            ),
+        ]
 
 
 def render_stats(
@@ -19,6 +44,7 @@ def render_stats(
     suppressed: Sequence[Suppressed],
     files_analyzed: int,
     skipped: Sequence[tuple[str, str]],
+    dependencies: DependencyCounts | None = None,
 ) -> str:
     by_sev = Counter(f.severity for f in findings)
     breakdown = ", ".join(
@@ -38,5 +64,6 @@ def render_stats(
             f"{s.finding.rule_id}: {s.reason}"
             for s in sorted(suppressed, key=lambda s: s.finding.sort_key())
         ),
+        *(dependencies.lines() if dependencies is not None else []),
     ]
     return "\n".join(lines) + "\n"
