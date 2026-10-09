@@ -1,0 +1,11 @@
+id = "code007-py-typer-dev-command-own-options"
+description = "A typer dev-server command builds a shell line from its own --host/--port options: the person running the command supplies them and already has a shell"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "minimal rewrite of noise-study dev data (seapagan/fastapi-template app/commands/dev.py)"
+
+[[forbidden]]
+rule = "SC-CODE-007"

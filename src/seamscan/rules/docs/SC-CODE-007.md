@@ -26,6 +26,14 @@ A command given as a list without a shell is never flagged, whatever it contains
 Fixed strings with `shell=True`, inline or via a module constant, are not flagged.
 Test files are skipped.
 
+**Decision: a command-line tool's own options are its operator's (2026-10-09).** An
+option or argument of a typer or click command (`@app.command()`, `@app.callback()`,
+`@click.command()`, `@click.argument(...)`, in a module that imports typer or click),
+used as it arrived, counts as safe: the person who types `dev serve --host ...` already
+has a shell and gains nothing by injecting into this one. Other values in the same
+command are judged as usual. The noise studies' one SC-CODE-007 finding was a dev-server
+command of this kind.
+
 ### TypeScript and JavaScript
 
 A shell parses text that isn't inert (spec §6.2):
@@ -122,6 +130,11 @@ Python:
   `shlex.quote`/`shlex.join` are known quoters.
 - A loop variable over a fixed list (`for c in ["ls", "pwd"]: os.system(c)`) is not
   known to be literal, so it's flagged.
+- A typer or click command that another program runs with untrusted input (a web
+  handler shelling out to `mytool --name "$USER_INPUT"`) has its options trusted here;
+  the injection is reported only if that other program builds a shell line itself.
+  argparse values (`args.host`) and Django management-command options aren't
+  recognised as an operator's own and are still reported.
 - `shell=True` with a list argv isn't checked, since only the first item would be the
   command.
 - `shell=` set from a variable isn't read, so `subprocess.run(cmd, shell=use_shell)` is
