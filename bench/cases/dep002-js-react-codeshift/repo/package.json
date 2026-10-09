@@ -1,0 +1,17 @@
+{
+  "name": "migrate-ui",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "codemod": "react-codeshift --transform=react-19 src/"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "jscodeshift": "^17.1.1",
+    "react-codeshift": "^1.0.0",
+    "typescript": "^5.7.2"
+  }
+}

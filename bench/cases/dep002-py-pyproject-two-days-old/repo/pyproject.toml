@@ -1,0 +1,12 @@
+[project]
+name = "notes-api"
+version = "0.1.0"
+description = "Notes API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.6",
+    "supabase>=2.11.0",
+    "supabase-pydantic-models>=0.1.0",
+    "python-dotenv>=1.0.1",
+]

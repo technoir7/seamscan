@@ -1,0 +1,37 @@
+id = "dep001-py-requirements-dir-django-extension"
+description = "Django project's requirements/base.txt names a nonexistent DRF extension"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "requirements/base.txt"
+line = 5
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:django",
+    "pypi:django-cors-headers",
+    "pypi:djangorestframework",
+    "pypi:djangorestframework-simplejwt",
+    "pypi:factory-boy",
+    "pypi:psycopg",
+    "pypi:pytest-django",
+    "pypi:whitenoise",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "django-rest-passwordreset-jwt"
+exists = false

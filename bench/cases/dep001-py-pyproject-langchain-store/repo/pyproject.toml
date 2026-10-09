@@ -1,0 +1,14 @@
+[project]
+name = "rag-api"
+version = "0.1.0"
+description = "RAG service over Supabase pgvector"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.6",
+    "langchain>=0.3.13",
+    "langchain-openai>=0.2.14",
+    "langchain-supabase-vectorstore>=0.1.0",
+    "supabase>=2.11.0",
+    "tiktoken>=0.8.0",
+]

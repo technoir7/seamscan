@@ -1,0 +1,37 @@
+id = "dep003-js-local-native-addon"
+description = "scan: a file: dependency on a local native addon is never looked up"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:pg",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "acme-native"
+exists = true
+install_scripts = ["install"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "node-addon-api"
+exists = true
+install_scripts = []

@@ -1,0 +1,37 @@
+id = "dep003-js-new-package-in-new-workspace"
+description = "scan: a new workspace's package.json adds bcrypt, which compiles at install"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-003"
+path = "apps/auth/package.json"
+line = 6
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:express",
+    "npm:jsonwebtoken",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "bcrypt"
+exists = true
+first_published = 2010-08-20T00:00:00Z
+weekly_downloads = 2100000
+install_scripts = ["install"]

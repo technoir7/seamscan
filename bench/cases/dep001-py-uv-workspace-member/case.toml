@@ -1,0 +1,31 @@
+id = "dep001-py-uv-workspace-member"
+description = "uv workspace: a member package is a dependency by name but comes from the repository"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:fastapi",
+    "pypi:pydantic",
+    "pypi:sqlalchemy",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "platform-core"
+exists = false
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "platform-db"
+exists = false

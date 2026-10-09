@@ -1,0 +1,34 @@
+id = "dep001-py-dependency-groups-lint"
+description = "PEP 735 dependency group adds a Ruff plugin that doesn't exist on PyPI"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "pyproject.toml"
+line = 20
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:fastapi",
+    "pypi:pytest",
+    "pypi:ruff",
+    "pypi:sqlalchemy",
+    "pypi:stripe",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "ruff-sqlalchemy-rules"
+exists = false

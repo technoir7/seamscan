@@ -1,0 +1,58 @@
+id = "dep003-js-audit-mode-install-scripts"
+description = "audit: install scripts on existing dependencies are old news (scan-only rule)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:@eslint/eslintrc",
+    "npm:@supabase/ssr",
+    "npm:@supabase/supabase-js",
+    "npm:@tailwindcss/postcss",
+    "npm:@types/node",
+    "npm:@types/react",
+    "npm:@types/react-dom",
+    "npm:clsx",
+    "npm:eslint",
+    "npm:eslint-config-next",
+    "npm:lucide-react",
+    "npm:next",
+    "npm:react",
+    "npm:react-dom",
+    "npm:tailwind-merge",
+    "npm:tailwindcss",
+    "npm:typescript",
+    "npm:zod",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "sharp"
+exists = true
+first_published = 2013-08-23T00:00:00Z
+weekly_downloads = 19000000
+install_scripts = ["install"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "bcrypt"
+exists = true
+first_published = 2010-08-20T00:00:00Z
+weekly_downloads = 2100000
+install_scripts = ["install"]

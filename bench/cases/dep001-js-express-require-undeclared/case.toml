@@ -1,0 +1,37 @@
+id = "dep001-js-express-require-undeclared"
+description = "Express server requires a rate-limit store package that isn't declared and doesn't exist"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "src/server.js"
+line = 4
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:bcryptjs",
+    "npm:cors",
+    "npm:dotenv",
+    "npm:express",
+    "npm:helmet",
+    "npm:jsonwebtoken",
+    "npm:nodemon",
+    "npm:pg",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "express-rate-limiter-redis"
+exists = false

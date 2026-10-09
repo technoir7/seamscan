@@ -1,0 +1,34 @@
+id = "dep001-py-pyproject-langchain-store"
+description = "uv pyproject lists a LangChain integration package that was never published"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "pyproject.toml"
+line = 11
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:fastapi",
+    "pypi:langchain",
+    "pypi:langchain-openai",
+    "pypi:supabase",
+    "pypi:tiktoken",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "langchain-supabase-vectorstore"
+exists = false

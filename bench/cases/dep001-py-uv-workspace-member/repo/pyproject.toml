@@ -1,0 +1,18 @@
+[project]
+name = "platform"
+version = "0.1.0"
+description = "Backend API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.6",
+    "platform-core",
+    "platform-db",
+]
+
+[tool.uv.sources]
+platform-core = { workspace = true }
+platform-db = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]

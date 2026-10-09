@@ -1,0 +1,33 @@
+id = "dep002-py-poetry-three-weeks"
+description = "Poetry dependency first published 20 days ago"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "pyproject.toml"
+line = 11
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:httpx",
+    "pypi:pytest",
+    "pypi:tenacity",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "hubspot-api-client-async"
+exists = true
+first_published = 2026-09-11T00:00:00Z

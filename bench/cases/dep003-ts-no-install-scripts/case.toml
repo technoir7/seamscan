@@ -1,0 +1,41 @@
+id = "dep003-ts-no-install-scripts"
+description = "scan: added dependencies declare no install scripts"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:zod",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "@tanstack/react-table"
+exists = true
+first_published = 2022-07-01T00:00:00Z
+weekly_downloads = 3500000
+install_scripts = []
+
+[[registry.package]]
+ecosystem = "npm"
+name = "date-fns"
+exists = true
+first_published = 2014-10-06T00:00:00Z
+weekly_downloads = 22000000
+install_scripts = []

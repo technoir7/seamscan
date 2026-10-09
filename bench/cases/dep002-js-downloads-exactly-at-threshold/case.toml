@@ -1,0 +1,35 @@
+id = "dep002-js-downloads-exactly-at-threshold"
+description = "an old package with exactly 100 weekly downloads is not below the threshold"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:bcryptjs",
+    "npm:cors",
+    "npm:dotenv",
+    "npm:express",
+    "npm:helmet",
+    "npm:jsonwebtoken",
+    "npm:pg",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "pg-listen-typed"
+exists = true
+first_published = 2021-06-11T00:00:00Z
+weekly_downloads = 100

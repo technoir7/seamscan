@@ -1,0 +1,22 @@
+id = "dep001-py-normalized-names"
+description = "Flask_SQLAlchemy and flask-sqlalchemy are one PyPI project; mixed-case names are not 'missing'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:flask",
+    "pypi:flask-login",
+    "pypi:flask-sqlalchemy",
+    "pypi:wtforms",
+]

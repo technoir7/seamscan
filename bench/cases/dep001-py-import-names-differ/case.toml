@@ -1,0 +1,36 @@
+id = "dep001-py-import-names-differ"
+description = "Python import names differ from distributions (yaml/PyYAML, bs4/beautifulsoup4); only manifests are checked"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:pillow",
+    "pypi:python-dotenv",
+    "pypi:requests",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "pyyaml"
+exists = true
+first_published = 2011-11-10T00:00:00Z
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "beautifulsoup4"
+exists = true
+first_published = 2012-01-20T00:00:00Z

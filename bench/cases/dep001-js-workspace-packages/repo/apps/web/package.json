@@ -1,0 +1,15 @@
+{
+  "name": "@acme/web",
+  "private": true,
+  "version": "0.1.0",
+  "dependencies": {
+    "@acme/ui": "workspace:*",
+    "@acme/db": "workspace:^",
+    "next": "15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@acme/eslint-config": "workspace:*"
+  }
+}

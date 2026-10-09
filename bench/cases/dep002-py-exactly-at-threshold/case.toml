@@ -1,0 +1,38 @@
+id = "dep002-py-exactly-at-threshold"
+description = "first published exactly 30 days before now: old enough"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:alembic",
+    "pypi:fastapi",
+    "pypi:httpx",
+    "pypi:passlib",
+    "pypi:psycopg2-binary",
+    "pypi:pydantic",
+    "pypi:pydantic-settings",
+    "pypi:python-jose",
+    "pypi:python-multipart",
+    "pypi:sqlalchemy",
+    "pypi:uvicorn",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "fastapi-cache-redis"
+exists = true
+first_published = 2026-09-01T00:00:00Z

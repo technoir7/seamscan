@@ -1,0 +1,12 @@
+Flask==3.1.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+email-validator==2.2.0
+gunicorn==23.0.0
+python-dotenv==1.0.1
+-e ./libs/acme-auth
+acme-models @ file:///opt/acme/models
+acme-utils @ git+https://github.com/acme/acme-utils.git@v1.4.0
+git+https://github.com/acme/acme-reports.git
+./wheels/acme_pdf-0.3.0-py3-none-any.whl

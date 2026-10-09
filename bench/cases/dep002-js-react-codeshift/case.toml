@@ -1,0 +1,41 @@
+id = "dep002-js-react-codeshift"
+description = "the react-codeshift pattern: a hallucinated name someone registered 11 days ago, 12 downloads"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "package.json"
+line = 14
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:react",
+    "npm:react-dom",
+    "npm:typescript",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "jscodeshift"
+exists = true
+first_published = 2015-03-31T00:00:00Z
+weekly_downloads = 5800000
+
+[[registry.package]]
+ecosystem = "npm"
+name = "react-codeshift"
+exists = true
+first_published = 2026-09-20T00:00:00Z
+weekly_downloads = 12

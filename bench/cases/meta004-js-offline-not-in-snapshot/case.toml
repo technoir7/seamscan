@@ -1,0 +1,36 @@
+id = "meta004-js-offline-not-in-snapshot"
+description = "offline: an uncommon npm package can't be verified"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "package.json"
+line = 18
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:bcryptjs",
+    "npm:cors",
+    "npm:dotenv",
+    "npm:express",
+    "npm:helmet",
+    "npm:jsonwebtoken",
+    "npm:pg",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "express-slow-down"
+problem = "offline, and not in the snapshot or the cache"

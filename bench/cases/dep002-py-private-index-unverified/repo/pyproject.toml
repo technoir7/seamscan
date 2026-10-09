@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "acme-etl"
+version = "0.1.0"
+description = ""
+authors = ["Dev Team <dev@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+acme-warehouse = {version = "^2.3.0", source = "acme"}
+polars = "^1.17.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+
+[[tool.poetry.source]]
+name = "acme"
+url = "https://pypi.acme-corp.dev/simple/"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

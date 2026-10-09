@@ -1,0 +1,42 @@
+id = "dep001-js-npm-alias-real-target"
+description = "an npm: alias installs a real package under another name; imports of the alias are declared"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:react",
+    "npm:react-dom",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "lodash"
+exists = true
+first_published = 2012-04-23T00:00:00Z
+weekly_downloads = 60000000
+
+[[registry.package]]
+ecosystem = "npm"
+name = "react-router-dom"
+exists = true
+first_published = 2014-01-01T00:00:00Z
+weekly_downloads = 12000000
+
+[[registry.package]]
+ecosystem = "npm"
+name = "lodash4"
+exists = false

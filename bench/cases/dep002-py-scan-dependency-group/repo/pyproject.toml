@@ -1,0 +1,16 @@
+[project]
+name = "ingest"
+version = "0.1.0"
+description = "CSV ingest"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.2.3",
+    "pyarrow>=18.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "pandas-stubs-extra>=0.1.2",
+]

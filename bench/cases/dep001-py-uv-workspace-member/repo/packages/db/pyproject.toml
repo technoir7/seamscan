@@ -1,0 +1,10 @@
+[project]
+name = "platform_db"
+version = "0.1.0"
+description = "Database layer"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "sqlalchemy>=2.0.36",
+    "platform-core",
+]

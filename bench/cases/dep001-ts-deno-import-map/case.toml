@@ -1,0 +1,21 @@
+id = "dep001-ts-deno-import-map"
+description = "Edge Functions import bare names that deno.json maps to npm: and URL specifiers"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "openai"
+exists = true

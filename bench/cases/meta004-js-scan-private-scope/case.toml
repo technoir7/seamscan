@@ -1,0 +1,30 @@
+id = "meta004-js-scan-private-scope"
+description = "scan: a privately scoped package added in this change gets a public 404 but .npmrc maps the scope"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "package.json"
+line = 18
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:pg",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "@acme/audit-log"
+problem = "npm has no such package, but .npmrc maps @acme to another registry"

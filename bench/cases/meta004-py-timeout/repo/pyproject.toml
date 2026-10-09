@@ -1,0 +1,11 @@
+[project]
+name = "ocr-worker"
+version = "0.1.0"
+description = "OCR worker"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pytesseract>=0.3.13",
+    "pdf2image>=1.17.0",
+    "rq>=2.1.0",
+]

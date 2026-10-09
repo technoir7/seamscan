@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    // shadcn components live under src/components
+    "paths": {
+      "@/*": ["./*"],
+      "@components/*": ["components/*"],
+      "@shared/*": ["../shared/*"],
+    },
+  },
+}

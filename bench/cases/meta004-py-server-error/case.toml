@@ -1,0 +1,31 @@
+id = "meta004-py-server-error"
+description = "PyPI returned 503 for a Pipfile package"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "Pipfile"
+line = 3
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:black",
+    "pypi:django",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "django-allauth"
+problem = "PyPI returned HTTP 503"

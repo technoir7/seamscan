@@ -1,0 +1,49 @@
+id = "dep002-ts-undeclared-import-new"
+description = "a Next.js route imports an undeclared package published three days ago"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "app/api/og/route.ts"
+line = 2
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:@eslint/eslintrc",
+    "npm:@supabase/ssr",
+    "npm:@supabase/supabase-js",
+    "npm:@tailwindcss/postcss",
+    "npm:@types/node",
+    "npm:@types/react",
+    "npm:@types/react-dom",
+    "npm:clsx",
+    "npm:eslint",
+    "npm:eslint-config-next",
+    "npm:lucide-react",
+    "npm:next",
+    "npm:react",
+    "npm:react-dom",
+    "npm:tailwind-merge",
+    "npm:tailwindcss",
+    "npm:typescript",
+    "npm:zod",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "next-og-image-kit"
+exists = true
+first_published = 2026-09-28T00:00:00Z
+weekly_downloads = 210

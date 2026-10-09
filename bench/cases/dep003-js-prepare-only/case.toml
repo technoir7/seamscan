@@ -1,0 +1,33 @@
+id = "dep003-js-prepare-only"
+description = "scan: the new dependency's only lifecycle script is `prepare`, which npm doesn't run for registry installs"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:pg",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "pino-http"
+exists = true
+first_published = 2016-05-01T00:00:00Z
+weekly_downloads = 1900000
+install_scripts = ["prepare"]

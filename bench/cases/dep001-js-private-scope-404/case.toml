@@ -1,0 +1,47 @@
+id = "dep001-js-private-scope-404"
+description = ".npmrc maps @acme to a private registry; the public 404 is 'not verified', not 'missing'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "package.json"
+line = 21
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:@eslint/eslintrc",
+    "npm:@supabase/ssr",
+    "npm:@supabase/supabase-js",
+    "npm:@tailwindcss/postcss",
+    "npm:@types/node",
+    "npm:@types/react",
+    "npm:@types/react-dom",
+    "npm:clsx",
+    "npm:eslint",
+    "npm:eslint-config-next",
+    "npm:lucide-react",
+    "npm:next",
+    "npm:react",
+    "npm:react-dom",
+    "npm:tailwind-merge",
+    "npm:tailwindcss",
+    "npm:typescript",
+    "npm:zod",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "@acme/design-tokens"
+problem = "npm has no such package, but .npmrc maps @acme to another registry"

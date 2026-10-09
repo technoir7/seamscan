@@ -1,0 +1,6 @@
+[packages]
+django = "*"
+django-allauth = "*"
+
+[dev-packages]
+black = "*"

@@ -1,0 +1,34 @@
+id = "dep001-py-optional-dependencies-ai-extra"
+description = "pyproject optional 'ai' extra includes an invented Anthropic tools SDK"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "pyproject.toml"
+line = 15
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:anthropic",
+    "pypi:httpx",
+    "pypi:pydantic",
+    "pypi:pytest",
+    "pypi:ruff",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "anthropic-tools-sdk"
+exists = false

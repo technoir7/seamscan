@@ -1,0 +1,34 @@
+id = "dep002-py-pipfile-new"
+description = "Pipfile pulls in a package published last week"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "Pipfile"
+line = 9
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:flask",
+    "pypi:flask-sqlalchemy",
+    "pypi:gunicorn",
+    "pypi:pytest",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "flask-supabase-auth"
+exists = true
+first_published = 2026-09-23T00:00:00Z
