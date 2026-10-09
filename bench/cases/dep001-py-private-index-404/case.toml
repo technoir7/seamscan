@@ -1,0 +1,40 @@
+id = "dep001-py-private-index-404"
+description = "requirements point at a private index; PyPI's 404 for the internal package is 'not verified', not 'missing'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "requirements.txt"
+line = 14
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:alembic",
+    "pypi:fastapi",
+    "pypi:httpx",
+    "pypi:passlib",
+    "pypi:psycopg2-binary",
+    "pypi:pydantic",
+    "pypi:pydantic-settings",
+    "pypi:python-jose",
+    "pypi:python-multipart",
+    "pypi:sqlalchemy",
+    "pypi:uvicorn",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "acme-billing-client"
+problem = "PyPI has no such package, but the repository uses another index"

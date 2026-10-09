@@ -131,7 +131,9 @@ def _load_config(root: Path) -> Config:
     if explicit is None and not path.exists():
         return Config()
     try:
-        return parse_config(_read(path, "config"), frozenset(r.meta.id for r in RULES))
+        # SC-META rules can't be disabled or re-ranked (§9.5), even the registered ones.
+        known = frozenset(r.meta.id for r in RULES if not r.meta.id.startswith("SC-META-"))
+        return parse_config(_read(path, "config"), known)
     except ConfigError as exc:
         _fail(f"{path}: {exc}")
 
@@ -171,14 +173,19 @@ def _registry(
     files: Sequence[SourceFile],
     change: ChangeSet | None,
     context: Sequence[SourceFile],
+    skipped: Sequence[tuple[str, str]],
     offline: bool,
 ) -> tuple[RegistryView, DependencyCounts]:
     """Look up the dependencies in scope (ADR-004). Network trouble becomes data in the
     view; nothing here raises for it."""
-    in_scope = [f for f in files if not config.excludes(f.path)]
-    # Registry settings are facts about the whole repository, even in scan mode.
-    repo = registry_config({f.path: f for f in [*context, *files]}.values())
-    wanted = dependencies_to_check(in_scope, change)
+    # Whether a name is local depends on the whole repository, even in scan mode (the
+    # change only narrows which declarations count). A skipped file still proves that an
+    # import of its path is local, so it comes along with no text.
+    by_path = {f.path: f for f in [*context, *files]}
+    by_path.update({path: SourceFile(path, "") for path, _ in skipped if path not in by_path})
+    repo_files = [f for f in by_path.values() if not config.excludes(f.path)]
+    repo = registry_config(repo_files)
+    wanted = dependencies_to_check(repo_files, change)
     refs = frozenset(r for r in wanted if not config.deps.allows(r) and not repo.is_private(r))
     now = datetime.now(UTC)
     found = lookup(
@@ -191,7 +198,7 @@ def _registry(
         # Scan mode's refs are only the dependencies the change adds: the ones whose
         # install scripts matter (SC-DEP-003). An audit doesn't pay for them.
         install_scripts=change is not None,
-        versions=_pinned(in_scope, refs),
+        versions=_pinned(repo_files, refs),
         other_registries=repo.other_registries,
     )
     for warning in found.warnings:
@@ -259,7 +266,7 @@ def _run(
     """
     config = _load_config(root)
     known = _load_baseline(root).fingerprints()
-    registry, dependencies = _registry(config, files, change, context, offline)
+    registry, dependencies = _registry(config, files, change, context, skipped, offline)
     analysis = _analyze(config, files, change, context, registry)
     verdict = decide(analysis.findings, config.policy, known)
     kept = tuple(s for s in skipped if not config.excludes(s[0]))
@@ -486,7 +493,7 @@ def _current_findings(root: Path) -> tuple[Finding, ...]:
     config = _load_config(root)
     # Looked up as `audit` does, or the baseline would lack the dependency findings that
     # the next audit then reports as new.
-    registry, _ = _registry(config, fileset.files, None, (), offline=False)
+    registry, _ = _registry(config, fileset.files, None, (), fileset.skipped, offline=False)
     findings = _analyze(config, fileset.files, registry=registry).findings
     crashed = [f for f in findings if f.rule_id in INTERNAL_ERROR_RULES]
     for f in crashed:

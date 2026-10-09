@@ -25,4 +25,4 @@ jobs:
       - name: Benchmark budgets (spec §8.6)
         run: uv run python -m bench.run --check
       - name: Self-scan
-        run: uv run python -m seamscan audit src
+        run: uv run python -m seamscan audit src --offline

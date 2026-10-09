@@ -1,0 +1,31 @@
+id = "meta004-py-timeout"
+description = "the PyPI request timed out: unverified, never 'missing'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "pyproject.toml"
+line = 9
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:pytesseract",
+    "pypi:rq",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "pdf2image"
+problem = "PyPI did not answer within 10 s"

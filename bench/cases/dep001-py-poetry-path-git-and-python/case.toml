@@ -1,0 +1,30 @@
+id = "dep001-py-poetry-path-git-and-python"
+description = "Poetry: the python constraint and path/git dependencies are not registry packages"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:celery",
+    "pypi:pytest",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "acme-shared"
+exists = false
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "acme-pdf"
+exists = false

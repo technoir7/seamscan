@@ -35,5 +35,17 @@ RULE_CRASHED = meta(
     "A rule failed while running; results are incomplete.",
 )
 
+# A registered rule (rules/dependencies.py) that reports on the scan's coverage, so it
+# lives here with the other SC-META ids.
+DEPENDENCY_UNVERIFIED = meta(
+    "SC-META-004",
+    "Dependency not verified",
+    Severity.LOW,
+    Confidence.LOW,
+    (),
+    frozenset({"python", "javascript"}),
+    "The registry couldn't confirm this dependency exists; it was not checked.",
+)
+
 # Not rules that run: the pipeline raises these itself. Outputs still need their metadata.
 META: tuple[RuleMeta, ...] = (SUPPRESSION_WITHOUT_REASON, PARSE_FAILED, RULE_CRASHED)

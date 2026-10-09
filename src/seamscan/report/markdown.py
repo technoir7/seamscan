@@ -28,6 +28,7 @@ AREAS = {
     "SUPA": ("Supabase database access", "Supabase database access"),
     "FIRE": ("Firebase security rules", "Firebase security rules"),
     "WEB": ("Web routes and server settings", "web routes and server settings"),
+    "DEP": ("Dependencies", "dependencies"),
     "CODE": ("Risky code patterns", "risky code patterns"),
     "TEST": ("Tests that can't catch bugs", "tests that can't catch bugs"),
     "META": ("Scan coverage", "scan coverage"),

@@ -1,0 +1,35 @@
+id = "dep001-py-poetry-dev-group-pytest-plugin"
+description = "Poetry dev group adds a pytest plugin name that sounds right but doesn't exist"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "pyproject.toml"
+line = 17
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:fastapi",
+    "pypi:pytest",
+    "pypi:pytest-asyncio",
+    "pypi:ruff",
+    "pypi:sqlmodel",
+    "pypi:uvicorn",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "pytest-fastapi-client"
+exists = false

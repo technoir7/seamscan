@@ -1,0 +1,54 @@
+id = "meta004-ts-import-timeout"
+description = "the npm request for an undeclared import timed out"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "lib/markdown.ts"
+line = 2
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:@eslint/eslintrc",
+    "npm:@supabase/ssr",
+    "npm:@supabase/supabase-js",
+    "npm:@tailwindcss/postcss",
+    "npm:@types/node",
+    "npm:@types/react",
+    "npm:@types/react-dom",
+    "npm:clsx",
+    "npm:eslint",
+    "npm:eslint-config-next",
+    "npm:lucide-react",
+    "npm:next",
+    "npm:react",
+    "npm:react-dom",
+    "npm:tailwind-merge",
+    "npm:tailwindcss",
+    "npm:typescript",
+    "npm:zod",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "marked"
+exists = true
+first_published = 2011-08-01T00:00:00Z
+weekly_downloads = 12000000
+
+[[registry.package]]
+ecosystem = "npm"
+name = "isomorphic-dompurify"
+problem = "npm did not answer within 10 s"

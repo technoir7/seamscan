@@ -1,0 +1,25 @@
+id = "dep003-js-scripts-unknown-offline"
+description = "scan, offline: a snapshot hit has no version metadata, so install scripts are unknown, not present"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:multer",
+]

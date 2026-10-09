@@ -1,0 +1,11 @@
+[project]
+name = "agent"
+version = "0.1.0"
+description = "MCP agent"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.42.0",
+    "mcp>=1.2.0",
+    "mcp-server-sqlite-lite>=0.1.0",
+]

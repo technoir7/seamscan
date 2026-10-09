@@ -1,0 +1,27 @@
+id = "meta004-py-scan-added-offline"
+description = "scan, offline: the dependency added in this change isn't in the snapshot"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "requirements.txt"
+line = 8
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "flask-limiter"
+problem = "offline, and not in the snapshot or the cache"

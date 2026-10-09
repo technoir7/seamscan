@@ -1,0 +1,30 @@
+id = "dep003-ts-import-is-not-an-install"
+description = "scan: an undeclared import of a package with a postinstall script isn't installed by this change"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "esbuild"
+exists = true
+first_published = 2020-01-01T00:00:00Z
+weekly_downloads = 40000000
+install_scripts = ["postinstall"]

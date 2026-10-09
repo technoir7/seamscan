@@ -1,0 +1,33 @@
+id = "dep003-ts-added-optional-sharp"
+description = "scan: optionalDependencies gain sharp, which runs an install script"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-003"
+path = "package.json"
+line = 34
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "sharp"
+exists = true
+first_published = 2013-08-23T00:00:00Z
+weekly_downloads = 19000000
+install_scripts = ["install"]

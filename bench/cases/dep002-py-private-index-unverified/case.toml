@@ -1,0 +1,31 @@
+id = "dep002-py-private-index-unverified"
+description = "Poetry private source: the package can't be verified, so no age claim either"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "pyproject.toml"
+line = 10
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:polars",
+    "pypi:pytest",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "acme-warehouse"
+problem = "PyPI has no such package, but the repository uses another index"

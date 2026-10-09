@@ -1,0 +1,25 @@
+id = "dep001-py-path-and-git-requirements"
+description = "local paths, editable installs and git URLs are never looked up on PyPI"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:email-validator",
+    "pypi:flask",
+    "pypi:flask-login",
+    "pypi:flask-sqlalchemy",
+    "pypi:flask-wtf",
+    "pypi:gunicorn",
+    "pypi:python-dotenv",
+]

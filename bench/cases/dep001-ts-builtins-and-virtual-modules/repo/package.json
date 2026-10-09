@@ -1,0 +1,11 @@
+{
+  "name": "docs-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "astro": "^5.1.1",
+    "@astrojs/mdx": "^4.0.3",
+    "vite-plugin-pwa": "^0.21.1"
+  }
+}

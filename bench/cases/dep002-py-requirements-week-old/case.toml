@@ -1,0 +1,33 @@
+id = "dep002-py-requirements-week-old"
+description = "requirements.txt adds a package first published six days ago"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "requirements.txt"
+line = 4
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:openai",
+    "pypi:python-dotenv",
+    "pypi:streamlit",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "streamlit-chat-memory"
+exists = true
+first_published = 2026-09-25T00:00:00Z

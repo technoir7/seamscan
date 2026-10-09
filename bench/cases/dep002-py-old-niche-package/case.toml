@@ -1,0 +1,29 @@
+id = "dep002-py-old-niche-package"
+description = "an old, little-known package: PyPI has no download counts, and age alone clears it"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:flask",
+    "pypi:python-dotenv",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "flask-htmx"
+exists = true
+first_published = 2022-02-14T00:00:00Z

@@ -1,0 +1,38 @@
+id = "dep003-js-install-script-already-in-base"
+description = "scan: esbuild (postinstall) was already a dependency; the change only adds zod"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "esbuild"
+exists = true
+first_published = 2020-01-01T00:00:00Z
+weekly_downloads = 40000000
+install_scripts = ["postinstall"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "zod"
+exists = true
+first_published = 2020-03-07T00:00:00Z
+weekly_downloads = 25000000
+install_scripts = []

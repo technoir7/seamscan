@@ -186,7 +186,8 @@ src/seamscan/
     baseline.py          #   baseline file, ratchet comparison
     verdict.py           #   blocking vs non-blocking, exit code
   supply/                # I/O EDGE: package registries
-    registry.py          #   PyPI/npm lookups (stdlib urllib), cache, offline snapshot
+    http.py  cache.py  snapshot.py  registry.py   # urllib GET, cache, bundled names, lookup
+    data/                #   top-10k npm and PyPI names (sources and licenses in its README)
   report/                # pure: verdict -> text
     terminal.py  json.py  sarif.py  markdown.py  agent.py
   hooks/
@@ -751,6 +752,30 @@ the resolved version.
 rules read a `RegistryView` with `now` passed in. Local, URL and workspace specs,
 `[deps] allow` names and privately mapped scopes are never looked up.
 
+**As built (M5):**
+- *Manifests:* package.json (dependencies, dev, optional and peer, since npm 7+
+  installs peers; `npm:` aliases resolve to their target), requirements*.txt and
+  requirements/*.txt, pyproject.toml (PEP 621, PEP 735, uv dev-dependencies, Poetry),
+  Pipfile. Not read: setup.py, requirements.in, environment.yml.
+- *npm imports* skip builtins, protocol specifiers, paths, `@/ ~ # $` aliases,
+  tsconfig `paths`/`baseUrl`, bundler aliases and Deno import maps. A file `collect`
+  skipped still counts as local. Whether a name is local is decided over the whole
+  repository, in scan mode too.
+- *DEP-002* never fires on snapshot names (`PackageFacts.popular`) or missing data;
+  PyPI uses age only. *DEP-003* reads the packument's version, or for snapshot names
+  the per-version document; `gypfile` counts as `install`; `prepare` is ignored. An
+  append that only adds a comma to the previous entry doesn't count as adding it.
+- *Requests:* npm, 2 per non-snapshot name (packument, downloads); PyPI, 1 Simple API
+  request (404 = missing). Snapshot names need none in an audit.
+- *Cache:* `$XDG_CACHE_HOME/seamscan/registry/`, written atomically. Offline runs use
+  cached answers of any age; a failed refresh falls back to the cached existence
+  answer for 7 days. On 429 seamscan waits once if `Retry-After` ≤ 5 s; a host that
+  timed out or rate-limited isn't asked again in that run.
+- *Gaps:* `.yarnrc.yml`, `pip.conf`, `uv.toml` and `PIP_INDEX_URL` aren't read; when a
+  whole repository points at a private registry, names still go to the public one
+  (only the 404 is softened), so private unscoped names need `[deps] allow`. No overall
+  deadline for online runs (worst case about 30 s).
+
 **Network behavior:**
 - Responses are cached in `~/.cache/seamscan/registry/` (TTL 7 days for
   existence, 1 day for age and downloads).
@@ -774,7 +799,8 @@ rules read a `RegistryView` with `now` passed in. Local, URL and workspace specs
 - **SC-META-004 — Dependency not verified.** LOW/LOW. The registry couldn't
   confirm a dependency (offline and not cached or in the snapshot, timeout,
   5xx, 429, or a 404 in a repository that configures another registry).
-  Never reported as SC-DEP-001 (ADR-004).
+  Never reported as SC-DEP-001 (ADR-004). It is a registered rule (so it has
+  cases and budgets) but, like every SC-META rule, can't be disabled.
 
 ### 7.9 Deliberately deferred to v2
 
@@ -850,6 +876,25 @@ secret scanning quiet without weakening the cases.
 **Split integrity.** A test checks that every case's `split` equals the
 hash-derived value (`sha256(id)`, the first 8 hex digits mod 10 < 3 →
 `holdout`). Cases can't be moved between splits by hand.
+
+**Registry fixtures (M5).** Dependency cases carry the registry's answers, so no
+case touches the network:
+
+```toml
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react"]          # exists and popular, nothing else known
+[[registry.package]]
+ecosystem = "npm"
+name = "react-codeshift"
+exists = true
+first_published = 2026-09-20T00:00:00Z
+weekly_downloads = 12
+```
+
+A dependency the rules would look up without a fixture is a case error, so fixtures
+can't be silently incomplete. Extra fixtures are allowed (to show that a local name
+would 404 if it were looked up). Cases without `[registry]` run with no registry.
 
 ### 8.2 Scoring
 
@@ -1138,10 +1183,11 @@ seamscan explain RULE-ID                 # print the rule page
 seamscan hook claude                     # Claude Code hook adapter (stdin -> stdout)
 ```
 
-Global: `--config PATH`, `--debug`, `--version`. `--stats` is an option on
+Global: `--config PATH`, `--debug`, `--version`. `--offline` (M5) is on `audit`
+and `scan`; the baseline commands always look up online, as `audit` does. `--stats` is an option on
 `audit` and `scan` and writes to stderr, so stdout stays machine-readable.
 `scan --files PATH...` limits any scan mode to those paths; a path git doesn't
-know, or ignores, is exit 2. `--offline` and `--strict` arrive with M5.
+know, or ignores, is exit 2. `--strict` is not built yet.
 
 ### 11.2 GitHub Action (`action.yml`, composite)
 
@@ -1164,7 +1210,7 @@ repo has it enabled. seamscan finds, and GitHub's own tools can propose fixes.
 
 ### 11.3 pre-commit
 
-`.pre-commit-hooks.yaml` defines `id: seamscan`, `entry: seamscan scan --staged` (`--offline` added with M5),
+`.pre-commit-hooks.yaml` defines `id: seamscan`, `entry: seamscan scan --staged --offline`,
 `pass_filenames: false`.
 
 ### 11.4 Claude Code hook
@@ -1274,7 +1320,7 @@ Each milestone ends with its "done when" checks passing in CI.
 | **M2** | **Python rules** | SEC-001/003/004, CODE-001–010 and TEST-001–003 (pytest) meet their budgets. Suppressions work. |
 | **M3** | **TS/JS** | The tree-sitter layer, the same rules for TS/JS, WEB-001–003 and file roles (§5.6). TS/JS cases make up ≥ 40% of the corpus. |
 | **M4** | **Supabase and Firebase** | Schema replay; SUPA-001–004, FIRE-001 and SEC-002; ≥ 60 original cases, including the CVE-2025-48757 pattern end to end. |
-| **M5** | **Dependencies** | The registry client, cache, offline snapshot and DEP-001–003, with network failure behavior tested. |
+| **M5** | **Dependencies** (done 2026-10-09) | The registry client, cache, offline snapshot and DEP-001–003, with network failure behavior tested. |
 | **M6** | **Gating and integrations** (done 2026-10-09, except the GitHub upload check, which waits for the push) | Baseline and ratchet; SARIF with GitHub upload verified on a test repo; the Action, pre-commit and the Claude hook; the markdown audit report. |
 | **M7** | **Evaluation and release** | Holdout scored; the 20-repo noise study; the comparator run; generated README table; write-up; demo GIF; PyPI 1.0.0. |
 
@@ -1349,6 +1395,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-09: **M5 done (0.7.0).** SC-DEP-001..003 and SC-META-004 per ADR-004: pure extraction (`facts/dependencies.py`, `facts/registries.py`), the `supply/` edge (urllib, atomic cache, bundled top-10k snapshot with licensed sources, failure-as-data, 429 backoff), `--offline`, `[deps]` config, registry fixtures in benchmark cases. 30 rules, 820 cases (411 with TS/JS), every rule 1.00/1.00 on both splits (author-written; §8.3). Hook: PostToolUse offline, Stop online. Details under §7.7 "As built (M5)".
 - 2026-10-09: M5 groundwork: ADR-004 (dependency checks keep the core pure: extract, look up at the edge, rules read a `RegistryView` with `now` as data); SC-META-004 "Dependency not verified" (§7.8); `PackageRef`/`PackageFacts`/`RegistryView` in `model.py`; `facts/dependencies.py` (package.json and requirements files, with locations); `analyze(registry=...)`.
 - 2026-10-09: **M6 done (0.6.0)**, apart from verifying the GitHub SARIF upload, which needs the branch pushed. Baseline and ratchet (`baseline create|prune|check`), `seamscan.toml` (`[policy]`, `[rules]`, `[paths] exclude`), SARIF 2.1.0 (validated against the vendored OASIS schema), the markdown audit report, the agent format, `--stats`, suppression reasons in every output, `scan --files`, `rules`, `explain`, `hook claude` (new pure `hooks/` layer), `action.yml` and `.pre-commit-hooks.yaml`. Rule pages moved into the package (`src/seamscan/rules/docs/`). Spec corrections from the hook docs: MultiEdit is gone; hook errors must exit 1, not 2. Decisions recorded as "As built (M6)" in §9.3, §9.5, §10, §11.
 - 2026-10-08: M6 moved ahead of M5 (§14). M6 groundwork: fingerprints computed before scan scoping; `Verdict.baselined`; one shared run path in the CLI. M6 scope decisions recorded under §14.

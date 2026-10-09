@@ -1,0 +1,38 @@
+id = "dep002-js-new-even-if-downloaded"
+description = "five days old with many downloads: age alone is enough"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "package.json"
+line = 18
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:bcryptjs",
+    "npm:cors",
+    "npm:dotenv",
+    "npm:express",
+    "npm:helmet",
+    "npm:jsonwebtoken",
+    "npm:pg",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "express-zod-openapi-router"
+exists = true
+first_published = 2026-09-26T00:00:00Z
+weekly_downloads = 48000

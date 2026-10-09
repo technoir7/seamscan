@@ -1,0 +1,32 @@
+id = "meta004-py-rate-limited"
+description = "PyPI answered 429 after backoff for a Poetry dependency"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "pyproject.toml"
+line = 12
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:fastapi",
+    "pypi:pytest",
+    "pypi:shapely",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "geoalchemy2"
+problem = "PyPI rate-limited the request (HTTP 429)"

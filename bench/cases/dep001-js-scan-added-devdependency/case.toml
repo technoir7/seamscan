@@ -1,0 +1,32 @@
+id = "dep001-js-scan-added-devdependency"
+description = "scan: the change adds a Vitest mock helper for Supabase that npm doesn't have"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "package.json"
+line = 48
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "vitest"
+exists = true
+
+[[registry.package]]
+ecosystem = "npm"
+name = "vitest-supabase-mock"
+exists = false

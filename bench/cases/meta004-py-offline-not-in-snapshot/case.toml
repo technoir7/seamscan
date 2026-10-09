@@ -1,0 +1,40 @@
+id = "meta004-py-offline-not-in-snapshot"
+description = "offline: a niche package isn't in the snapshot or the cache, so it can't be verified"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "requirements.txt"
+line = 12
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:alembic",
+    "pypi:fastapi",
+    "pypi:httpx",
+    "pypi:passlib",
+    "pypi:psycopg2-binary",
+    "pypi:pydantic",
+    "pypi:pydantic-settings",
+    "pypi:python-jose",
+    "pypi:python-multipart",
+    "pypi:sqlalchemy",
+    "pypi:uvicorn",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "fastapi-mail"
+problem = "offline, and not in the snapshot or the cache"

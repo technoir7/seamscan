@@ -1,0 +1,60 @@
+id = "dep001-js-lovable-invented-supabase-helper"
+description = "Lovable-style Vite app adds a Supabase auth helper package that doesn't exist on npm"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-001"
+path = "package.json"
+line = 32
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:@eslint/js",
+    "npm:@hookform/resolvers",
+    "npm:@radix-ui/react-dialog",
+    "npm:@radix-ui/react-label",
+    "npm:@radix-ui/react-slot",
+    "npm:@radix-ui/react-toast",
+    "npm:@supabase/supabase-js",
+    "npm:@tanstack/react-query",
+    "npm:@types/node",
+    "npm:@types/react",
+    "npm:@types/react-dom",
+    "npm:@vitejs/plugin-react-swc",
+    "npm:autoprefixer",
+    "npm:class-variance-authority",
+    "npm:clsx",
+    "npm:eslint",
+    "npm:globals",
+    "npm:lucide-react",
+    "npm:postcss",
+    "npm:react",
+    "npm:react-dom",
+    "npm:react-hook-form",
+    "npm:react-router-dom",
+    "npm:sonner",
+    "npm:tailwind-merge",
+    "npm:tailwindcss",
+    "npm:tailwindcss-animate",
+    "npm:typescript",
+    "npm:typescript-eslint",
+    "npm:vite",
+    "npm:zod",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "supabase-auth-react-hooks"
+exists = false

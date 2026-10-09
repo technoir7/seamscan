@@ -1,0 +1,29 @@
+id = "dep002-py-thirty-one-days"
+description = "first published 31 days ago: past the 30-day window"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:anthropic",
+    "pypi:mcp",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "mcp-server-sqlite-lite"
+exists = true
+first_published = 2026-08-31T00:00:00Z

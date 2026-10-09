@@ -10,6 +10,7 @@ import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
+from seamscan.facts.dependencies import Dependency, registry_dependencies
 from seamscan.facts.roles import PackageKind, Role, role_of
 from seamscan.facts.supabase import SupabaseSchema, build_supabase_schemas
 from seamscan.model import Location, SourceFile
@@ -80,6 +81,9 @@ class ProjectModel:
     # One per supabase/migrations directory. Here rather than built from ctx.files because
     # in scan mode the unchanged migrations arrive only as context (ADR-002).
     supabase: tuple[SupabaseSchema, ...] = ()
+    # Every registry dependency, manifest or import. Here because whether an import is
+    # declared or local depends on files that may only arrive as context (ADR-004).
+    dependencies: tuple[Dependency, ...] = ()
 
     def package_for(self, path: str) -> Package | None:
         for p in self.packages:
@@ -155,4 +159,5 @@ def build_project(files: Iterable[SourceFile]) -> ProjectModel:
         tuple(env),
         partial.unreadable_manifests,
         build_supabase_schemas(files),
+        registry_dependencies(files),
     )

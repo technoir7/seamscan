@@ -1,0 +1,31 @@
+id = "dep002-js-workspace-package-new"
+description = "a workspace package created last week is local, not a young registry package"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "npm:express",
+    "npm:stripe",
+    "npm:turbo",
+]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "@acme/billing"
+exists = true
+first_published = 2026-09-27T00:00:00Z
+weekly_downloads = 0

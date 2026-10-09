@@ -251,6 +251,32 @@ def test_scan_checks_only_added_dependencies_with_their_install_scripts(
     assert f"{NPM}/react" not in "".join(net.urls)
 
 
+def test_scan_never_looks_up_a_package_defined_elsewhere_in_the_repository(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # The workspace package lives in an unchanged file; only the whole repository shows
+    # that `@acme/ui` is local, so its name must not reach the public registry.
+    (repo / "packages" / "ui").mkdir(parents=True)
+    (repo / "packages" / "ui" / "package.json").write_text(json.dumps({"name": "@acme/ui"}))
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "workspace")
+    package_json(repo, {"@acme/ui": "^1.0.0", "react": "^19.0.0"})
+    net = use_net(monkeypatch, {})
+    result = runner.invoke(app, ["scan", "--format", "json"])
+    assert result.exit_code == 0, result.output
+    assert net.urls == []
+
+
+def test_an_import_of_a_skipped_file_is_not_a_missing_package(tmp_path: Path):
+    # tsconfig baseUrl makes `types_db` a local file; collect skips it (too big or binary),
+    # but its path still proves the import is local.
+    (tmp_path / "tsconfig.json").write_text(json.dumps({"compilerOptions": {"baseUrl": "."}}))
+    (tmp_path / "types_db.ts").write_bytes(b"\x00binary")
+    (tmp_path / "app.ts").write_text("import type { Database } from 'types_db';\n")
+    result = runner.invoke(app, ["audit", str(tmp_path), "--offline", "--format", "json"])
+    assert "SC-META-004" not in result.stdout and "SC-DEP-001" not in result.stdout
+
+
 def hook(payload: Mapping[str, object]) -> object:
     return runner.invoke(app, ["hook", "claude"], input=json.dumps(payload))
 

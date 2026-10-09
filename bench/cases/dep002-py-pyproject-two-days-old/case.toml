@@ -1,0 +1,33 @@
+id = "dep002-py-pyproject-two-days-old"
+description = "pyproject depends on a Supabase helper registered two days ago (a hallucinated name someone claimed)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "pyproject.toml"
+line = 10
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:fastapi",
+    "pypi:python-dotenv",
+    "pypi:supabase",
+]
+
+[[registry.package]]
+ecosystem = "pypi"
+name = "supabase-pydantic-models"
+exists = true
+first_published = 2026-09-29T13:45:00Z

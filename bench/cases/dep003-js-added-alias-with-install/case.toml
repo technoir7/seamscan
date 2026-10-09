@@ -1,0 +1,33 @@
+id = "dep003-js-added-alias-with-install"
+description = "scan: an npm: alias adds canvas, whose version runs an install script"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-003"
+path = "package.json"
+line = 32
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "canvas"
+exists = true
+first_published = 2010-12-01T00:00:00Z
+weekly_downloads = 3000000
+install_scripts = ["install"]

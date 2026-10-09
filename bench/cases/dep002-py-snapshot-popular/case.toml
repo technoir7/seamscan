@@ -1,0 +1,32 @@
+id = "dep002-py-snapshot-popular"
+description = "well-known packages from the bundled snapshot have no age data and are never 'too new'"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = [
+    "pypi:alembic",
+    "pypi:fastapi",
+    "pypi:httpx",
+    "pypi:passlib",
+    "pypi:psycopg2-binary",
+    "pypi:pydantic",
+    "pypi:pydantic-settings",
+    "pypi:python-jose",
+    "pypi:python-multipart",
+    "pypi:sqlalchemy",
+    "pypi:uvicorn",
+]

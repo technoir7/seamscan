@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from bench.case import Case, case_change, case_files, load_all
+from bench.case import Case, case_change, case_files, case_registry, load_all
 from bench.score import CaseScore, Found, RuleScore, aggregate, score_case
 from seamscan.analysis import analyze
 from seamscan.model import Confidence
@@ -15,7 +15,7 @@ from seamscan.rules.registry import RULES
 
 
 def run_case(case: Case) -> CaseScore:
-    result = analyze(case_files(case), change=case_change(case))
+    result = analyze(case_files(case), change=case_change(case), registry=case_registry(case))
     found = [Found(f.rule_id, f.location.path, f.location.start_line) for f in result.findings]
     return score_case(case.expected, case.forbidden, found)
 

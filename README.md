@@ -14,9 +14,10 @@ AI assistants make the same mistakes again and again:
 seamscan finds them. It reports each finding with an exact file and line, a severity
 and a confidence.
 
-**Status: alpha (0.6.0).** It covers Python and TypeScript/JavaScript (Next.js, React,
+**Status: alpha (0.7.0).** It covers Python and TypeScript/JavaScript (Next.js, React,
 Vite, Expo, Express, Hono, Supabase Edge Functions, FastAPI, Flask, Django), plus
-Supabase migrations and Firebase security rules.
+Supabase migrations and Firebase security rules, plus the npm and PyPI packages a
+project declares or imports.
 
 The cross-file checks link a table without row-level security to the browser code
 that reads it. That's the CVE-2025-48757 pattern, which exposed 170 Lovable apps.
@@ -30,6 +31,9 @@ uvx --from git+https://github.com/technoir7/seamscan seamscan audit .     # whol
 uvx --from git+https://github.com/technoir7/seamscan seamscan scan        # only what you changed
 ```
 
+- `--offline` skips the network. By default seamscan asks npm and PyPI about the
+  packages a project uses (see [Dependency checks](#dependency-checks)); nothing else
+  ever leaves the machine.
 - `audit [PATH]` checks every file git knows about: tracked files, plus untracked
   files that aren't ignored.
 - `scan` checks only the lines your change added. It compares the working tree with
@@ -78,7 +82,11 @@ exit code come from the same decision.
 | [SC-CODE-009](src/seamscan/rules/docs/SC-CODE-009.md) | Predictable randomness for secrets | Py, TS/JS | MEDIUM | HIGH |
 | [SC-CODE-010](src/seamscan/rules/docs/SC-CODE-010.md) | Invisible or bidirectional Unicode in source (Trojan Source) | Py, TS/JS | HIGH | HIGH |
 | [SC-CODE-011](src/seamscan/rules/docs/SC-CODE-011.md) | Unsafe deserialization | Py | HIGH | MEDIUM |
+| [SC-DEP-001](src/seamscan/rules/docs/SC-DEP-001.md) | Dependency that doesn't exist | Py, TS/JS | HIGH | HIGH |
+| [SC-DEP-002](src/seamscan/rules/docs/SC-DEP-002.md) | Dependency too new or obscure to trust | Py, TS/JS | MEDIUM | MEDIUM |
+| [SC-DEP-003](src/seamscan/rules/docs/SC-DEP-003.md) | New dependency runs code at install (`scan` only, npm) | TS/JS | MEDIUM | HIGH |
 | [SC-FIRE-001](src/seamscan/rules/docs/SC-FIRE-001.md) | Open security rules | Firebase rules | CRITICAL | HIGH |
+| [SC-META-004](src/seamscan/rules/docs/SC-META-004.md) | Dependency not verified | Py, TS/JS | LOW | LOW |
 | [SC-SEC-001](src/seamscan/rules/docs/SC-SEC-001.md) | Provider secret in source | Py, TS/JS, `.env` | CRITICAL | HIGH |
 | [SC-SEC-002](src/seamscan/rules/docs/SC-SEC-002.md) | Secret reachable from the browser | TS/JS, `.env` | CRITICAL | HIGH |
 | [SC-SEC-003](src/seamscan/rules/docs/SC-SEC-003.md) | Hardcoded fallback for a secret | Py, TS/JS | HIGH | HIGH |
@@ -138,9 +146,38 @@ severity = { "SC-CODE-002" = "LOW" }
 
 [paths]
 exclude = ["scripts/legacy/**"]
+
+[deps]
+min_age_days = 30
+min_weekly_downloads = 100
+allow = ["@acme/*"]            # internal names: never looked up
 ```
 
 An unknown key or a typo is an error (exit 2), never silently ignored.
+
+## Dependency checks
+
+AI coding tools invent package names that sound right. Attackers register those names
+(slopsquatting), so the next install fetches their code. seamscan asks the registry
+about every package a project declares (package.json, requirements files,
+pyproject.toml, Pipfile) or imports in TS/JS without declaring:
+
+- **SC-DEP-001:** the package doesn't exist.
+- **SC-DEP-002:** it was first published less than 30 days ago, or (npm) has fewer
+  than 100 downloads a week.
+- **SC-DEP-003:** a dependency added in this change runs code when it's installed
+  (`scan` only).
+- **SC-META-004:** seamscan couldn't verify it (offline, timeout, rate limit). A
+  package is never reported as missing because the network failed.
+
+What stays private: local, git and workspace packages, names matched by
+`[deps] allow` in `seamscan.toml`, and scopes that `.npmrc` maps to another registry
+are never sent anywhere. In a repository that configures its own registry, a name the
+public registry doesn't know is reported as unverified, not missing.
+
+Answers are cached in `~/.cache/seamscan/registry/` (or `$XDG_CACHE_HOME`). The 10,000
+most-used names on each registry ship with seamscan, so they need no request.
+`--offline` uses only the cache and that list.
 
 ## Integrations
 
@@ -157,7 +194,7 @@ at least 5 cases it must flag and 5 close calls it must not. The cases are split
 rule at the right file and line. CI fails if any rule drops below its precision/recall
 budget.
 
-The corpus has 746 cases, 387 of them with TypeScript/JavaScript. Every rule scores
+The corpus has 820 cases, 411 of them with TypeScript/JavaScript. Every rule scores
 precision 1.00 and recall 1.00 on both splits.
 
 When the Python rules landed, the old v0.2 engine was scored on the 262-case corpus of
@@ -196,9 +233,9 @@ See [spec §14](docs/SPEC.md).
   and client code.
 - **Done in 0.6: Integrations.** Baseline/ratchet, `seamscan.toml`, SARIF, the
   markdown review report, a GitHub Action, pre-commit and a Claude Code hook.
-- **Next: dependency checks.** Packages that don't exist or are suspiciously new
-  (slopsquatting).
-- **Then 1.0:** an independently written test set, a noise study on real
+- **Done in 0.7: Dependency checks.** Packages that don't exist, are suspiciously new
+  or obscure, or run code at install, with a cache and an offline mode.
+- **Next, 1.0:** an independently written test set, a noise study on real
   repositories, and a PyPI release.
 
 ## Development

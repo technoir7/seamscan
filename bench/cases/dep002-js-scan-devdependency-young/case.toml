@@ -1,0 +1,29 @@
+id = "dep002-js-scan-devdependency-young"
+description = "scan: the change adds a Tailwind plugin published 14 days ago"
+mode = "scan"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-DEP-002"
+path = "package.json"
+line = 47
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "tailwindcss-animate-pro"
+exists = true
+first_published = 2026-09-17T00:00:00Z
+weekly_downloads = 3100
