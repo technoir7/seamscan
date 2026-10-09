@@ -46,3 +46,18 @@ def test_aggregate_precision_recall():
     assert table["R"].precision == 0.5
     assert table["R"].recall == 0.5
     assert table["R"].tp == 1 and table["R"].fp == 1 and table["R"].fn == 1
+
+
+def test_scoped_scoring_ignores_rules_the_case_does_not_test():
+    # Independent cases label only the rules they test (spec §8.3); other findings are
+    # unlabelled, so they are neither right nor wrong.
+    expected = [Expected("SC-A", "a.py", 3, 2)]
+    found = [Found("SC-A", "a.py", 3), Found("SC-B", "a.py", 9), Found("SC-C", "a.py", 1)]
+    s = score_case(expected, ["SC-C"], found, scoped=True)
+    assert s.tp == {"SC-A": 1}
+    assert s.fp == {"SC-C": 1}
+
+
+def test_unscoped_scoring_counts_every_unmatched_finding():
+    found = [Found("SC-B", "a.py", 9)]
+    assert score_case([], [], found).fp == {"SC-B": 1}

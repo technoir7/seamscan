@@ -3,7 +3,14 @@
 import re
 from pathlib import Path
 
-from bench.case import CASES_DIR, case_files, case_registry, expected_split, load_all
+from bench.case import (
+    CASES_DIR,
+    INDEPENDENT_DIR,
+    case_files,
+    case_registry,
+    expected_split,
+    load_all,
+)
 from bench.fake_secrets import FAKES
 from seamscan.parse.javascript import js_dialect
 from seamscan.rules.registry import RULES
@@ -40,9 +47,24 @@ def test_registry_fixtures_cover_every_lookup():
         case_registry(case)  # raises CaseError naming the missing fixture
 
 
+def test_independent_cases_load_and_are_marked_as_such():
+    cases = load_all(INDEPENDENT_DIR)
+    assert cases
+    for case in cases:
+        assert case.split == "independent" and case.id.startswith("ind-"), case.id
+        files = {f.path: f.text for f in case_files(case)}
+        for e in case.expected:
+            assert e.path in files, f"{case.id}: {e.path} missing"
+        case_registry(case)
+
+
+# A redaction regex holds a bare key prefix, not a key; nothing secret-shaped to scan for.
+PREFIX_ONLY = {INDEPENDENT_DIR / "ind-sec001-py-neg-regex-pattern/repo/logging_filters.py"}
+
+
 def test_case_files_hold_placeholders_not_secret_shaped_strings():
-    for path in CASES_DIR.rglob("*"):
-        if path.is_file():
+    for path in [*CASES_DIR.rglob("*"), *INDEPENDENT_DIR.rglob("*")]:
+        if path.is_file() and path not in PREFIX_ONLY:
             assert not SECRET_SHAPES.search(path.read_text()), (
                 f"{path}: use a {{FAKE_*}} placeholder"
             )

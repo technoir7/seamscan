@@ -48,11 +48,18 @@ def score_case(
     expected: Sequence[Expected],
     forbidden: Sequence[str],
     found: Sequence[Found],
+    scoped: bool = False,
 ) -> CaseScore:
     """Match each expectation to at most one finding: same rule, same path, line within
     tolerance (closest wins). Unmatched findings are false alarms, including any hit on a
-    `forbidden` rule."""
-    del forbidden  # every unmatched finding already counts; forbidden only documents intent
+    `forbidden` rule.
+
+    `scoped`: only the rules the case tests (expected or forbidden) count. Corpus cases
+    label every finding; independent cases label only the rules they were written for.
+    """
+    if scoped:
+        tested = {e.rule for e in expected} | set(forbidden)
+        found = [f for f in found if f.rule in tested]
     unmatched = list(found)
     tp: Counter[str] = Counter()
     fn: Counter[str] = Counter()

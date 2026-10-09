@@ -5,9 +5,12 @@ from __future__ import annotations
 import difflib
 import hashlib
 import re
+import shutil
+import subprocess
+import tempfile
 import tomllib
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
@@ -15,6 +18,7 @@ from typing import Any, cast
 from bench.fake_secrets import FAKES
 from bench.score import Expected
 from seamscan.facts.dependencies import dependencies_to_check, pypi_name
+from seamscan.facts.registries import registry_config
 from seamscan.model import (
     WHOLE_FILE,
     ChangeSet,
@@ -24,7 +28,9 @@ from seamscan.model import (
     RegistryView,
     SourceFile,
 )
-from seamscan.workspace.files import collect
+from seamscan.policy.config import Config, DepsPolicy, parse_config
+from seamscan.rules.registry import ALL_META, RULES
+from seamscan.workspace.files import FileSet, collect
 
 CASES_DIR = Path(__file__).resolve().parent / "cases"
 INDEPENDENT_DIR = Path(__file__).resolve().parent / "independent"
@@ -65,6 +71,7 @@ def load_case(directory: Path) -> Case:
         raise CaseError(f"{directory}: mode must be 'audit' or 'scan'")
     if mode == "scan" and not (directory / "base").is_dir():
         raise CaseError(f"{directory}: scan-mode cases need a base/ tree")
+    _config(directory / "repo")  # fail at load on a config the harness can't apply
     return Case(
         id=data["id"],
         description=data["description"],
@@ -179,8 +186,33 @@ def case_files(case: Case) -> tuple[SourceFile, ...]:
     return _read_tree(case, case.root)
 
 
+def _config(root: Path) -> Config:
+    """The case repo's seamscan.toml. The harness applies only `[deps]`, so anything else
+    is an error rather than a setting silently ignored."""
+    path = root / "seamscan.toml"
+    if not path.is_file():
+        return Config()
+    known = [*(r.meta.id for r in RULES), *(m.id for m in ALL_META)]
+    config = parse_config(path.read_text(), known)
+    if replace(config, deps=DepsPolicy()) != Config():
+        raise CaseError(f"{path}: the benchmark applies only [deps] from seamscan.toml")
+    return config
+
+
+def _collect(root: Path) -> FileSet:
+    # The CLI reads git's view, so a .gitignore'd file is never analyzed. Cases have no
+    # .git, so a case with a .gitignore is read through a throwaway repository.
+    if not (root / ".gitignore").is_file():
+        return collect(root, use_git=False)
+    with tempfile.TemporaryDirectory() as tmp:
+        copy = Path(tmp) / "repo"
+        shutil.copytree(root, copy)
+        subprocess.run(["git", "init", "-q", str(copy)], check=True)
+        return collect(copy, use_git=True)
+
+
 def _read_tree(case: Case, root: Path) -> tuple[SourceFile, ...]:
-    fileset = collect(root, use_git=False)
+    fileset = _collect(root)
     if fileset.skipped:
         raise CaseError(f"{case.id}: unreadable files {fileset.skipped}")
     return tuple(SourceFile(f.path, _fill(f.text, f.path)) for f in fileset.files)
@@ -220,8 +252,20 @@ def case_registry(case: Case) -> RegistryView | None:
     """
     if case.registry is None:
         return None
-    wanted = dependencies_to_check(case_files(case), case_change(case))
+    files = case_files(case)
+    deps = _config(case.root).deps
+    repo = registry_config(files)
+
+    # As the CLI does (cli._registry): allow-listed and privately hosted names are never
+    # looked up, so no answer about them reaches the rules.
+    def looked_up(ref: PackageRef) -> bool:
+        return not deps.allows(ref) and not repo.is_private(ref)
+
+    wanted = {r for r in dependencies_to_check(files, case_change(case)) if looked_up(r)}
     missing = sorted(f"{r.ecosystem}:{r.name}" for r in wanted - case.registry.packages.keys())
     if missing:
         raise CaseError(f"{case.id}: no registry fixture for {', '.join(missing)}")
-    return case.registry
+    return replace(
+        case.registry,
+        packages={r: f for r, f in case.registry.packages.items() if looked_up(r)},
+    )

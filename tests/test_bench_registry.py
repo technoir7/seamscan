@@ -116,3 +116,28 @@ def test_a_package_is_either_in_the_snapshot_or_listed(tmp_path: Path):
     )
     with pytest.raises(CaseError, match="twice"):
         load_case(write_case(tmp_path, toml, {}))
+
+
+def test_a_name_the_repo_allow_lists_is_never_looked_up_as_in_the_cli(tmp_path: Path):
+    toml = """
+[registry]
+now = 2026-10-01T00:00:00Z
+[[registry.package]]
+ecosystem = "pypi"
+name = "acme-internal"
+exists = false
+"""
+    files = {
+        "requirements.txt": "acme-internal==1.0\n",
+        "seamscan.toml": '[deps]\nallow = ["acme-*"]\n',
+    }
+    view = case_registry(load_case(write_case(tmp_path, toml, files)))
+    assert view is not None
+    assert PackageRef(Ecosystem.PYPI, "acme-internal") not in view.packages
+
+
+def test_a_case_config_the_harness_cannot_apply_is_an_error(tmp_path: Path):
+    toml = "[registry]\nnow = 2026-10-01T00:00:00Z\n"
+    files = {"app.py": "x = 1\n", "seamscan.toml": '[rules]\ndisable = ["SC-CODE-001"]\n'}
+    with pytest.raises(CaseError, match="seamscan.toml"):
+        case_registry(load_case(write_case(tmp_path, toml, files)))
