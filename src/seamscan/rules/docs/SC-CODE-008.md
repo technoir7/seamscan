@@ -36,7 +36,10 @@ Not matched, because they aren't these globals: `JSON.parse`, `redis.eval(script
 ### TypeScript and JavaScript: HTML (CWE-79)
 
 - React's `dangerouslySetInnerHTML={{ __html: x }}`, in any non-test file, when `x`
-  isn't inert or sanitized.
+  isn't inert or sanitized. **Not on a `<style>` element:** its text is CSS, and
+  browsers don't run script from style text. shadcn/ui's chart component writes its theme
+  variables this way, so it appears in many apps. (A value that can close the element,
+  `</style><script>`, would still be a problem; the rule doesn't look for that.)
 - `el.innerHTML = x`, `el.innerHTML += x`, `el.outerHTML = x` and
   `el.insertAdjacentHTML(position, x)`, in client and unknown-role files. Server files
   are skipped: DOM sinks there are jsdom or test setup.
@@ -103,6 +106,7 @@ JSON.parse(raw);
 <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(md) as string) }} />
 <script dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 <footer dangerouslySetInnerHTML={{ __html: "&copy; 2026 Acme" }} />
+<style dangerouslySetInnerHTML={{ __html: `[data-chart=${id}] { --color-a: ${color}; }` }} />
 list.innerHTML = "";
 list.innerHTML = todos.map((t) => `<li>${escapeHtml(t.text)}</li>`).join("");
 await redis.eval(RATE_LIMIT_LUA, 1, key);
