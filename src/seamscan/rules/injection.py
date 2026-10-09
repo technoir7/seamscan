@@ -591,6 +591,33 @@ _SHELL_ALWAYS = frozenset(
     }
 )
 _SHELL_QUOTERS = frozenset({"shlex.quote", "shlex.join"})
+_CLI_DECORATOR_ENDINGS = frozenset({"command", "callback", "group"})
+
+
+def _cli_command(module: PyModule, fn: ast.AST) -> bool:
+    """A typer or click command: `@app.command()`, `@app.callback()`, `@click.command()`,
+    `@click.argument(...)` and the like, in a module that imports typer or click."""
+    if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return False
+    if not any(v.split(".")[0] in ("typer", "click") for v in module.aliases.values()):
+        return False
+    for dec in fn.decorator_list:
+        name = qualified_name(module, dec.func if isinstance(dec, ast.Call) else dec) or ""
+        if name.startswith("click.") or name.rsplit(".", 1)[-1] in _CLI_DECORATOR_ENDINGS:
+            return True
+    return False
+
+
+def _cli_parameter(module: PyModule, node: ast.expr) -> bool:
+    """A command's own option or argument, never reassigned: the person running a
+    command-line tool supplies it, and they already have a shell."""
+    if not isinstance(node, ast.Name) or assigned_values(module, node):
+        return False
+    fn = enclosing_function(module, node)
+    if fn is None or isinstance(fn, ast.Lambda) or not _cli_command(module, fn):
+        return False
+    a = fn.args
+    return any(arg.arg == node.id for arg in (*a.posonlyargs, *a.args, *a.kwonlyargs))
 
 
 def _shell_built(ctx: RuleContext) -> Iterator[Finding]:
@@ -606,12 +633,13 @@ def _shell_built(ctx: RuleContext) -> Iterator[Finding]:
         if command is None or isinstance(command, (ast.List, ast.Tuple)):
             continue
 
-        def quoted(node: ast.expr, m: PyModule = module) -> bool:
-            return isinstance(node, ast.Call) and qualified_name(m, node.func) in _SHELL_QUOTERS
+        def safe(node: ast.expr, m: PyModule = module) -> bool:
+            quoted = isinstance(node, ast.Call) and qualified_name(m, node.func) in _SHELL_QUOTERS
+            return quoted or _cli_parameter(m, node)
 
-        if is_inert(module, command, quoted):
+        if is_inert(module, command, safe):
             continue
-        how = "built from values" if built_from_values(module, command, quoted) else "not a literal"
+        how = "built from values" if built_from_values(module, command, safe) else "not a literal"
         yield finding(
             SHELL_BUILT,
             location(module, call),

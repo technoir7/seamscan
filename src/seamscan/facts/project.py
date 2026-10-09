@@ -1,6 +1,6 @@
 """Whole-project facts every rule can use (spec §5.2, §5.6): which package a file belongs
 to and what kind it is, the role of each file, Supabase table references, the schema the
-Supabase migrations leave behind, and .env values.
+Supabase migrations leave behind, .env values, and whether the code uses ambient credentials.
 Built once per scan from the files' text. Pure."""
 
 from __future__ import annotations
@@ -84,6 +84,9 @@ class ProjectModel:
     # Every registry dependency, manifest or import. Here because whether an import is
     # declared or local depends on files that may only arrive as context (ADR-004).
     dependencies: tuple[Dependency, ...] = ()
+    # The code sets or reads cookies, uses sessions or HTTP basic auth anywhere: credentials
+    # a browser attaches on its own, which is what a credentialed CORS policy exposes.
+    ambient_credentials: bool = False
 
     def package_for(self, path: str) -> Package | None:
         for p in self.packages:
@@ -103,6 +106,21 @@ class ProjectModel:
 
 
 _FROM_CALL = re.compile(r"""\.from\(\s*(['"`])([A-Za-z_][A-Za-z0-9_]*)\1\s*\)""")
+
+# Lexical and generous on purpose: a false "yes" only keeps SC-WEB-003 reporting as before.
+_AMBIENT_CREDENTIALS = re.compile(
+    r"""
+    set_cookie|delete_cookie|set_signed_cookie|\.cookies\b|\bcookies\(\)|document\.cookie
+    |set-cookie|\.cookie\(|clearCookie|[sg]etCookie\(|\bCookie\(
+    |SessionMiddleware|django\.contrib\.(?:sessions|auth)|flask_login|LoginManager
+    |from\s+flask\s+import[^\n]*\bsession\b|flask\.session|HTTPBasic|APIKeyCookie
+    |cookie-parser|cookie-session|express-session|@fastify/(?:cookie|session|secure-session)
+    |hono/cookie|iron-session|next-auth|@auth/|@supabase/(?:ssr|auth-helpers)|@clerk/
+    |better-auth|\blucia\b|\bpassport\b|basic-auth|basicAuth|Basic\s(?:\$\{|\{|["']\s*\+)
+    |withCredentials\s*:\s*true|credentials\s*:\s*["']include["']
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
 
 
 def _line_col(text: str, offset: int) -> tuple[int, int]:
@@ -160,4 +178,15 @@ def build_project(files: Iterable[SourceFile]) -> ProjectModel:
         partial.unreadable_manifests,
         build_supabase_schemas(files),
         registry_dependencies(files),
+        any(_AMBIENT_CREDENTIALS.search(f.text) for f in files if _code_or_manifest(f)),
+    )
+
+
+def _code_or_manifest(f: SourceFile) -> bool:
+    name = f.path.rsplit("/", 1)[-1]
+    return (
+        name.endswith(".py")
+        or name in ("package.json", "pyproject.toml")
+        or (name.startswith("requirements") and name.endswith(".txt"))
+        or source_dialect(f) is not None
     )

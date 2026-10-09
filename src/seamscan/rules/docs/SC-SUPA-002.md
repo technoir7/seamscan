@@ -106,6 +106,12 @@ False positives:
 - A deliberate open `INSERT` (a public waitlist) is reported at HIGH. Constrain the
   inserted rows, or suppress it on the line above the policy:
   `-- seamscan: ignore-next-line[SC-SUPA-002] reason: public waitlist, insert only`.
+- Intent isn't in the SQL. A table that is public on purpose (`for select using (true)`
+  on blog comments) and an anonymous app's sign-up insert (no identity exists yet to
+  check) look exactly like the mistakes. In the 2026-10-09 noise studies 6 of 8
+  SC-SUPA-002 findings were real problems; the 2 false ones were these two kinds, and a
+  table *named* `private_items` with the same policy was one of the real ones, so table
+  names can't settle it either.
 - A policy on a table that has RLS off has no effect, but is still reported (SC-SUPA-001
   reports the table).
 

@@ -247,6 +247,31 @@ def test_cors_in_test_files_is_ignored():
     assert lines("SC-WEB-003", test) == []
 
 
+_STARLETTE_CORS = (
+    "from fastapi import FastAPI\n"
+    "from fastapi.middleware.cors import CORSMiddleware\n\n"
+    "app = FastAPI()\n"
+    'app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True)\n'
+)
+
+
+def test_credentialed_cors_is_harmless_when_nothing_ambient_is_sent():
+    # A Bearer token travels in a header the app's own code sets; other sites can't make
+    # the browser attach it, so "credentials" gives them nothing.
+    bearer = ("deps.py", 'oauth2 = OAuth2PasswordBearer(tokenUrl="token")\n')
+    assert lines("SC-WEB-003", ("main.py", _STARLETTE_CORS), bearer) == []
+
+
+def test_credentialed_cors_is_reported_when_the_app_uses_cookies():
+    login = ("auth.py", "def login(response):\n    response.set_cookie('session', 'x')\n")
+    assert lines("SC-WEB-003", ("main.py", _STARLETTE_CORS), login) == [("main.py", 5)]
+
+
+def test_debug_mode_does_not_depend_on_cookies():
+    run = ("app.py", "from flask import Flask\napp = Flask(__name__)\napp.run(debug=True)\n")
+    assert lines("SC-WEB-003", run) == [("app.py", 3)]
+
+
 def test_non_django_settings_debug_is_not_flagged():
     settings = ("worker/settings.py", "DEBUG = True\nQUEUE_URL = 'redis://localhost'\n")
     assert lines("SC-WEB-003", settings) == []

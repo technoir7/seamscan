@@ -129,6 +129,11 @@ def _tokens(text: str) -> Iterator[Token | None]:
         i = end
 
 
+def tokens(text: str) -> list[Token]:
+    """Every token in `text` (a function body, say), without the `;` between statements."""
+    return [tok for tok in _tokens(text) if tok is not None]
+
+
 def statements(text: str) -> Iterator[Statement]:
     """The non-empty statements in `text`, in order."""
     line_starts = [0, *(m.end() for m in re.finditer("\n", text))]
