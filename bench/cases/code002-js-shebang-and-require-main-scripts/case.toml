@@ -1,0 +1,10 @@
+id = "code002-js-shebang-and-require-main-scripts"
+description = "A shebang script and a require.main module report failed writes on the console; they run from a terminal"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

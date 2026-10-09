@@ -1,0 +1,10 @@
+id = "code002-js-log-table-write-console-fallback"
+description = "An error logger writes to an api_logs table and falls back to the console: logging is best effort by nature"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

@@ -1,0 +1,12 @@
+id = "code002-js-promise-catch-then-continues"
+description = "A logged .catch on an order insert, then the handler answers success"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "server/checkout.js"
+line = 9

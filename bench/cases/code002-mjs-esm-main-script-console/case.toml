@@ -1,0 +1,10 @@
+id = "code002-mjs-esm-main-script-console"
+description = "An ES module that runs as a command (import.meta.url is argv[1]) reports failures on the console"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

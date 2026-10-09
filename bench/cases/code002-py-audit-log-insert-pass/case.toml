@@ -1,0 +1,12 @@
+id = "code002-py-audit-log-insert-pass"
+description = "Audit-trail insert swallowed, next to an order insert swallowed: only the order is lost data"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/orders.py"
+line = 11

@@ -1,12 +1,10 @@
 id = "code002-ts-empty-catch-cart-storage"
-description = "React hook restores the cart from localStorage and drops any parse error"
+description = "React hook restores the cart from localStorage and drops any parse error: a read, no state change (not flagged since 2026-10-09; was positive)"
 mode = "audit"
 split = "holdout"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-CODE-002"
-path = "src/hooks/useCart.ts"
-line = 12

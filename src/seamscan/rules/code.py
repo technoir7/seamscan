@@ -29,6 +29,7 @@ from seamscan.parse.python import (
     snippet,
 )
 from seamscan.rules.base import Rule, RuleContext, finding, meta
+from seamscan.rules.web_auth import is_log_table
 
 TLS_DISABLED = meta(
     "SC-CODE-001",
@@ -291,20 +292,23 @@ def _clip(text: str, limit: int = 200) -> str:
 SWALLOWED_EXCEPTION = meta(
     "SC-CODE-002",
     "Swallowed exception",
-    Severity.MEDIUM,
+    Severity.HIGH,
     Confidence.HIGH,
     ("CWE-390",),
     frozenset({"python", "javascript"}),
-    "A broad except handler throws the error away without logging or re-raising it.",
+    "A write, payment or login fails and the error is thrown away, so the program carries "
+    "on as if it worked.",
 )
 
 _BROAD_EXCEPTIONS = frozenset(
     {"Exception", "BaseException", "builtins.Exception", "builtins.BaseException"}
 )
 
-# A swallowed error around one of these means a write, payment or login silently didn't
-# happen, so the finding is raised to HIGH. The list is short and explicit on purpose;
-# rules/docs/SC-CODE-002.md says what it covers.
+# A swallowed error matters when the failed call changes state: a write, payment or login
+# that silently didn't happen. Around anything else (a read with a fallback, a clipboard
+# copy, opening a browser) it is nearly always a deliberate best effort; two noise studies
+# found 5 real findings in 59 when every broad handler counted. The list is short and
+# explicit on purpose; rules/docs/SC-CODE-002.md says what it covers.
 _WRITE_METHODS = frozenset(
     {
         "commit",
@@ -328,6 +332,11 @@ _WRITE_METHODS = frozenset(
 _PAYMENT_RESOURCES = frozenset(
     {"charges", "refunds", "payment_intents", "payouts", "transfers", "subscriptions"}
 )
+# SQLAlchemy session writes; `add` alone is too common a name (`seen.add(x)`), so these
+# count only on a session-like receiver, as for SC-WEB-001.
+_SESSION_WRITES = frozenset({"add", "add_all", "merge", "flush", "bulk_save_objects"})
+_SESSION_NAMES = frozenset({"db", "session", "db_session", "dbsession", "sess"})
+_INTERRUPTS = frozenset({"BaseException", "builtins.BaseException"})
 _SENSITIVE_CALL = re.compile(r"auth|login|verify|charge|refund", re.IGNORECASE)
 
 
@@ -336,6 +345,15 @@ def _is_broad(module: PyModule, handler: ast.ExceptHandler) -> bool:
         return True
     types = handler.type.elts if isinstance(handler.type, ast.Tuple) else [handler.type]
     return any(qualified_name(module, t) in _BROAD_EXCEPTIONS for t in types)
+
+
+def _catches_interrupts(module: PyModule, handler: ast.ExceptHandler) -> bool:
+    """A bare `except:` or `except BaseException:` also catches KeyboardInterrupt and
+    SystemExit, so a handler that does nothing makes the program hard to stop."""
+    if handler.type is None:
+        return True
+    types = handler.type.elts if isinstance(handler.type, ast.Tuple) else [handler.type]
+    return any(qualified_name(module, t) in _INTERRUPTS for t in types)
 
 
 def _does_nothing(stmt: ast.stmt) -> bool:
@@ -364,6 +382,48 @@ def _call_path(func: ast.expr) -> list[str]:
             return parts[::-1]
 
 
+# Calls that name the table a chained write goes to: `supabase.table("orders").insert(…)`.
+_TABLE_CALLS = frozenset({"table", "from_", "collection"})
+
+
+def _named_tables(call: ast.Call) -> list[str]:
+    """The string arguments of table-naming calls along a call's receiver chain."""
+    names: list[str] = []
+    node: ast.expr = call.func
+    while True:
+        if isinstance(node, ast.Attribute):
+            node = node.value
+        elif isinstance(node, ast.Call):
+            func, args = node.func, node.args
+            if (
+                isinstance(func, ast.Attribute)
+                and func.attr in _TABLE_CALLS
+                and args
+                and isinstance(args[0], ast.Constant)
+                and isinstance(args[0].value, str)
+            ):
+                names.append(args[0].value)
+            node = func
+        else:
+            return names
+
+
+_READ_SQL = re.compile(r"\s*(?:SELECT|WITH|SHOW|EXPLAIN)\b", re.IGNORECASE)
+
+
+def _runs_a_read(call: ast.Call, path: list[str]) -> bool:
+    """`execute` runs whatever it is given: a query builder that only selects
+    (`table("t").select("*").eq(...).execute()`), or SQL text that starts with SELECT."""
+    if "select" in path and not _WRITE_METHODS.intersection(path[:-1]):
+        return True
+    first = call.args[0] if call.args else None
+    return (
+        isinstance(first, ast.Constant)
+        and isinstance(first.value, str)
+        and bool(_READ_SQL.match(first.value))
+    )
+
+
 def _sensitive_call(module: PyModule, body: list[ast.stmt]) -> str | None:
     for stmt in body:
         for node in ast.walk(stmt):
@@ -372,11 +432,21 @@ def _sensitive_call(module: PyModule, body: list[ast.stmt]) -> str | None:
             path = _call_path(node.func)
             if not path:
                 continue
+            # A log, analytics or audit write is best effort by nature (as for SC-WEB-001).
+            if any(map(is_log_table, [*path[:-1], *_named_tables(node)])):
+                continue
+            if path[-1] == "execute" and _runs_a_read(node, path):
+                continue
             name = qualified_name(module, node.func) or ""
+            receiver = path[-2].lower() if len(path) > 1 else ""
             if (
                 name.startswith("stripe.")
                 or _PAYMENT_RESOURCES.intersection(path)
                 or path[-1] in _WRITE_METHODS
+                or (
+                    path[-1] in _SESSION_WRITES
+                    and (receiver in _SESSION_NAMES or receiver.endswith("session"))
+                )
                 or _SENSITIVE_CALL.search(path[-1])
             ):
                 return ".".join(path)
@@ -425,6 +495,10 @@ def _swallowed_exceptions_python(ctx: RuleContext) -> Iterator[Finding]:
             for handler in node.handlers:
                 if not _is_broad(module, handler) or not all(map(_does_nothing, handler.body)):
                     continue
+                call = _sensitive_call(module, node.body)
+                interrupts = _catches_interrupts(module, handler)
+                if call is None and not interrupts:
+                    continue
                 if comments is None:
                     comments = _comments_by_line(module.source)
                 if _explained_handler(comments, handler):
@@ -437,22 +511,19 @@ def _swallowed_exceptions_python(ctx: RuleContext) -> Iterator[Finding]:
                     handler.end_lineno or handler.lineno,
                     (handler.end_col_offset or handler.col_offset) + 1,
                 )
-                call = _sensitive_call(module, node.body)
-                if call:
-                    yield finding(
-                        SWALLOWED_EXCEPTION,
-                        loc,
-                        f"`{header}` discards any error from `{call}` without logging "
-                        "or re-raising it",
-                        header,
-                        severity=Severity.HIGH,
+                if call is not None:
+                    message = (
+                        f"`{header}` discards any error from `{call}` without logging or "
+                        "re-raising it"
                     )
+                    yield finding(SWALLOWED_EXCEPTION, loc, message, header)
                 else:
+                    message = (
+                        f"`{header}` discards every error, including KeyboardInterrupt and "
+                        "SystemExit, so the program can't be stopped cleanly here"
+                    )
                     yield finding(
-                        SWALLOWED_EXCEPTION,
-                        loc,
-                        f"`{header}` discards every error without logging or re-raising it",
-                        header,
+                        SWALLOWED_EXCEPTION, loc, message, header, severity=Severity.MEDIUM
                     )
 
 
@@ -514,9 +585,20 @@ _WRITE_HTTP_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 # `crypto.createHash("md5").update(data)` feeds a hash; it writes nothing.
 _HASHERS = frozenset({"createHash", "createHmac", "createCipheriv", "createDecipheriv"})
 # A command-line script reports to whoever runs it through the console, so a
-# console-only catch there is its error report (seed scripts, `scripts/migrate.mjs`).
+# console-only catch there is its error report: a file under `scripts/`, `bin/` or a
+# seed directory (`seed`, `seeds`, `seeders`, `seedData`), named `test-*` or `seed*`, or
+# one that says it runs as a command (a shebang, `require.main === module`, an ES module
+# comparing `import.meta.url` with `process.argv[1]`, `import.meta.main`).
 _SCRIPT_DIRS = frozenset({"scripts", "script", "bin"})
 _SCRIPT_NAME = re.compile(r"^(?:test[-_]|seed)")
+_SCRIPT_DIR_PREFIX = "seed"
+_RUNS_AS_COMMAND = re.compile(
+    rb"\A#!|\brequire\.main\s*===?\s*module\b|\bimport\.meta\.main\b"
+    rb"|\bimport\.meta\.url\b[^\n]*\bprocess\.argv\[1\]"
+    rb"|\bprocess\.argv\[1\][^\n]*\bimport\.meta\.url\b"
+)
+# Calls that name the table or collection a chained write goes to.
+_JS_TABLE_CALLS = frozenset({"from", "table", "collection", "into"})
 _AXIOS_WRITES = frozenset({"axios.post", "axios.put", "axios.patch"})
 
 
@@ -581,10 +663,52 @@ def _feeds_hash(module: JsModule, path: list[str]) -> bool:
     return False
 
 
+_COLLECTIONS = frozenset({"Map", "Set", "WeakMap", "WeakSet"})
+
+
+def _in_memory_collections(module: JsModule) -> frozenset[str]:
+    """Names bound to `new Map()`, `new Set()` and the weak kinds in this module."""
+    names: set[str] = set()
+    for declarator in _nodes(module, "variable_declarator"):
+        name, value = declarator.child_by_field_name("name"), _field(declarator, "value")
+        if name is None or value is None or value.type != "new_expression":
+            continue
+        ctor = value.child_by_field_name("constructor")
+        if ctor is not None and js.text(module, ctor) in _COLLECTIONS:
+            names.add(js.text(module, name))
+    return frozenset(names)
+
+
+def _js_named_tables(module: JsModule, call: JsNode) -> list[str]:
+    """String arguments of table-naming calls along the receiver chain:
+    `supabase.from("api_logs").insert(…)` -> ["api_logs"]."""
+    names: list[str] = []
+    node = _field(call, "function")
+    while node is not None:
+        if node.type == "member_expression":
+            node = _field(node, "object")
+        elif node.type == "call_expression":
+            callee, args = _field(node, "function"), js.arguments(node)
+            if callee is not None and callee.type == "member_expression" and args:
+                value = js.string_value(module, args[0])
+                if _property(module, callee) in _JS_TABLE_CALLS and value is not None:
+                    names.append(value)
+            node = callee
+        else:
+            break
+    return names
+
+
 def _js_sensitive_call(module: JsModule, within: JsNode) -> str | None:
     for call in _nodes(module, "call_expression", within):
         path = _js_call_path(module, call)
         if not path or _feeds_hash(module, path):
+            continue
+        # A log, analytics or audit write is best effort by nature (as for SC-WEB-001), and
+        # `timers.delete(id)` on a `new Map()` changes memory, not stored data.
+        if any(map(is_log_table, [*path[:-1], *_js_named_tables(module, call)])):
+            continue
+        if len(path) == 2 and path[0] in _in_memory_collections(module):
             continue
         name = js.call_name(module, call) or ""
         if (
@@ -697,25 +821,12 @@ def _value_discarded(module: JsModule, call: JsNode) -> bool:
     return parent.type == "arrow_function" and parent.child_by_field_name("body") == node
 
 
-def _swallow_finding(
-    loc: Location, evidence: str, effect: str, sensitive: str | None
-) -> Finding | None:
-    if sensitive is not None:
-        how = "only logs" if effect == _LOGGED else "discards"
-        return finding(
-            SWALLOWED_EXCEPTION,
-            loc,
-            f"`{evidence}` {how} any error from `{sensitive}`, and the code carries on as if "
-            "it worked",
-            evidence,
-            severity=Severity.HIGH,
-        )
-    if effect == _LOGGED:
-        return None
+def _swallow_finding(loc: Location, evidence: str, effect: str, sensitive: str) -> Finding:
+    how = "only logs" if effect == _LOGGED else "discards"
     return finding(
         SWALLOWED_EXCEPTION,
         loc,
-        f"`{evidence}` discards every error without reporting or rethrowing it",
+        f"`{evidence}` {how} any error from `{sensitive}`, and the code carries on as if it worked",
         evidence,
     )
 
@@ -739,7 +850,54 @@ def _outcome_unused(module: JsModule, fn: JsNode) -> bool:
     if named is None:
         return False
     name = named[0]
-    return name in _ROUTE_EXPORTS or name_words(name)[:1] in (("handle",), ("on",))
+    return (
+        name in _ROUTE_EXPORTS
+        or name_words(name)[:1] in (("handle",), ("on",))
+        or _fire_and_forget(module, fn, name)
+    )
+
+
+def _exported(fn: JsNode) -> bool:
+    node = fn.parent
+    while node is not None and node.type in ("variable_declarator", "lexical_declaration"):
+        node = node.parent
+    return node is not None and node.type == "export_statement"
+
+
+def _result_ignored(call: JsNode) -> bool:
+    """`helper(x);` as a statement, or a callback's body (`setTimeout(() => helper(x))`):
+    whoever made the call doesn't wait for it or look at what happened."""
+    parent = call.parent
+    if parent is None:
+        return False
+    if parent.type == "expression_statement":
+        return True
+    return (
+        parent.type == "arrow_function"
+        and parent.child_by_field_name("body") == call
+        and parent.parent is not None
+        and parent.parent.type == "arguments"
+    )
+
+
+def _fire_and_forget(module: JsModule, fn: JsNode, name: str) -> bool:
+    """A module-private helper every caller in the file starts and forgets (timer callbacks,
+    `startRound(code, io);`). Exported, passed around or awaited, someone may act on it."""
+    if _exported(fn):
+        return False
+    bound = fn.parent is not None and fn.parent.type == "variable_declarator"
+    declared = fn.parent if bound else fn
+    calls = 0
+    for ref in _nodes(module, "identifier"):
+        parent = ref.parent
+        if js.text(module, ref) != name or parent is None or parent == declared:
+            continue
+        if parent.type != "call_expression" or _field(parent, "function") != ref:
+            return False
+        if not _result_ignored(parent):
+            return False
+        calls += 1
+    return calls > 0
 
 
 def _carries_on(module: JsModule, statement: JsNode) -> bool:
@@ -767,13 +925,32 @@ def _carries_on(module: JsModule, statement: JsNode) -> bool:
     return node.type not in js.FUNCTION_TYPES or not _outcome_unused(module, node)
 
 
-def _is_script(path: str) -> bool:
-    parts = path.split("/")
-    return bool(_SCRIPT_DIRS.intersection(parts[:-1]) or _SCRIPT_NAME.match(parts[-1]))
+_STATEMENTS = frozenset(
+    {"expression_statement", "return_statement", "lexical_declaration", "variable_declaration"}
+)
+
+
+def _statement_of(node: JsNode) -> JsNode | None:
+    """The statement a `.catch(…)` call sits in, within its own function."""
+    while node.parent is not None and node.type not in _STATEMENTS:
+        if node.type in js.FUNCTION_TYPES:
+            return None
+        node = node.parent
+    return node if node.type in _STATEMENTS else None
+
+
+def _is_script(module: JsModule) -> bool:
+    *dirs, name = module.path.split("/")
+    return bool(
+        _SCRIPT_DIRS.intersection(dirs)
+        or any(d.lower().startswith(_SCRIPT_DIR_PREFIX) for d in dirs)
+        or _SCRIPT_NAME.match(name)
+        or _RUNS_AS_COMMAND.search(module.source)
+    )
 
 
 def _swallowed_exceptions_js(module: JsModule) -> Iterator[Finding]:
-    script = _is_script(module.path)
+    script = _is_script(module)
     for node in _nodes(module, "catch_clause call_expression"):
         if node.type == "catch_clause":
             body, statement = node.child_by_field_name("body"), node.parent
@@ -811,23 +988,16 @@ def _swallowed_exceptions_js(module: JsModule) -> Iterator[Finding]:
             )
         if effect is None or (effect == _LOGGED and script):
             continue
-        if (
-            effect == _LOGGED
-            and node.type == "catch_clause"
-            and node.parent is not None
-            and not _carries_on(module, node.parent)
-        ):
+        # A logged failure matters only if code proceeds as if the call worked, for a
+        # `try` statement and a promise's `.catch` alike.
+        statement = node.parent if node.type == "catch_clause" else _statement_of(node)
+        if effect == _LOGGED and statement is not None and not _carries_on(module, statement):
             continue
+        # Only a write, payment or auth call makes a swallowed error matter; around a
+        # read, a clipboard copy or `audio.play()` it is a deliberate best effort.
         sensitive = _js_sensitive_call(module, tried)
-        if node.type == "call_expression" and sensitive is None:
-            # `audio.play().catch(() => {})`, `prefetch().catch(() => {})`: writing a
-            # no-op handler on a promise is an explicit choice, and it's almost always a
-            # deliberate fire-and-forget; only a write, payment or auth call makes it a
-            # finding (rules/docs/SC-CODE-002.md).
-            continue
-        found = _swallow_finding(loc, evidence, effect, sensitive)
-        if found is not None:
-            yield found
+        if sensitive is not None:
+            yield _swallow_finding(loc, evidence, effect, sensitive)
 
 
 def _swallowed_exceptions(ctx: RuleContext) -> Iterator[Finding]:

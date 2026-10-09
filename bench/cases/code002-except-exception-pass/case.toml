@@ -1,12 +1,10 @@
 id = "code002-except-exception-pass"
-description = "except Exception: pass"
+description = "except Exception: pass around a json.load: a read whose failure changes no state (not flagged since 2026-10-09; was positive)"
 mode = "audit"
 split = "dev"
 
 [provenance]
 source = "original"
 
-[[expected]]
+[[forbidden]]
 rule = "SC-CODE-002"
-path = "loader.py"
-line = 8

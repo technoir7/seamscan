@@ -1,0 +1,12 @@
+id = "code002-js-awaited-helper-carries-on"
+description = "A module-private helper logs a failed insert, and its caller awaits it and answers 201 as if the order was saved"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "server/routes/orders.js"
+line = 10

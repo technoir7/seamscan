@@ -61,17 +61,17 @@ def test_package_json_script_and_broken_manifest():
 # ---------------------------------------------------------------- SC-CODE-002
 
 
-def test_empty_catch_is_medium_and_around_a_write_is_high():
+def test_an_empty_catch_matters_only_around_a_state_changing_call():
     src = (
         "async function a() { try { JSON.parse(x) } catch {} }\n"
         'async function b() { try { await db.from("t").insert(r) } catch (e) {} }\n'
+        'async function c() { try { await db.from("api_logs").insert(r) } catch (e) {} }\n'
+        "const seen = new Map();\n"
+        "function d() { try { seen.delete(k) } catch (e) {} }\n"
     )
     found = run(SWALLOWED_EXCEPTION.id, src)
-    assert [(f.location.start_line, f.severity) for f in found] == [
-        (1, Severity.MEDIUM),
-        (2, Severity.HIGH),
-    ]
-    assert "db.from.insert" in found[1].message and found[1].evidence == "catch (e)"
+    assert [(f.location.start_line, f.severity) for f in found] == [(2, Severity.HIGH)]
+    assert "db.from.insert" in found[0].message and found[0].evidence == "catch (e)"
 
 
 def test_console_only_catch_is_flagged_only_around_sensitive_calls():

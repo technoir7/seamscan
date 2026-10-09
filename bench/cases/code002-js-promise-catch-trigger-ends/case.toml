@@ -1,0 +1,10 @@
+id = "code002-js-promise-catch-trigger-ends"
+description = "Cloud Function triggers return a delete whose failure is logged; the trigger just ends, nothing proceeds"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

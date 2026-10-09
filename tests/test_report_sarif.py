@@ -72,7 +72,7 @@ def test_driver_lists_every_rule_with_github_severity():
     assert supa["properties"]["security-severity"] == "8.0"
     assert supa["properties"]["tags"] == ["security", "external/cwe/cwe-284"]
     assert rules["SC-SEC-001"]["properties"]["security-severity"] == "9.5"
-    assert rules["SC-CODE-002"]["properties"]["security-severity"] == "5.5"
+    assert rules["SC-CODE-009"]["properties"]["security-severity"] == "5.5"
     assert rules["SC-META-002"]["properties"]["security-severity"] == "3.0"
     assert "tags" not in rules["SC-TEST-001"]["properties"]
 

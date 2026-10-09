@@ -127,7 +127,8 @@ def _words(name: str) -> set[str]:
     return set(words) | {a + b for a, b in zip(words, words[1:], strict=False)}
 
 
-def _log_table(name: str | None) -> bool:
+def is_log_table(name: str | None) -> bool:
+    """A table or model for logs, analytics or audit trails, written best effort by nature."""
     return bool(name) and bool(LOG_TABLE_WORDS.intersection(_words(name or "")))
 
 
@@ -150,7 +151,7 @@ class _Write:
 def _first_unchecked_write(
     writes: Sequence[_Write], checks: Sequence[tuple[int, int]]
 ) -> _Write | None:
-    real = [w for w in writes if not _log_table(w.table)]
+    real = [w for w in writes if not is_log_table(w.table)]
     if not real:
         return None
     first = min(real, key=lambda w: w.start)
