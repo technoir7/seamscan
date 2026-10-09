@@ -913,6 +913,32 @@ def _raises_not_implemented(node: ast.Raise) -> bool:
     return isinstance(exc, ast.Name) and exc.id == "NotImplementedError"
 
 
+def _rejects_unsupported(module: PyModule, node: ast.Raise) -> bool:
+    """`else: raise NotImplementedError(f"Unknown database engine {engine}")`: a branch
+    that names the input it rejects after handling the supported ones, like the JS
+    template-message exemption. A message that says the work isn't done still counts."""
+    if not isinstance(node.exc, ast.Call) or not node.exc.args:
+        return False
+    message = node.exc.args[0]
+    if isinstance(message, ast.Constant) and isinstance(message.value, str):
+        text = message.value
+    elif isinstance(message, ast.JoinedStr):
+        parts = (v.value for v in message.values if isinstance(v, ast.Constant))
+        text = "".join(p for p in parts if isinstance(p, str))
+    else:
+        return False
+    if _UNFINISHED_MESSAGE.search(text) or _TODO_MARKER.search(text):
+        return False
+    parent = module.parents.get(id(node))
+    while parent is not None and not isinstance(
+        parent, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda | ast.ClassDef
+    ):
+        if isinstance(parent, ast.If | ast.match_case):
+            return True
+        parent = module.parents.get(id(parent))
+    return False
+
+
 def _placeholder(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
     """How the check is stubbed out, when its body (ignoring a docstring) is a placeholder."""
     body = fn.body
@@ -932,8 +958,18 @@ def _placeholder(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
     return None
 
 
+# A liveness or readiness probe answers "is the process up", and returning True is that
+# answer working: `health_check`, `readinessCheck`, `ping`.
+_PROBE_WORDS = frozenset({"health", "healthz", "liveness", "readiness", "ping", "alive", "ready"})
+
+
 def _is_guard_name(name: str) -> bool:
-    return name not in _GUARD_EXEMPT and any(_GUARD_WORD.fullmatch(w) for w in name_words(name))
+    words = name_words(name)
+    return (
+        name not in _GUARD_EXEMPT
+        and not _PROBE_WORDS.intersection(words)
+        and any(_GUARD_WORD.fullmatch(w) for w in words)
+    )
 
 
 def _unfinished_code_python(ctx: RuleContext) -> Iterator[Finding]:
@@ -941,7 +977,7 @@ def _unfinished_code_python(ctx: RuleContext) -> Iterator[Finding]:
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Raise) and _raises_not_implemented(node):
                 fn = enclosing_function(module, node)
-                if _meant_to_be_overridden(module, fn):
+                if _meant_to_be_overridden(module, fn) or _rejects_unsupported(module, node):
                     continue
                 where = (
                     f"`{fn.name}`"

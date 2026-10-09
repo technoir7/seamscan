@@ -1,0 +1,17 @@
+id = "code003-conditional-not-implemented-yet"
+description = "a branch raising NotImplementedError that says the feature isn't done, or with no message"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "app/reports.py"
+line = 5
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "app/reports.py"
+line = 7

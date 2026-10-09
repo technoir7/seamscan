@@ -28,6 +28,15 @@ Not flagged:
   base's `raise NotImplementedError` flagged.
 - `.pyi` stub files, which are never analyzed
 - test files
+- `raise NotImplementedError("…")` with a message, inside an `if`/`elif`/`else` branch or
+  a `match` case: a branch that names the input it rejects after handling the supported
+  ones (`else: raise NotImplementedError(f"Unknown database engine {engine}")`), like
+  the TS/JS template-message exemption below. A message that says the work isn't done
+  (`not implemented`, `not yet implemented`, `unimplemented`, `TODO`) and a bare
+  `raise NotImplementedError` in a branch are still flagged.
+- health and liveness probes: a guard name that also has the word `health`, `healthz`,
+  `liveness`, `readiness`, `ping`, `alive` or `ready` (`health_check`, `readinessCheck`).
+  Returning True is the probe working. This applies to TS/JS too.
 - `is_authenticated` returning True: Flask-Login's and Django's user classes define it
   that way on purpose
 
@@ -150,8 +159,9 @@ really is an interface, make that explicit with `@abstractmethod`, a `Protocol`,
 ## Known gaps
 
 - `raise NotImplementedError(f"unsupported provider {p}")` used as an "unsupported
-  input" error in a dispatcher is flagged, though it is often deliberate. Suppress it
-  with a reason, or raise `ValueError`.
+  input" error is flagged when it isn't inside a branch (a dict dispatch's fallback, the
+  last line of a function after early returns), though it is often deliberate.
+  Suppress it with a reason, or raise `ValueError`.
 - Stubs with other always-true shapes (`return 1`, `return not False`, `return user is
   not None or True`) are missed, and so are guard names outside the word list
   (`is_admin`, `can_edit`, `is_valid`).

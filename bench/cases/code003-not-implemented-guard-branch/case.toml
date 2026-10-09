@@ -1,0 +1,10 @@
+id = "code003-not-implemented-guard-branch"
+description = "NotImplementedError with a message in an else or match branch rejects an unsupported input"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-003"
