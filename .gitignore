@@ -46,3 +46,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Noise-study detail about other people's code; only counts are committed (bench/wild.py).
+bench/wild/*.local.*

@@ -1,0 +1,136 @@
+# Noise study corpus (spec §8.4): 20 public repositories at pinned commits.
+#
+# Selection rule, applied 2026-10-09 with `gh search repos "<query>" --sort stars`:
+# take the top results that are applications or starter templates (not libraries,
+# framework extensions or code generators), not forks, not archived, pushed since
+# 2025-04-01, under 50 MB, and not one of the 24 repositories used while developing
+# the rules (19 Lovable apps plus shadcn-ui/taxonomy, steven-tey/precedent,
+# supabase-community/vercel-ai-chatbot, vercel/ai-chatbot,
+# vercel/nextjs-subscription-payments).
+#
+# JavaScript/TypeScript: 3 x "nextjs supabase", 2 x "vite supabase" (5+ stars),
+# 3 x "nextjs firebase", 2 x "react firebase".
+# Judgment calls: tutorials count as apps; s3rius/FastAPI-template (a cookiecutter
+# generator) and kmbhm1/supabase-pydantic (a library) were skipped; fireact-dev/main calls
+# itself a SaaS framework but ships as a starter app, so it stayed in.
+# Python: 2 x "fastapi template", 2 x "fastapi supabase", 3 x "flask app", 3 x "django saas".
+
+[[repo]]
+name = "ShenSeanChen/launch-mvp-stripe-nextjs-supabase"
+commit = "513a8f0ca6e405725dcf98eab1fc5cd6468b5f10"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "imbhargav5/nextbase-nextjs-supabase-starter"
+commit = "00ad2da857b84322ff359db098cbf1cb4f4b7282"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "mryechkin/nextjs-supabase-auth"
+commit = "e23d5b98dc358f80440d62a213bab45d9d24a3cd"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "Tirth1107/THEGHOSTCHAT"
+commit = "a126f59fa18278efdd827cf9d937d7379e4dd6af"
+group = "js"
+query = "vite supabase"
+
+[[repo]]
+name = "ArshVermaGit/REELSPOT"
+commit = "2bae5e672bf8e9f81275bc1ec2bf1ed49b0fc7bd"
+group = "js"
+query = "vite supabase"
+
+[[repo]]
+name = "milliorn/nextjs-firebase-starter"
+commit = "260550cd140b90efb77034a5b6746475e21b5a37"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "agency-ai-solutions/nextjs-firebase-ai-coding-template"
+commit = "7bed8aa4e00fbe287b95f6eb0c9b451aa60e0cb4"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "MartinXPN/nextjs-firebase-mui-starter"
+commit = "1386cccca63834dcaeb59f836daf298aa3baaa65"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "fireact-dev/main"
+commit = "78f325b1ac9f8af336226ace3e38188bde5c441c"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "kalviumcommunity/S74_capstone_yogesh_guessync"
+commit = "de0df52e77e32ce69730bef87a16c671000b6bbe"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "wassim249/fastapi-langgraph-agent-production-ready-template"
+commit = "f7faab38fa5332669627139b27c4f2dc4178649e"
+group = "python"
+query = "fastapi template"
+
+[[repo]]
+name = "zhanymkanov/fastapi_production_template"
+commit = "8e82353ff3430c77fb77ead7de0d680f0229a667"
+group = "python"
+query = "fastapi template"
+
+[[repo]]
+name = "AtticusZeller/fastapi_supabase_template"
+commit = "1acfbe345e31310683575bfe1ffda6a9b02e98b1"
+group = "python"
+query = "fastapi supabase"
+
+[[repo]]
+name = "melaven/enterprise-serm-platform"
+commit = "e1eab9a200bde8d59acdb3d6da3b8361de5c9df3"
+group = "python"
+query = "fastapi supabase"
+
+[[repo]]
+name = "nickjj/docker-flask-example"
+commit = "9e600d2f14ac11fc67bc9def68b6e9b1e93354f1"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "hackersandslackers/flask-blueprint-tutorial"
+commit = "468023f8f438088b5ffa7b61c9e4d8e87e35d6aa"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "hackersandslackers/flask-sqlalchemy-tutorial"
+commit = "d663ae301550411248c07f2a9fbf5ee7a5d26967"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "ernestofgonzalez/djangorocket"
+commit = "d0fd85d720db8af17cf9ecfa9d8ea28e18a4bf85"
+group = "python"
+query = "django saas"
+
+[[repo]]
+name = "cangeorgecode/Django_Boilerplate_Free"
+commit = "8ad8f586d3c24a5a7d428e2605726ee035b14ac0"
+group = "python"
+query = "django saas"
+
+[[repo]]
+name = "speedpy/speedpy"
+commit = "46899bcde450d36dc1f926d2c255a7afa7a609dc"
+group = "python"
+query = "django saas"
