@@ -1,0 +1,10 @@
+id = "code002-js-timer-helpers-fire-and-forget"
+description = "Module-private game helpers run from timers and as fire-and-forget calls; a logged save failure ends the round step"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

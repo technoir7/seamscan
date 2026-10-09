@@ -15,7 +15,7 @@ A value is "named like a credential" when the last word of its name is `password
 `passwd`, `pwd`, `token`, `secret`, `pin`, `passcode` or `apikey`, or its last two words
 are `api key` or `secret key`. The name is taken from:
 
-- a variable or attribute: `password`, `user.pin`, `settings.API_KEY`, `x_api_key`
+- a variable or attribute: `password`, `user.pin`, `client.api_key`, `x_api_key`
 - a string subscript or `.get()` key: `request.form["password"]`,
   `request.headers.get("X-Admin-Token")`
 - WTForms fields: `form.password.data`
@@ -35,6 +35,17 @@ Not flagged:
   flagged.
 - a loop variable named like a credential (`for token in tokens: if token == "and"`):
   a lexer token
+- **the app's own configuration**, as in TS/JS below: `settings.API_KEY`,
+  `config.X`, `app.config["SECRET"]`, `os.environ["TOKEN"]`, `os.getenv("KEY")`,
+  `os.environ.get("KEY")`, or a variable assigned from one of them in the same
+  function. `settings.LLAMA_API_KEY != "llx-placeholder"` checks for a default left
+  in place; it authenticates no one.
+- **a placeholder check**, as in TS/JS: `key and key != "your-key-here"`,
+  `not key or key == "test-key"`
+- **a `compare_digest` on a kind, not a credential**: when an argument's name ends in
+  `type`, `typ`, `kind`, `scope` or `role` (`secrets.compare_digest(token_type,
+  "refresh")`, `grant_type`), the literal is the name of a kind of token or grant. The
+  constant-time comparison is good hygiene there, not a sign of a secret.
 - test files
 
 The evidence shows the literal redacted.
@@ -67,6 +78,13 @@ On 24 public repositories (about 1.0M lines, see SC-CODE-002), these two exempti
 took the rule from 83 findings, nearly all placeholder checks of API keys, to 3: one
 real demo backdoor in a login controller (`normalizedEmail === "admin@gmail.com" &&
 password === "admin@123"`) and two copies of a `apiKey === "test-key"` warning.
+
+Two later noise studies (40 repositories, every finding triaged) found 6 findings,
+none real: four constant-time comparisons of a JWT's `typ` claim with `"refresh"`,
+`"verify"`, `"reset"` and `"access"`, a Python settings placeholder check (the
+configuration and placeholder exemptions existed only for TS/JS until then), and a
+`"guest"` sentinel (below). The kind-name exemption and the Python configuration and
+placeholder exemptions remove the first five.
 
 ## Why it matters
 
@@ -126,6 +144,12 @@ store and check a hash (`argon2`, `bcrypt`) instead of the password itself. Rota
 value that was committed.
 
 ## Known gaps
+
+- A public sentinel compared with a credential-named value (`if (token === "guest")`
+  that lets anyone in as a guest) is reported; whether that guest access is intended
+  can't be told from the comparison. Suppress it with a reason when it is.
+- A configuration object under another name (`cfg_store.API_KEY`, `self.opts.token`)
+  isn't recognised, so its placeholder checks are still reported.
 
 - Values named outside the list (`auth == "..."`, `key == "..."`, `credentials`) are
   missed, and so are literals reached through a constant (`password == ADMIN_PASSWORD`

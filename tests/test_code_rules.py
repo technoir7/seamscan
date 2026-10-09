@@ -51,9 +51,27 @@ def test_swallowed_read_stays_medium():
 
 
 def test_except_star_and_test_files():
-    src = "try:\n    run()\nexcept* Exception:\n    pass\n"
+    src = "try:\n    db.commit()\nexcept* Exception:\n    pass\n"
     assert lines(run(SWALLOWED_EXCEPTION.id, src)) == [3]
     assert run(SWALLOWED_EXCEPTION.id, src, path="tests/test_m.py") == []
+
+
+def test_only_a_state_changing_call_makes_a_broad_handler_matter():
+    read = "try:\n    data = json.load(f)\nexcept Exception:\n    pass\n"
+    assert run(SWALLOWED_EXCEPTION.id, read) == []
+    query = "try:\n    q.table('t').select('*').execute()\nexcept Exception:\n    pass\n"
+    assert run(SWALLOWED_EXCEPTION.id, query) == []
+    audit = "try:\n    q.table('audit_log').insert(e).execute()\nexcept Exception:\n    pass\n"
+    assert run(SWALLOWED_EXCEPTION.id, audit) == []
+    write = "try:\n    session.add(row)\nexcept Exception:\n    pass\n"
+    assert [f.severity for f in run(SWALLOWED_EXCEPTION.id, write)] == [Severity.HIGH]
+
+
+def test_a_bare_except_that_ignores_everything_swallows_interrupts():
+    src = "while True:\n    try:\n        tick()\n    except BaseException:\n        ...\n"
+    found = run(SWALLOWED_EXCEPTION.id, src)
+    assert [(f.location.start_line, f.severity) for f in found] == [(4, Severity.MEDIUM)]
+    assert "KeyboardInterrupt" in found[0].message
 
 
 def test_handler_that_does_anything_else_is_not_silent():

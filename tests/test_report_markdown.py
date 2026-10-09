@@ -25,7 +25,7 @@ FILES = [
     SourceFile("svc/a.py", "import requests\nrequests.get(u, verify=False)\n"),
     SourceFile("svc/b.py", "import httpx\nc = httpx.Client(verify=False)\n"),
     SourceFile("svc/broken.py", "def (:\n"),
-    SourceFile("svc/err.py", "try:\n    go()\nexcept Exception:\n    pass\n"),
+    SourceFile("svc/err.py", "try:\n    go()\nexcept:\n    pass\n"),
     SourceFile(
         "svc/c.py",
         "import requests\n"
@@ -215,5 +215,5 @@ def test_top_findings_cover_every_kind_of_issue_to_fix_first():
 
 
 def test_without_anything_to_fix_first_the_most_severe_are_explained():
-    a = analyze([SourceFile("svc/err.py", "try:\n    go()\nexcept Exception:\n    pass\n")])
+    a = analyze([SourceFile("svc/err.py", "try:\n    go()\nexcept:\n    pass\n")])
     assert "### 3.1 Swallowed exception" in section(report(a), 3)

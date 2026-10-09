@@ -1,0 +1,12 @@
+id = "code004-py-compare-digest-api-key-literal"
+description = "A request's API key compared in constant time with a key written into the source"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-004"
+path = "app/api/admin.py"
+line = 7

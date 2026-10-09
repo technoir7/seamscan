@@ -1,0 +1,12 @@
+id = "code003-js-stub-beside-real-methods"
+description = "A guard class with real methods and one check that always passes: not an interface"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-003"
+path = "server/guards/session.js"
+line = 11

@@ -1,0 +1,10 @@
+id = "code002-py-read-fallbacks-no-state-change"
+description = "Broad excepts around reads and best-effort conveniences: nothing a failure leaves undone changes state"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-002"

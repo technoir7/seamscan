@@ -1,0 +1,12 @@
+id = "code002-ts-empty-catch-orders-insert"
+description = "An empty catch around an orders insert in a server action: the order is lost and checkout carries on"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/checkout/actions.ts"
+line = 14

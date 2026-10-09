@@ -1,0 +1,12 @@
+id = "code002-py-login-link-update-pass"
+description = "OAuth login links an existing account with an update whose failure is swallowed, then logs the user in"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-002"
+path = "app/api/auth.py"
+line = 15

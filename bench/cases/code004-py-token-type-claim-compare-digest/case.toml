@@ -1,0 +1,10 @@
+id = "code004-py-token-type-claim-compare-digest"
+description = "A JWT's type claim compared in constant time with the kind name 'refresh': a claim's kind, not a credential"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-004"
