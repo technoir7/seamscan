@@ -98,8 +98,8 @@ def test_too_new_and_too_obscure():
     }
     found = dep_findings(files, view(facts))
     assert ids(found) == [("SC-DEP-002", 4), ("SC-DEP-002", 5)]
-    assert "first published 6 days ago" in found[0].message
-    assert "12 downloads last week" in found[1].message
+    assert found[0].message.startswith("young was first published 6 days ago (")
+    assert found[1].message.startswith("obscure had 12 downloads last week (")
 
 
 def test_thresholds_come_from_the_view():

@@ -109,7 +109,7 @@ def _too_new(ctx: RuleContext) -> Iterator[Finding]:
         if facts.first_published is not None:
             age = view.now - facts.first_published
             if age < timedelta(days=view.min_age_days):
-                reasons.append(f"first published {_days(age)} ago")
+                reasons.append(f"was first published {_days(age)} ago")
         downloads = facts.weekly_downloads
         # PyPI publishes no reliable download counts; only npm's are a signal.
         if (
@@ -121,7 +121,7 @@ def _too_new(ctx: RuleContext) -> Iterator[Finding]:
         if not reasons:
             continue
         message = (
-            f"{d.ref.name} was {' and '.join(reasons)} (limits: {view.min_age_days} days, "
+            f"{d.ref.name} {' and '.join(reasons)} (limits: {view.min_age_days} days, "
             f"{view.min_weekly_downloads} weekly downloads). Brand-new and little-used names "
             "are where slopsquatting happens: someone registers a name AI tools invent. Check "
             "it is the package you meant and who publishes it."
