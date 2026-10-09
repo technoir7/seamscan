@@ -1388,6 +1388,22 @@ Order rationale:
 - **Consequence:** the corpus numbers describe the rules as specified; the wild
   number describes what a user sees, and it is far lower. 1.0 waits for a noise pass
   developed against these 20 repos (now dev data) and re-measured on 20 fresh ones.
+- *Noise pass* (same day): ten fixes aimed at the first study's false-alarm causes
+  (CODE-002 must carry on after a logged failure; reason comments in Python; minified
+  JS; accept/reject test pairs; Supabase demo keys; tree-checked imports; auth action
+  clients; `<style>` CSS; health probes and guard branches in CODE-003). First study:
+  77 to 47 findings, all 15 true ones kept. Independent set unchanged (0.96 / 0.94).
+- *Fresh study* (`bench/wild/repos-fresh.toml`, pinned before seamscan ran on them;
+  one crash found and fixed first, an M3 bug in CODE-003 on plain-JS classes): 137k
+  lines, 74 findings (0.54 per 1,000 lines). Triage by a fresh session, same rubric:
+  **10 true, 63 false, 1 unclear: precision 0.14; blocking findings 9 of 53 (0.17).**
+  The noise pass removed the false alarms it targeted and fresh repos brought
+  different ones (13 from one interface class in CODE-003, JWT `typ` comparisons in
+  CODE-004, `pytest_asyncio` fixtures in TEST-001, seed scripts in CODE-002).
+- *Pooled over both studies (151 findings), by rule:* the database and auth rules
+  carry the signal (SUPA-001 4/4, SUPA-002 6/8, WEB-001 5/8 true); the general
+  code-pattern heuristics mostly don't (CODE-002 5/59, CODE-003 0/16, CODE-004 0/6,
+  CODE-008 0/7, TEST-001 1/16). Pattern-by-pattern fixes chase a long tail.
 
 ---
 

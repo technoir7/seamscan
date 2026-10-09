@@ -283,5 +283,107 @@
         "SC-WEB-001": 1
       }
     }
-  ]
+  ],
+  "triage": {
+    "precision": {
+      "sampled": 74,
+      "true": 10,
+      "false": 63,
+      "unclear": 1,
+      "precision": 0.14
+    },
+    "blocking_precision": {
+      "sampled": 54,
+      "true": 9,
+      "false": 44,
+      "unclear": 1,
+      "precision": 0.17
+    },
+    "precision_by_rule": {
+      "SC-CODE-002": {
+        "sampled": 29,
+        "true": 1,
+        "false": 28,
+        "unclear": 0,
+        "precision": 0.03
+      },
+      "SC-CODE-003": {
+        "sampled": 13,
+        "true": 0,
+        "false": 13,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-004": {
+        "sampled": 5,
+        "true": 0,
+        "false": 5,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-007": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-SEC-002": {
+        "sampled": 3,
+        "true": 0,
+        "false": 3,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-SEC-003": {
+        "sampled": 4,
+        "true": 1,
+        "false": 3,
+        "unclear": 0,
+        "precision": 0.25
+      },
+      "SC-SEC-004": {
+        "sampled": 1,
+        "true": 0,
+        "false": 0,
+        "unclear": 1,
+        "precision": null
+      },
+      "SC-SUPA-001": {
+        "sampled": 4,
+        "true": 4,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-SUPA-002": {
+        "sampled": 2,
+        "true": 2,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-TEST-001": {
+        "sampled": 6,
+        "true": 0,
+        "false": 6,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-WEB-001": {
+        "sampled": 2,
+        "true": 1,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.5
+      },
+      "SC-WEB-003": {
+        "sampled": 4,
+        "true": 1,
+        "false": 3,
+        "unclear": 0,
+        "precision": 0.25
+      }
+    }
+  }
 }
