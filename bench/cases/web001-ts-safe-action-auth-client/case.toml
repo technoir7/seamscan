@@ -1,0 +1,11 @@
+id = "web001-ts-safe-action-auth-client"
+description = "next-safe-action server actions built on an auth client (authActionClient, or .use(authMiddleware)) check the session before the action runs (seen in the noise study)"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "adapted"
+upstream = "noise study 2026-10-09 (pattern from a public Next.js + Supabase starter)"
+
+[[forbidden]]
+rule = "SC-WEB-001"
