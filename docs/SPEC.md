@@ -1404,6 +1404,20 @@ Order rationale:
   carry the signal (SUPA-001 4/4, SUPA-002 6/8, WEB-001 5/8 true); the general
   code-pattern heuristics mostly don't (CODE-002 5/59, CODE-003 0/16, CODE-004 0/6,
   CODE-008 0/7, TEST-001 1/16). Pattern-by-pattern fixes chase a long tail.
+- *Second noise pass* (developed on the 40 repos of studies one and two, with each change
+  stated as a principle on its rule page; Changelog has the list) and ADR-005 (SC-CODE-002
+  calibrated to LOW confidence). In-sample on those 40: 24 true, 24 false.
+- *Third study* (`bench/wild/repos-third.toml`, pinned before the second pass; no crash):
+  117k lines, 34 findings (0.29 per 1,000 lines). Triage by a fresh session, same
+  rubric: **18 true, 16 false: precision 0.53; blocking findings 15 of 29 (0.52).**
+  Caveat: 8 of the 18 are one repository's server actions trusting a caller-sent user
+  id, which database policies set outside the repository could block; counted as
+  unclear, precision is 10 of 26 (0.38). Remaining false alarms: vendored, unminified
+  libraries (jQuery, select2, drf-yasg) for CODE-008 (5); intended-public forms and
+  demos for WEB-001 (3); one each for CODE-004, CODE-011, DEP-002, SEC-003, TEST-001,
+  and editor-authored rich text for CODE-008 (2), static JSON-LD (1).
+- Triage hygiene: the third triager's grep printed one placeholder line from a
+  third-party `.env.example`, against the no-.env rule; no verdict used it.
 
 ---
 

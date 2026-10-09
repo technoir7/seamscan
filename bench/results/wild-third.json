@@ -263,5 +263,79 @@
         "SC-WEB-003": 1
       }
     }
-  ]
+  ],
+  "triage": {
+    "precision": {
+      "sampled": 34,
+      "true": 18,
+      "false": 16,
+      "unclear": 0,
+      "precision": 0.53
+    },
+    "blocking_precision": {
+      "sampled": 29,
+      "true": 15,
+      "false": 14,
+      "unclear": 0,
+      "precision": 0.52
+    },
+    "precision_by_rule": {
+      "SC-CODE-004": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-008": {
+        "sampled": 11,
+        "true": 3,
+        "false": 8,
+        "unclear": 0,
+        "precision": 0.27
+      },
+      "SC-CODE-011": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-DEP-002": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-SEC-003": {
+        "sampled": 2,
+        "true": 1,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.5
+      },
+      "SC-TEST-001": {
+        "sampled": 3,
+        "true": 2,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.67
+      },
+      "SC-WEB-001": {
+        "sampled": 14,
+        "true": 11,
+        "false": 3,
+        "unclear": 0,
+        "precision": 0.79
+      },
+      "SC-WEB-003": {
+        "sampled": 1,
+        "true": 1,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      }
+    }
+  }
 }
