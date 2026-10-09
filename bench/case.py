@@ -6,12 +6,24 @@ import difflib
 import hashlib
 import re
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+from typing import Any, cast
 
 from bench.fake_secrets import FAKES
 from bench.score import Expected
-from seamscan.model import WHOLE_FILE, ChangeSet, SourceFile
+from seamscan.facts.dependencies import dependencies_to_check, pypi_name
+from seamscan.model import (
+    WHOLE_FILE,
+    ChangeSet,
+    Ecosystem,
+    PackageFacts,
+    PackageRef,
+    RegistryView,
+    SourceFile,
+)
 from seamscan.workspace.files import collect
 
 CASES_DIR = Path(__file__).resolve().parent / "cases"
@@ -28,6 +40,9 @@ class Case:
     forbidden: tuple[str, ...]
     provenance_source: str
     root: Path
+    # Registry facts and a fixed clock for the dependency rules (ADR-004). None: the case
+    # has no [registry] table and runs with dependency checks off, like analyze's default.
+    registry: RegistryView | None = None
 
 
 class CaseError(ValueError):
@@ -61,6 +76,83 @@ def load_case(directory: Path) -> Case:
         forbidden=tuple(f["rule"] for f in data.get("forbidden", [])),
         provenance_source=data["provenance"]["source"],
         root=directory / "repo",
+        registry=_registry(directory, data.get("registry")),
+    )
+
+
+_REGISTRY_KEYS = {"now", "min_age_days", "min_weekly_downloads", "package", "snapshot"}
+_PACKAGE_KEYS = {
+    "ecosystem",
+    "name",
+    "exists",
+    "first_published",
+    "weekly_downloads",
+    "install_scripts",
+    "problem",
+}
+
+
+def _instant(where: str, value: object) -> datetime:
+    # A bare TOML date or a local datetime would compare wrongly against `now`.
+    if not isinstance(value, datetime) or value.tzinfo is None:
+        raise CaseError(f"{where}: must be a date-time with a timezone, e.g. 2026-10-01T00:00:00Z")
+    return value
+
+
+def _package(where: str, raw: Mapping[str, Any]) -> tuple[PackageRef, PackageFacts]:
+    unknown = set(raw) - _PACKAGE_KEYS
+    if unknown:
+        raise CaseError(f"{where}: unknown keys {sorted(unknown)}")
+    try:
+        ecosystem = Ecosystem(raw["ecosystem"])
+    except (KeyError, ValueError):
+        raise CaseError(
+            f"{where}: ecosystem must be one of {[e.value for e in Ecosystem]}"
+        ) from None
+    name = str(raw["name"])
+    if ecosystem is Ecosystem.PYPI and name != pypi_name(name):
+        raise CaseError(f"{where}: write PyPI names normalized: {pypi_name(name)!r}")
+    if "exists" not in raw and not raw.get("problem"):
+        raise CaseError(f"{where}: needs `exists`, or a `problem` when it couldn't be verified")
+    published = raw.get("first_published")
+    scripts = raw.get("install_scripts")
+    facts = PackageFacts(
+        exists=bool(raw["exists"]) if "exists" in raw else None,
+        first_published=None if published is None else _instant(where, published),
+        weekly_downloads=raw.get("weekly_downloads"),
+        install_scripts=None if scripts is None else tuple(cast(list[str], scripts)),
+        problem=raw.get("problem", ""),
+    )
+    return PackageRef(ecosystem, name), facts
+
+
+def _registry(directory: Path, raw: object) -> RegistryView | None:
+    if raw is None:
+        return None
+    table = cast(dict[str, Any], raw)
+    unknown = set(table) - _REGISTRY_KEYS
+    if unknown:
+        raise CaseError(f"{directory}: [registry] has unknown keys {sorted(unknown)}")
+    # `snapshot = ["npm:react", "pypi:fastapi"]`: popular packages the bundled snapshot
+    # knows. They exist, with no age or download data, as a snapshot hit gives them.
+    entries = [
+        (f"registry.snapshot {item!r}", {"ecosystem": eco, "name": name, "exists": True})
+        for item in cast(list[str], table.get("snapshot", []))
+        for eco, _, name in [item.partition(":")]
+    ]
+    entries += [
+        (f"registry.package[{i}]", entry)
+        for i, entry in enumerate(cast(list[dict[str, Any]], table.get("package", [])))
+    ]
+    packages: dict[PackageRef, PackageFacts] = {}
+    for where, entry in entries:
+        ref, facts = _package(f"{directory}: {where}", entry)
+        if ref in packages:
+            raise CaseError(f"{directory}: {ref.ecosystem}:{ref.name} is listed twice")
+        packages[ref] = facts
+    limits = {k: table[k] for k in ("min_age_days", "min_weekly_downloads") if k in table}
+    return RegistryView(
+        packages, _instant(f"{directory}: registry.now", table.get("now")), **limits
     )
 
 
@@ -111,3 +203,19 @@ def case_change(case: Case) -> ChangeSet | None:
     if case.mode != "scan":
         return None
     return changeset_between(_read_tree(case, case.root.parent / "base"), case_files(case))
+
+
+def case_registry(case: Case) -> RegistryView | None:
+    """The case's registry view, once every package a lookup would ask about has a fixture.
+
+    A missing fixture is an error rather than "no facts": otherwise an incomplete fixture
+    would silently turn a dependency check off. Extra fixtures are fine; a real view can
+    hold more than one run looks up (the cache), and the rules must not depend on that.
+    """
+    if case.registry is None:
+        return None
+    wanted = dependencies_to_check(case_files(case), case_change(case))
+    missing = sorted(f"{r.ecosystem}:{r.name}" for r in wanted - case.registry.packages.keys())
+    if missing:
+        raise CaseError(f"{case.id}: no registry fixture for {', '.join(missing)}")
+    return case.registry

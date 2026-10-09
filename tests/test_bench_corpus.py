@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from bench.case import CASES_DIR, case_files, expected_split, load_all
+from bench.case import CASES_DIR, case_files, case_registry, expected_split, load_all
 from bench.fake_secrets import FAKES
 from seamscan.parse.javascript import js_dialect
 from seamscan.rules.registry import RULES
@@ -35,6 +35,11 @@ def test_expected_lines_exist_in_the_case_files():
             assert 1 <= e.line <= len(files[e.path].splitlines()), f"{case.id}: line {e.line}"
 
 
+def test_registry_fixtures_cover_every_lookup():
+    for case in load_all():
+        case_registry(case)  # raises CaseError naming the missing fixture
+
+
 def test_case_files_hold_placeholders_not_secret_shaped_strings():
     for path in CASES_DIR.rglob("*"):
         if path.is_file():
@@ -54,10 +59,16 @@ def test_fake_secrets_really_are_secret_shaped():
 CODE_LANGUAGES = ("python", "javascript")
 
 
+# Dependency rules report on manifests, which belong to their ecosystem's language.
+_PYTHON_MANIFEST = re.compile(
+    r"(?:^|/)(?:requirements[^/]*\.txt|requirements/[^/]+\.txt|pyproject\.toml|Pipfile)$"
+)
+
+
 def language_of(path: str) -> str | None:
-    if path.endswith(".py"):
+    if path.endswith(".py") or _PYTHON_MANIFEST.search(path):
         return "python"
-    if js_dialect(path) is not None:
+    if js_dialect(path) is not None or path.rsplit("/", 1)[-1] == "package.json":
         return "javascript"
     return None
 
