@@ -1,0 +1,25 @@
+id = "meta004-js-npmrc-default-registry-404"
+description = ".npmrc sends every install to a company registry: a public 404 for an unscoped package is 'not verified', not 'missing'"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-META-004"
+path = "package.json"
+line = 13
+tolerance = 0
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+snapshot = ["npm:react", "npm:react-dom", "npm:vite", "npm:typescript"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "acme-ui-kit"
+exists = false

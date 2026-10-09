@@ -1,0 +1,19 @@
+{
+  "name": "acme-dashboard",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "acme-ui-kit": "^4.2.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.4",
+    "typescript": "~5.8.3"
+  }
+}
