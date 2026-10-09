@@ -7,7 +7,8 @@ import re
 import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
-from enum import IntEnum
+from datetime import datetime
+from enum import IntEnum, StrEnum
 
 
 class Severity(IntEnum):
@@ -103,3 +104,38 @@ def with_fingerprints(findings: Iterable[Finding]) -> tuple[Finding, ...]:
         digest = hashlib.sha256("\x1f".join((*key, str(k))).encode()).hexdigest()[:32]
         result.append(replace(f, fingerprint=digest))
     return tuple(result)
+
+
+class Ecosystem(StrEnum):
+    NPM = "npm"
+    PYPI = "pypi"
+
+
+@dataclass(frozen=True, order=True)
+class PackageRef:
+    ecosystem: Ecosystem
+    name: str  # as the registry knows it: npm names as written, PyPI names PEP 503-normalized
+
+
+@dataclass(frozen=True)
+class PackageFacts:
+    """What the registry says about one package (ADR-004). None means not known."""
+
+    exists: bool | None  # None: couldn't verify (offline miss, timeout, 5xx, 429)
+    first_published: datetime | None = None
+    weekly_downloads: int | None = None  # npm only
+    install_scripts: tuple[str, ...] | None = None  # npm: hooks of the version checked
+    problem: str = ""  # why `exists` is None, for the "not verified" finding
+
+
+@dataclass(frozen=True)
+class RegistryView:
+    """Everything the dependency rules may know about the outside world, as plain data.
+
+    `now` is passed in, never read from a clock, so identical inputs give identical output.
+    """
+
+    packages: Mapping[PackageRef, PackageFacts]
+    now: datetime
+    min_age_days: int = 30
+    min_weekly_downloads: int = 100

@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 
 from seamscan.facts.project import build_project
 from seamscan.facts.secrets import find_secrets, redact
-from seamscan.model import ChangeSet, Finding, Location, SourceFile, with_fingerprints
+from seamscan.model import ChangeSet, Finding, Location, RegistryView, SourceFile, with_fingerprints
 from seamscan.parse.javascript import JsModule, js_dialect, parse_js
 from seamscan.parse.python import ParseFailure, PyModule, parse_python
 from seamscan.policy.suppress import Suppressed, apply_suppressions
@@ -111,6 +111,7 @@ def analyze(
     change: ChangeSet | None = None,
     rules: Sequence[Rule] = RULES,
     context: Iterable[SourceFile] = (),
+    registry: RegistryView | None = None,
 ) -> Analysis:
     """Run every rule over the files. With a ChangeSet, keep only findings the change touches.
 
@@ -124,7 +125,12 @@ def analyze(
     parsed = _parse(ordered)
     findings = parsed.failures
     ctx = RuleContext(
-        python=parsed.python, js=parsed.js, files=ordered, change=change, project=project
+        python=parsed.python,
+        js=parsed.js,
+        files=ordered,
+        change=change,
+        project=project,
+        registry=registry,
     )
     for rule in rules:
         findings.extend(_run(rule, ctx))

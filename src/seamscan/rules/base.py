@@ -11,6 +11,7 @@ from seamscan.model import (
     Confidence,
     Finding,
     Location,
+    RegistryView,
     RuleMeta,
     Severity,
     SourceFile,
@@ -30,6 +31,9 @@ class RuleContext:
     # Whole-project facts (packages, file roles, table references, .env values). In scan
     # mode they cover every file, not just the changed ones (ADR-002).
     project: ProjectModel = field(default_factory=lambda: build_project(()))
+    # Registry facts for dependency rules, gathered at the I/O edge (ADR-004). None means
+    # dependency checks were not requested; those rules then report nothing.
+    registry: RegistryView | None = None
 
 
 @dataclass(frozen=True)

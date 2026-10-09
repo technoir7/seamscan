@@ -747,12 +747,17 @@ MEDIUM / HIGH / CWE-829. Fires when a dependency added in this change has
 `preinstall`, `install` or `postinstall` scripts in its registry metadata for
 the resolved version.
 
+**Design:** ADR-004. Extraction is pure, lookups happen in `supply/`, and the
+rules read a `RegistryView` with `now` passed in. Local, URL and workspace specs,
+`[deps] allow` names and privately mapped scopes are never looked up.
+
 **Network behavior:**
 - Responses are cached in `~/.cache/seamscan/registry/` (TTL 7 days for
   existence, 1 day for age and downloads).
 - `--offline` uses only the cache plus a bundled snapshot of the top 10k
   PyPI and npm names.
-  - A name not in either is reported as "unverified" (LOW), never as missing.
+  - A name not in either is reported as "unverified" (SC-META-004, LOW), never
+    as missing.
 - Network errors are reported, never treated as "exists".
 - Requests are sequential with a 10 s timeout, and HTTP 429 responses back
   off and are reported.
@@ -766,6 +771,10 @@ the resolved version.
 - **SC-META-003 — Rule crashed on a file.** The rule's other files still run,
   the crash is reported with a traceback in `--debug`, and the exit code
   becomes 3.
+- **SC-META-004 — Dependency not verified.** LOW/LOW. The registry couldn't
+  confirm a dependency (offline and not cached or in the snapshot, timeout,
+  5xx, 429, or a 404 in a repository that configures another registry).
+  Never reported as SC-DEP-001 (ADR-004).
 
 ### 7.9 Deliberately deferred to v2
 
@@ -1340,6 +1349,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-09: M5 groundwork: ADR-004 (dependency checks keep the core pure: extract, look up at the edge, rules read a `RegistryView` with `now` as data); SC-META-004 "Dependency not verified" (§7.8); `PackageRef`/`PackageFacts`/`RegistryView` in `model.py`; `facts/dependencies.py` (package.json and requirements files, with locations); `analyze(registry=...)`.
 - 2026-10-09: **M6 done (0.6.0)**, apart from verifying the GitHub SARIF upload, which needs the branch pushed. Baseline and ratchet (`baseline create|prune|check`), `seamscan.toml` (`[policy]`, `[rules]`, `[paths] exclude`), SARIF 2.1.0 (validated against the vendored OASIS schema), the markdown audit report, the agent format, `--stats`, suppression reasons in every output, `scan --files`, `rules`, `explain`, `hook claude` (new pure `hooks/` layer), `action.yml` and `.pre-commit-hooks.yaml`. Rule pages moved into the package (`src/seamscan/rules/docs/`). Spec corrections from the hook docs: MultiEdit is gone; hook errors must exit 1, not 2. Decisions recorded as "As built (M6)" in §9.3, §9.5, §10, §11.
 - 2026-10-08: M6 moved ahead of M5 (§14). M6 groundwork: fingerprints computed before scan scoping; `Verdict.baselined`; one shared run path in the CLI. M6 scope decisions recorded under §14.
 - 2026-10-08: **M4 done (0.5.0).** New rules: SC-SUPA-001..004 (statement scanner + schema replay per ADR-001; table→browser links per ADR-002), SC-FIRE-001 (Firestore/Storage/RTDB rules parser) and SC-SEC-002 (secrets reachable from the browser). 26 rules, 746 cases, every rule 1.00/1.00 on both splits (author-written; §8.3). The README rule table is now generated from the registry (`scripts/rules_table.py`) and a test fails when it is stale. Expo Router's `app/` is client code. SQL `--` suppressions. Decisions recorded in §5.7, §7.1, §7.3 and §9.2; backlog in §7.9.
