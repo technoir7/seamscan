@@ -42,6 +42,8 @@ seamscan = "seamscan.cli:main"
 [tool.setuptools.package-data]
 # Rule pages ship in the wheel so `seamscan explain` works offline after install.
 "seamscan.rules" = ["docs/*.md"]
+# The registry snapshot (ADR-004), with its README for the sources' attribution.
+"seamscan.supply" = ["data/*.txt", "data/README.md"]
 
 [tool.ruff]
 line-length = 100
