@@ -21,6 +21,7 @@ from seamscan.parse.javascript import JsModule, JsNode
 from seamscan.parse.python import (
     FunctionNode,
     PyModule,
+    comments_by_line,
     enclosing_function,
     is_constant,
     keyword,
@@ -461,18 +462,6 @@ _DIRECTIVE = re.compile(
 )
 
 
-def _comments_by_line(source: str) -> dict[int, str]:
-    """Comment text per line. `ast` drops comments; tokenize keeps them."""
-    out: dict[int, str] = {}
-    try:
-        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
-            if tok.type == tokenize.COMMENT:
-                out[tok.start[0]] = tok.string.lstrip("#").strip()
-    except (tokenize.TokenError, SyntaxError):
-        return out
-    return out
-
-
 def _gives_reason(comment: str) -> bool:
     rest = _DIRECTIVE.sub("", comment)
     return bool(re.search(r"[A-Za-z]{2}", rest)) and not _UNFINISHED_NOTE.search(rest)
@@ -500,7 +489,7 @@ def _swallowed_exceptions_python(ctx: RuleContext) -> Iterator[Finding]:
                 if call is None and not interrupts:
                     continue
                 if comments is None:
-                    comments = _comments_by_line(module.source)
+                    comments = comments_by_line(module)
                 if _explained_handler(comments, handler):
                     continue
                 header = _source_line(module.source, handler.lineno)
