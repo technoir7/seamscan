@@ -1393,12 +1393,15 @@ Order rationale:
 2. ~~License~~ Decided: MIT.
 3. **LLM-generated corpus:** which models, how many cases, and what spend
    cap? A suggestion: 2–3 current models × 20 task prompts.
-4. **Comparisons with Semgrep and Opengrep.** Running them is allowed for
-   internal use. *Publishing* numbers from the Semgrep registry rules needs the
-   license checked first. Should we skip it, or use Opengrep with community
-   rules that have a clear license?
-5. **Where the write-up lives:** a personal blog, dev.to, or a GitHub Pages
-   page in this repo?
+4. ~~Comparisons with Semgrep and Opengrep~~ Decided 2026-10-09: Semgrep runs
+   privately for learning (`bench.compare --semgrep`, results in a gitignored file);
+   only the permissively licensed comparators are published.
+5. ~~Where the write-up lives~~ Decided 2026-10-09: in this repository as a GitHub
+   page, cross-posted to dev.to.
+6. ~~PyPI release~~ Decided 2026-10-09: not for now. Every install path works from
+   GitHub. The case for it (claiming the name before someone else does, a visible
+   download count) is noted; revisit at 1.0. Until then M7's "PyPI 1.0.0" reads
+   "tagged 1.0.0 on GitHub".
 
 ---
 
