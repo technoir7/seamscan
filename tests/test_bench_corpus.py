@@ -120,7 +120,8 @@ def test_no_case_file_is_hidden_by_gitignore():
     import subprocess
 
     hidden = subprocess.run(
-        ["git", "ls-files", "--others", "--ignored", "--exclude-standard", "bench/cases"],
+        ["git", "ls-files", "--others", "--ignored", "--exclude-standard"]
+        + ["bench/cases", "bench/independent"],
         cwd=CASES_DIR.parent.parent,
         capture_output=True,
         text=True,
