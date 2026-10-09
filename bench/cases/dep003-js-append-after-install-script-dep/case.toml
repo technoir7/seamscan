@@ -1,0 +1,38 @@
+id = "dep003-js-append-after-install-script-dep"
+description = "scan: appending zod adds a comma to sharp's line; sharp (install script) was already there"
+mode = "scan"
+split = "holdout"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-DEP-003"
+
+[[forbidden]]
+rule = "SC-DEP-001"
+
+[[forbidden]]
+rule = "SC-DEP-002"
+
+[[forbidden]]
+rule = "SC-META-004"
+
+[registry]
+now = 2026-10-01T00:00:00Z
+
+[[registry.package]]
+ecosystem = "npm"
+name = "sharp"
+exists = true
+first_published = 2013-08-23T00:00:00Z
+weekly_downloads = 19000000
+install_scripts = ["install"]
+
+[[registry.package]]
+ecosystem = "npm"
+name = "zod-form-data"
+exists = true
+first_published = 2021-09-01T00:00:00Z
+weekly_downloads = 180000
+install_scripts = []

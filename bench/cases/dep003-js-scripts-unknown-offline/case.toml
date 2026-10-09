@@ -22,5 +22,4 @@ rule = "SC-META-004"
 now = 2026-10-01T00:00:00Z
 snapshot = [
     "npm:multer",
-    "npm:pg",
 ]
