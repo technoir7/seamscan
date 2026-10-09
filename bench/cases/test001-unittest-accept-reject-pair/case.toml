@@ -1,0 +1,10 @@
+id = "test001-unittest-accept-reject-pair"
+description = "Django validation tests: the accepting half has no assert, its sibling expects the same call to raise"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-TEST-001"

@@ -30,6 +30,17 @@ a docstring "must load without raising", or the word "smoke". Such a test is wea
 honest. The test this rule hunts keeps its old name (`test_total_includes_tax`) and
 loses its check.
 
+**Decision: the accepting half of an accept/reject pair.** A test with no assertion is not
+flagged when it calls a function that another test *in the same file* expects to raise:
+inside `with pytest.raises(...)` / `with self.assertRaises(...)`, or as the callable of
+`pytest.raises(E, fn, ...)` / `self.assertRaises(E, fn, ...)`. The pair is a common way to
+test a validator: `test_http_url_rejected` checks that `ep.full_clean()` raises on bad
+input, and `test_https_url_accepted` calls `ep.full_clean()` on good input, where not
+raising is the check. On the 20-repository noise study (spec §8.4), these made up 8 of the
+rule's 10 findings, all of them deliberate. The match is by the call's last name
+(`full_clean`, `validate_slug`), so a raising check on a different function, or one in
+another file, doesn't count.
+
 The finding sits on the `def` line and spans the whole function. In scan mode an edit
 anywhere inside the test brings it into scope.
 
@@ -73,6 +84,11 @@ finding.
 
 The "doesn't raise" exemption applies to the test title: `it("renders without crashing")`
 (the Create React App default) and `it("does not throw on empty input")` are not flagged.
+
+The accept/reject pair works the same way: a raising check is `expect(() => fn(x)).toThrow()`
+(any `toThrow*` matcher, chai's `.to.throw()`), `await expect(fn(x)).rejects...`,
+`expect(fn).toThrow()`, `new` expressions inside them, and `assert.throws` / `assert.rejects`
+/ `t.throws`.
 
 Hooks (`beforeEach`, `test.beforeEach`), Playwright's `test.describe` and `test.step`, and
 `describe` blocks are not tests. The finding sits on the line of the `it(` / `test(` call and
@@ -185,6 +201,11 @@ new behavior rather than nothing.
   (`class FooTests(BaseTests)`, where `BaseTests` subclasses `TestCase`) are missed.
 - The "doesn't raise" exemption trusts the name. An agent that renames a test to
   `test_..._does_not_raise` while deleting its assertion is not flagged.
+- The accept/reject exemption trusts the pair. A test that should check a return value
+  (`test_total_includes_tax` calling `compute_total`) is missed when another test in the
+  file expects `compute_total` to raise on bad input. Constructors count as calls, so a
+  file that expects `Order(qty=-1)` to raise exempts every no-assert test that builds an
+  `Order`.
 - In scan mode, a change that only *deletes* lines (the `assert` line removed, nothing
   added) has no added line to scope the finding to, so it is not reported. Audit mode
   still reports it.

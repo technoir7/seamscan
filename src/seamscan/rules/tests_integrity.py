@@ -161,11 +161,52 @@ def _header(module: PyModule, fn: Function) -> str:
     return module.source.splitlines()[fn.lineno - 1].strip()
 
 
+_RAISES_METHODS = frozenset({"assertRaises", "assertRaisesRegex"})
+
+
+def _expects_raise(module: PyModule, call: ast.Call) -> bool:
+    return qualified_name(module, call.func) == "pytest.raises" or (
+        isinstance(call.func, ast.Attribute) and call.func.attr in _RAISES_METHODS
+    )
+
+
+def _expected_to_raise(module: PyModule) -> frozenset[str]:
+    """Names of the calls some test in this file expects to raise: the calls inside a
+    `with pytest.raises(...)` / `with self.assertRaises(...)` block, and the callable of
+    `pytest.raises(E, fn, ...)` / `self.assertRaises(E, fn, ...)`."""
+    names: set[str] = set()
+    for node in ast.walk(module.tree):
+        if isinstance(node, (ast.With, ast.AsyncWith)) and any(
+            isinstance(i.context_expr, ast.Call) and _expects_raise(module, i.context_expr)
+            for i in node.items
+        ):
+            names.update(
+                _called_name(c)
+                for stmt in node.body
+                for c in ast.walk(stmt)
+                if isinstance(c, ast.Call)
+            )
+        elif isinstance(node, ast.Call) and _expects_raise(module, node) and len(node.args) > 1:
+            fn = node.args[1]
+            names.add(fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", ""))
+    names.discard("")
+    return frozenset(names)
+
+
+def _accepts_what_a_sibling_rejects(fn: Function, rejected: frozenset[str]) -> bool:
+    """The accepting half of an accept/reject pair: another test in the file expects this
+    call to raise on bad input, so here, with good input, not raising is the check."""
+    return any(isinstance(n, ast.Call) and _called_name(n) in rejected for n in ast.walk(fn))
+
+
 def _no_assertion(ctx: RuleContext) -> Iterator[Finding]:
     for module in _test_modules(ctx):
         helpers = _asserting_helpers(module)
+        rejected = _expected_to_raise(module)
         for fn in _test_functions(module):
             if _contains_assertion(module, fn, helpers) or _says_it_checks_only_for_errors(fn):
+                continue
+            if _accepts_what_a_sibling_rejects(fn, rejected):
                 continue
             # The location spans the whole function, so in scan mode an edit anywhere in
             # the test (such as deleting its assert) brings the finding into scope.
@@ -630,9 +671,77 @@ def _js_asserting_helpers(module: JsModule) -> frozenset[str]:
     return frozenset(names)
 
 
+_JS_THROW_MATCHERS = frozenset(
+    {
+        "toThrow",
+        "toThrowError",
+        "toThrowErrorMatchingSnapshot",
+        "toThrowErrorMatchingInlineSnapshot",
+        "throw",  # chai: expect(fn).to.throw()
+    }
+)
+# `assert.throws(fn)`, `assert.rejects(p)` (node:assert); `t.throws(fn)` (AVA, node:test).
+_JS_THROW_ASSERTS = frozenset({"throws", "rejects", "throwsAsync"})
+
+
+def _js_expect_subject(module: JsModule, call: JsNode) -> JsNode | None:
+    """`x` in `expect(x).<...>.toThrow()`: step down the callee to the expect call."""
+    node = _js_callee(call)
+    while node is not None:
+        if node.type == "member_expression":
+            node = node.child_by_field_name("object")
+        elif node.type == "call_expression":
+            callee = _js_callee(node)
+            if callee is not None and _js_chain(module, callee) in _JS_EXPECT_CALLEES:
+                args = js.arguments(node)
+                return args[0] if args else None
+            node = callee
+        elif node.type in ("parenthesized_expression", "await_expression", "non_null_expression"):
+            node = node.named_children[0] if node.named_children else None
+        else:
+            return None
+    return None
+
+
+def _js_called_names(module: JsModule, node: JsNode) -> set[str]:
+    """Last names of the calls and constructors in `node`, or the function it names."""
+    if node.type == "identifier":
+        return {js.text(module, node)}
+    if node.type == "member_expression":
+        prop = node.child_by_field_name("property")
+        return {js.text(module, prop)} if prop is not None else set()
+    names: set[str] = set()
+    for n in _js_walk(node):
+        target = n.child_by_field_name("function" if n.type == "call_expression" else "constructor")
+        if n.type in ("call_expression", "new_expression") and target is not None:
+            names.add(_js_chain(module, target)[-1])
+    names.discard("")
+    return names
+
+
+def _js_expected_to_throw(module: JsModule) -> frozenset[str]:
+    """Names of the calls some test in this file expects to throw or reject."""
+    names: set[str] = set()
+    for call in js.captures(module, "(call_expression) @c").get("c", []):
+        callee = _js_callee(call)
+        if callee is None:
+            continue
+        chain = _js_chain(module, callee)
+        subject: JsNode | None = None
+        if chain[-1] in _JS_THROW_MATCHERS or "rejects" in chain[1:]:
+            subject = _js_expect_subject(module, call)
+        elif len(chain) == 2 and chain[-1] in _JS_THROW_ASSERTS:
+            args = js.arguments(call)
+            subject = args[0] if args else None
+        if subject is not None:
+            names |= _js_called_names(module, subject)
+    return frozenset(names)
+
+
 def _js_no_assertion(ctx: RuleContext) -> Iterator[Finding]:
     for module in _js_test_modules(ctx):
         helpers = _js_asserting_helpers(module)
+        rejected = _js_expected_to_throw(module)
         for call, chain, callback in _js_tests(module):
             if _JS_NOT_RUN.intersection(chain):
                 continue  # a test that doesn't run is SC-TEST-003's business
@@ -641,6 +750,9 @@ def _js_no_assertion(ctx: RuleContext) -> Iterator[Finding]:
                 continue
             body = callback.child_by_field_name("body")
             if body is not None and _js_contains_assertion(module, body, helpers):
+                continue
+            # The accepting half of an accept/reject pair (see the Python rule).
+            if body is not None and _js_called_names(module, body) & rejected:
                 continue
             # The location spans the whole call, so in scan mode an edit anywhere in the
             # test brings the finding into scope.
