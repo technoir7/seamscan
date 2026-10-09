@@ -1503,6 +1503,19 @@ _COMPARE_DIGEST = frozenset({"hmac.compare_digest", "secrets.compare_digest"})
 _STOPS = frozenset({"sys.exit", "exit", "quit", "abort", "flask.abort"})
 
 
+# A name ending in one of these holds the kind of a thing (a JWT's `typ`, an OAuth
+# `grant_type`, a `scope`), compared with kind names like "refresh": not a credential.
+_KIND_WORDS = frozenset({"type", "typ", "kind", "scope", "role"})
+# Receivers whose attributes and items are the app's own configuration.
+_CONFIG_OBJECTS = frozenset({"settings", "config", "conf", "cfg", "environ"})
+_CONFIG_CALLS = frozenset({"os.getenv", "os.environ.get"})
+
+
+def _is_kind_name(name: str | None) -> bool:
+    words = name_words(name or "")
+    return bool(words) and words[-1] in _KIND_WORDS
+
+
 def _is_credential_name(name: str) -> bool:
     """The name ends in a credential noun: `password`, `x_api_key`, `jwt_secret`, but not
     `token_type` or `password_reset_status`."""
@@ -1510,19 +1523,18 @@ def _is_credential_name(name: str) -> bool:
     return bool(words) and (words[-1] in _CREDENTIAL_WORDS or words[-2:] in _CREDENTIAL_PAIRS)
 
 
-def _credential_label(node: ast.expr) -> str | None:
-    """The name a value goes by, if it names a credential: `password`, `user.pin`,
-    `form["password"]`, `headers.get("X-Api-Key")`, or WTForms' `form.password.data`."""
-    label: str | None = None
+def _value_name(node: ast.expr) -> str | None:
+    """The name a value goes by: `password`, `user.pin`, `form["password"]`,
+    `headers.get("X-Api-Key")`, or WTForms' `form.password.data`."""
     if isinstance(node, ast.Name):
-        label = node.id
-    elif isinstance(node, ast.Attribute):
+        return node.id
+    if isinstance(node, ast.Attribute):
         if node.attr in ("data", "value") and isinstance(node.value, ast.Name | ast.Attribute):
-            return _credential_label(node.value)
-        label = node.attr
-    elif isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant):
-        label = node.slice.value if isinstance(node.slice.value, str) else None
-    elif (
+            return _value_name(node.value)
+        return node.attr
+    if isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant):
+        return node.slice.value if isinstance(node.slice.value, str) else None
+    if (
         isinstance(node, ast.Call)
         and isinstance(node.func, ast.Attribute)
         and node.func.attr == "get"
@@ -1530,8 +1542,56 @@ def _credential_label(node: ast.expr) -> str | None:
         and isinstance(node.args[0], ast.Constant)
         and isinstance(node.args[0].value, str)
     ):
-        label = node.args[0].value
+        return node.args[0].value
+    return None
+
+
+def _credential_label(node: ast.expr) -> str | None:
+    """The name a value goes by, if it names a credential."""
+    label = _value_name(node)
     return label if label is not None and _is_credential_name(label) else None
+
+
+def _py_is_config(module: PyModule, node: ast.expr) -> bool:
+    """The app's own configuration: `settings.API_KEY`, `app.config["SECRET"]`,
+    `os.environ["TOKEN"]`, `os.getenv("KEY")`, or a variable set from one of them in the
+    same function. Comparing it with a literal checks for a default left in place; it
+    authenticates no one (as for TS/JS)."""
+    if isinstance(node, ast.Name):
+        scope = enclosing_function(module, node) or module.tree
+        return any(
+            isinstance(a, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == node.id for t in a.targets)
+            and _py_is_config(module, a.value)
+            for a in ast.walk(scope)
+        )
+    if isinstance(node, ast.Call):
+        return qualified_name(module, node.func) in _CONFIG_CALLS
+    target = node.value if isinstance(node, ast.Attribute | ast.Subscript) else None
+    if target is None:
+        return False
+    owner = qualified_name(module, target) or ""
+    return _last_segment(owner).lower() in _CONFIG_OBJECTS
+
+
+def _py_placeholder_check(module: PyModule, cmp: ast.Compare, side: ast.expr) -> bool:
+    """`key and key != "your-key-here"` and `not key or key == "test-key"` treat the
+    literal like a missing value: a check that a placeholder was replaced (as for TS/JS)."""
+    if len(cmp.ops) != 1:
+        return False
+    parent = module.parents.get(id(cmp))
+    if not isinstance(parent, ast.BoolOp):
+        return False
+    name = ast.dump(side)
+    others = [v for v in parent.values if v is not cmp]
+    if isinstance(cmp.ops[0], ast.NotEq) and isinstance(parent.op, ast.And):
+        return any(ast.dump(v) == name for v in others)
+    if isinstance(cmp.ops[0], ast.Eq) and isinstance(parent.op, ast.Or):
+        return any(
+            isinstance(v, ast.UnaryOp) and isinstance(v.op, ast.Not) and ast.dump(v.operand) == name
+            for v in others
+        )
+    return False
 
 
 def _secret_literal(node: ast.expr) -> str | None:
@@ -1606,6 +1666,8 @@ def _compared_credential(module: PyModule, cmp: ast.Compare) -> str | None:
                 label
                 and any(_secret_literal(lit) is not None for lit in literals)
                 and not _loop_variable(module, side)
+                and not _py_is_config(module, side)
+                and not _py_placeholder_check(module, cmp, side)
             ):
                 return label
     return None
@@ -1638,6 +1700,8 @@ def _hardcoded_credentials_python(ctx: RuleContext) -> Iterator[Finding]:
                 isinstance(node, ast.Call)
                 and qualified_name(module, node.func) in _COMPARE_DIGEST
                 and any(_secret_literal(a) is not None for a in node.args)
+                and not any(_is_kind_name(_value_name(a)) for a in node.args)
+                and not any(_py_is_config(module, a) for a in node.args)
             ):
                 yield finding(
                     HARDCODED_CREDENTIAL,
