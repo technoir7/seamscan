@@ -1,0 +1,10 @@
+id = "web003-ts-express-cors-reflect-bearer-only"
+description = "Express cors() reflects every origin with credentials, but the API authenticates with a Bearer token the client sends itself and sets no cookies: nothing ambient for other sites to ride on"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-WEB-003"

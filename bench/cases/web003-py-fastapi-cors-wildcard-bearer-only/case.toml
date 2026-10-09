@@ -1,0 +1,11 @@
+id = "web003-py-fastapi-cors-wildcard-bearer-only"
+description = "FastAPI CORSMiddleware with origins ['*'] and credentials, but auth is a Bearer JWT in the Authorization header and nothing sets a cookie: other sites get no ambient credentials (noise studies 2026-10-09)"
+mode = "audit"
+split = "holdout"
+
+[provenance]
+source = "adapted"
+upstream = "minimal rewrite of noise-study dev data (melaven/enterprise-serm-platform, rednafi/fastapi-nano)"
+
+[[forbidden]]
+rule = "SC-WEB-003"

@@ -1,5 +1,5 @@
 id = "web003-ts-route-handler-cors-headers"
-description = "Route handler returns ACAO * with Allow-Credentials true on every response"
+description = "Route handler returns ACAO * with Allow-Credentials true on every response; its login sets a session cookie, which the rule needs since 2026-10-09 (CORS credentials are ambient ones)"
 mode = "audit"
 split = "dev"
 

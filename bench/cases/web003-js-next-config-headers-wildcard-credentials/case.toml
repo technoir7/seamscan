@@ -1,5 +1,5 @@
 id = "web003-js-next-config-headers-wildcard-credentials"
-description = "next.config.js headers() sends ACAO * together with Allow-Credentials true"
+description = "next.config.js headers() sends ACAO * together with Allow-Credentials true; its login sets a session cookie, which the rule needs since 2026-10-09 (CORS credentials are ambient ones)"
 mode = "audit"
 split = "dev"
 

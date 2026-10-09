@@ -34,6 +34,20 @@ purpose, and browsers never send cookies with it. Header objects in browser code
 (`"use client"` files and Vite/CRA `src/`) are skipped, since setting CORS headers on a
 request does nothing. Test files are skipped.
 
+**Decision: credentials have to exist (2026-10-09).** The credentials CORS talks about
+are the ones a browser attaches by itself: cookies and HTTP authentication. A Bearer
+token that the app's own JavaScript puts in an `Authorization` header is not one: no
+other site can make the browser send it. So the CORS shapes above are reported only when
+the repository shows ambient credentials somewhere: it sets or reads a cookie
+(`set_cookie`, `request.cookies`, `res.cookie`, Next.js `cookies()`, `Set-Cookie`,
+`document.cookie`), uses sessions (`SessionMiddleware`, Flask `session`, Django's
+sessions or auth apps, `express-session`, `cookie-parser`, `iron-session`, Auth.js /
+NextAuth, `@supabase/ssr`, Clerk, Lucia, Passport...) or HTTP basic auth (`HTTPBasic`,
+a `"Basic ..."` header), or its client opts into them (`withCredentials: true`,
+`credentials: "include"`). The check is generous: any mention counts. In the noise
+studies of 2026-10-09 all four credentialed-CORS findings were Bearer-token APIs and all
+four were judged harmless. Debug mode is reported regardless.
+
 ## Why it matters
 
 The Werkzeug debugger behind Flask's `debug=True` gives anyone who can load an error page
@@ -128,11 +142,16 @@ False negatives:
   `if os.environ.get("CI") is None:`.
 - Options built across several statements (an object filled in with assignments) or
   imported from another file are not followed.
+- Cookies that something outside the repository sets for the API's site (a separate
+  auth service, a gateway or proxy on the same domain) aren't seen, so a credentialed
+  wildcard policy in a repository that never mentions cookies goes unreported.
 
 False positives:
 
 - Only top-level assignments are read, and the last one is judged. A settings module
   that sets `DEBUG = True` and turns it off inside an `if` is still reported.
+- The cookie check is any mention anywhere: a Bearer-token API with one unrelated
+  cookie (a theme preference) still has its CORS policy reported.
 
 ## References
 

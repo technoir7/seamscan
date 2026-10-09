@@ -149,3 +149,29 @@ def test_scan_mode_fingerprints_match_audit_fingerprints():
     audit = analyze([f]).findings
     scan = analyze([f], change=ChangeSet(added={"a.py": ((3, 3),)})).findings
     assert [x.fingerprint for x in scan] == [audit[1].fingerprint]
+
+
+def test_ambient_credentials_are_seen_anywhere_in_the_repository():
+    # Cookies, sessions or HTTP basic auth: what a browser attaches on its own, so what a
+    # credentialed CORS policy hands to other sites (SC-WEB-003).
+    seen = [
+        ("auth.py", "response.set_cookie('session', token, httponly=True)\n"),
+        ("app.py", "from flask import Flask, session\n"),
+        ("main.py", "app.add_middleware(SessionMiddleware, secret_key=key)\n"),
+        ("deps.py", "security = HTTPBasic()\n"),
+        ("server.js", "app.use(require('express-session')({ secret }));\n"),
+        ("lib/auth.ts", "import { cookies } from 'next/headers';\nconst c = cookies();\n"),
+        ("api.ts", "axios.create({ baseURL, withCredentials: true });\n"),
+        ("package.json", json.dumps({"dependencies": {"cookie-parser": "^1.4.7"}})),
+    ]
+    for path, text in seen:
+        assert build_project([SourceFile(path, text)]).ambient_credentials, path
+
+
+def test_bearer_tokens_are_not_ambient_credentials():
+    files = [
+        SourceFile("main.py", 'oauth2 = OAuth2PasswordBearer(tokenUrl="token")\n'),
+        SourceFile("api.ts", "fetch(url, { headers: { Authorization: `Bearer ${t}` } });\n"),
+        SourceFile("README.md", "Sessions and cookies are explained below.\n"),
+    ]
+    assert not build_project(files).ambient_credentials

@@ -1,5 +1,5 @@
 id = "web003-vercel-json-headers"
-description = "vercel.json headers send ACAO * with Allow-Credentials true for the API"
+description = "vercel.json headers send ACAO * with Allow-Credentials true for the API; its login sets a session cookie, which the rule needs since 2026-10-09 (CORS credentials are ambient ones)"
 mode = "audit"
 split = "holdout"
 

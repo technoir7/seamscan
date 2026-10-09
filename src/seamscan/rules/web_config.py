@@ -317,12 +317,19 @@ def _vercel_headers(file: SourceFile) -> Iterator[Finding]:
 
 
 def _permissive_config(ctx: RuleContext) -> Iterator[Finding]:
+    # CORS "credentials" are what a browser attaches by itself: cookies and HTTP auth. A
+    # Bearer token the app's own code puts in a header is not one, so where the repository
+    # shows no ambient credentials, a credentialed wildcard policy hands other sites nothing.
+    cors = ctx.project.ambient_credentials
     for module in ctx.python:
         if role_of(module.path) is Role.TEST:
             continue
         yield from _flask_debug(module)
         yield from _django_debug(module)
-        yield from _cors_middleware(module)
+        if cors:
+            yield from _cors_middleware(module)
+    if not cors:
+        return
     for jsm in ctx.js:
         role = ctx.project.js_role(jsm)
         if role is Role.TEST:
