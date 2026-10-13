@@ -186,11 +186,17 @@ def sample(study: Study, size: int, seed: int) -> None:
     problems = [f for f in json.loads(study.detail.read_text()) if not is_notice(f)]
     chosen = draw_sample(problems, size, seed)
     head = f"# Triage sample: {len(chosen)} findings, seed {seed}. verdict: {VERDICTS}\n"
+
+    # A JSON string is a TOML basic string, except that JSON's ASCII escapes write
+    # characters beyond the BMP (emoji) as surrogate pairs, which TOML rejects.
+    def value(v: Any) -> str:
+        return json.dumps(v, ensure_ascii=False)
+
     entries = [
         "\n[[finding]]\n"
-        + "".join(f"{k} = {json.dumps(f[k])}\n" for k in ("repo", "rule", "path", "line"))
-        + f"fingerprint = {json.dumps(f['fingerprint'])}\n"
-        + f"message = {json.dumps(f['message'])}\n"
+        + "".join(f"{k} = {value(f[k])}\n" for k in ("repo", "rule", "path", "line"))
+        + f"fingerprint = {value(f['fingerprint'])}\n"
+        + f"message = {value(f['message'])}\n"
         + 'verdict = ""\nnote = ""\n'
         for f in chosen
     ]

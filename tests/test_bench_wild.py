@@ -1,4 +1,8 @@
-from bench.wild import draw_sample, per_kloc, precision
+import json
+import tomllib
+from pathlib import Path
+
+from bench.wild import Study, draw_sample, per_kloc, precision, sample
 
 
 def _findings(n: int) -> list[dict[str, object]]:
@@ -30,3 +34,16 @@ def test_precision_leaves_unclear_verdicts_out_of_the_ratio():
     assert result["precision"] == 0.75
     assert result["unclear"] == 1
     assert result["sampled"] == 5
+
+
+def test_the_triage_sample_keeps_any_message_text_readable_as_toml(tmp_path: Path):
+    # JSON's ASCII escapes write an emoji as a surrogate pair, which TOML rejects.
+    message = "`_t('\U0001f680 Start')` is \"raw\"\n\tHTML"
+    finding = {**_findings(1)[0], "message": message}
+    study = Study(
+        tmp_path / "r.toml", tmp_path / "d.json", tmp_path / "t.toml", tmp_path / "c.json"
+    )
+    study.detail.write_text(json.dumps([finding]))
+    sample(study, 10, seed=7)
+    (entry,) = tomllib.loads(study.triage.read_text())["finding"]
+    assert entry["message"] == message

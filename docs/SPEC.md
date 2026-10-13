@@ -1416,6 +1416,20 @@ Order rationale:
   libraries (jQuery, select2, drf-yasg) for CODE-008 (5); intended-public forms and
   demos for WEB-001 (3); one each for CODE-004, CODE-011, DEP-002, SEC-003, TEST-001,
   and editor-authored rich text for CODE-008 (2), static JSON-LD (1).
+- *Fourth study* (`bench/wild/repos-fourth.toml`, pinned 2026-10-13 before the
+  vendored-library change; today's search results, since GitHub's ranking had moved). It
+  found a hang first: the directive search backtracked exponentially on comment lines
+  holding URLs (fixed, linear). 200k lines, 105 findings (0.52 per 1,000 lines). Triage
+  of a 100-finding sample by a fresh session, same rubric plus a sentence on tracing
+  CODE-008 sources: **16 true, 83 false, 1 unclear: precision 0.16; blocking 11 of 86
+  (0.13).** One repository gave 72 of the 100 (61 false); the other 19 give 5 of 27
+  (0.19). CODE-008 is 10 of 79: the app escapes through its own helpers (`esc`,
+  `_pbEsc`, a `sanitizeHTML` that wraps DOMPurify), which the documented list doesn't
+  name, or builds HTML from constants and numbers. Without CODE-008: 6 of 20 (0.30).
+- **Consequence (2026-10-13):** the third study's 0.53 did not hold on fresh code. Rule
+  by rule, the noise passes removed the false alarms they were aimed at and new
+  repositories brought new ones; CODE-008's sanitizer list is the next instance of the
+  long tail §14 already named. 1.0 waits on a decision about how to close it (Aaron).
 - Triage hygiene: the third triager's grep printed one placeholder line from a
   third-party `.env.example`, against the no-.env rule; no verdict used it.
 
@@ -1461,6 +1475,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-13: Fourth noise study: precision 0.16 (16 of 99 decided), blocking 0.13; one repository gave 72 of 100 sampled findings. Directive-search hang fixed. Triage samples are written as UTF-8 (emoji broke TOML). README results table generated from `bench/results/latest.json` and `wild-fourth.json`.
 - 2026-10-13: Vendored libraries are read for secrets only, like minified files: a JS/TS file under `vendor`, `vendors`, `third_party`, `third-party` or `staticfiles` (Django's collectstatic output), or one opening with a license banner that names a version. On 2,660 JS/TS files from the 60 studied repositories, every banner was a copied library. Removes the third study's five vendored-library false alarms (in-sample). A fourth set of 20 repositories (`repos-fourth.toml`) was pinned before this change to measure it.
 - 2026-10-09: Second noise pass (CODE-002 needs a state-changing call; interface classes; claim-kind comparisons; fixture decorators; browser-designed keys; SEC-003 covers only secrets the app trusts; credentialed CORS needs ambient credentials; schema-qualified definer bodies; CLI options). On the 40 development repositories: 24 true and 24 false findings, from 25 and 124 (in-sample). ADR-005: confidence calibrated from measured field precision; SC-CODE-002 becomes LOW (4 of 14), reported but never blocking. A third set of 20 repositories (`repos-third.toml`) was pinned before this pass to measure it.
 - 2026-10-09: M7 evaluation: independent set (697 cases, 0.96 / 0.94 after adjudication), 20-repo noise study (0.75 findings per 1,000 lines, precision 0.20), comparator run. JSX `&` parse fix. Results and the decision to do a noise pass before 1.0 are in §14 "M7 results so far".

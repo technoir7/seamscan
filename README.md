@@ -203,10 +203,33 @@ When the Python rules landed, the old v0.2 engine was scored on the 262-case cor
 the time with the same scoring. It got credit even without a location, and still
 reached precision 0.40 and recall 0.19.
 
-**Read the current numbers with care.** The cases were written alongside the rules, so
-even the holdout split isn't independent. An independently written holdout set comes
-before any published accuracy claim ([spec §8.3](docs/SPEC.md)). The rule pages list
-the misfires already found outside the benchmark.
+**The corpus overstates accuracy.** Its cases were written alongside the rules. Two
+measurements use code the rules weren't shaped by:
+
+<!-- results:start -->
+Independent cases (697, written from the rule pages by separate sessions; see [the adjudication](bench/independent/ADJUDICATION.md)):
+
+| Category | Found | Missed | False alarms | Precision | Recall |
+|---|---|---|---|---|---|
+| Dependencies | 43 | 1 | 0 | 1.00 | 0.98 |
+| Firebase | 12 | 1 | 4 | 0.75 | 0.92 |
+| Risky code patterns | 144 | 9 | 2 | 0.99 | 0.94 |
+| Secrets and keys | 38 | 5 | 1 | 0.97 | 0.88 |
+| Supabase | 31 | 0 | 0 | 1.00 | 1.00 |
+| Test integrity | 49 | 3 | 7 | 0.88 | 0.94 |
+| Web routes and server settings | 34 | 4 | 0 | 1.00 | 0.89 |
+| **All** | 351 | 23 | 14 | **0.96** | **0.94** |
+
+Real code (20 public repositories seamscan had never run on, 200,158 lines): **0.52 findings per 1,000 lines**. Every finding (100) was checked by hand against the code: **16 real, 83 false alarms, 1 unclear (precision 0.16)**; of the ones that fail a build, 11 of 86 were real (0.13).
+<!-- results:end -->
+
+Four separate sessions wrote the independent cases from the rule pages alone. Where
+seamscan and a label disagreed, another session holding only the rule pages decided: 34
+were seamscan's errors and count against it, 6 were wrong labels and were fixed. The real-code
+repositories were picked by a written rule (`bench/wild/repos-fourth.toml`) and pinned
+before the last change to the rules. Three earlier sets of 20 shaped the rules and no
+longer count as a measurement ([spec §14](docs/SPEC.md)). The rule pages list the
+misfires found so far.
 
 Run it yourself: `uv run python -m bench.run`.
 

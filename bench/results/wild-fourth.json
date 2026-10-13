@@ -1,0 +1,361 @@
+{
+  "seamscan": "0.7.0",
+  "date": "2026-10-13",
+  "offline": false,
+  "lines": 200158,
+  "findings": 105,
+  "notices": 3,
+  "blocking": 92,
+  "per_kloc": 0.52,
+  "by_rule": {
+    "SC-CODE-002": 6,
+    "SC-CODE-007": 1,
+    "SC-CODE-008": 82,
+    "SC-FIRE-001": 4,
+    "SC-META-002": 3,
+    "SC-SEC-003": 2,
+    "SC-SEC-004": 1,
+    "SC-TEST-001": 1,
+    "SC-TEST-002": 1,
+    "SC-WEB-001": 6,
+    "SC-WEB-003": 1
+  },
+  "repos": [
+    {
+      "repo": "gvago/nextjs-supabase-ai-template",
+      "commit": "e1f1fb5e6ec48c5fc613ec7665a7fd3e97f0304a",
+      "group": "js",
+      "lines": 8782,
+      "findings": 3,
+      "notices": 0,
+      "blocking": 2,
+      "per_kloc": 0.34,
+      "by_rule": {
+        "SC-CODE-007": 1,
+        "SC-SEC-003": 1,
+        "SC-TEST-002": 1
+      }
+    },
+    {
+      "repo": "jovanni9999/nextjs-supabase-auth",
+      "commit": "7f585ecf00d11dcb6c68477913bddca10aec446b",
+      "group": "js",
+      "lines": 615,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "sidekick0361/nextjs-supabase-saas-platform",
+      "commit": "3325e89681f346bde3cbb3f48f33eb1ac0b02459",
+      "group": "js",
+      "lines": 8621,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "juanmaramos/nextjs-supabase-template",
+      "commit": "bc95e001332a4433ace33ee865ecba7022a8db53",
+      "group": "js",
+      "lines": 234,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "goktugcy/goktugceyhan.dev",
+      "commit": "c85546f9deeba8279edb2036ac906daaf8398c45",
+      "group": "js",
+      "lines": 7420,
+      "findings": 2,
+      "notices": 1,
+      "blocking": 2,
+      "per_kloc": 0.27,
+      "by_rule": {
+        "SC-CODE-008": 2,
+        "SC-META-002": 1
+      }
+    },
+    {
+      "repo": "opedro-monteiro/nextjs-firebase-auth",
+      "commit": "def5d1b5eff8a40565353a8fd7382fabd5d43901",
+      "group": "js",
+      "lines": 1846,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "fdzlabs/nextjs-firebase-template",
+      "commit": "e4f2f213d85cc4d1a196a3ed3a64cdb81762efb6",
+      "group": "js",
+      "lines": 9874,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "ikkiwar/ridenow-nextjs-firebase",
+      "commit": "fafba88b1b9c0453ab71ab09db4d0b882833ccd6",
+      "group": "js",
+      "lines": 8374,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.12,
+      "by_rule": {
+        "SC-FIRE-001": 1
+      }
+    },
+    {
+      "repo": "OthmanAdi/BarbersBuddies_Onlineshop_maker",
+      "commit": "245d06a7d02648ed944565b28254a229a8cdd889",
+      "group": "js",
+      "lines": 73114,
+      "findings": 15,
+      "notices": 1,
+      "blocking": 10,
+      "per_kloc": 0.21,
+      "by_rule": {
+        "SC-CODE-002": 2,
+        "SC-CODE-008": 10,
+        "SC-FIRE-001": 3,
+        "SC-META-002": 1
+      }
+    },
+    {
+      "repo": "manis-sharma/REACT-TO-DO-",
+      "commit": "b41b403884f64f614eb05c7434262df2bd4352c6",
+      "group": "js",
+      "lines": 4364,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "fastapi/full-stack-fastapi-template",
+      "commit": "7257e606cb94eada1dca40173e2b7f99dd549bc6",
+      "group": "py",
+      "lines": 14102,
+      "findings": 6,
+      "notices": 1,
+      "blocking": 5,
+      "per_kloc": 0.43,
+      "by_rule": {
+        "SC-META-002": 1,
+        "SC-SEC-004": 1,
+        "SC-TEST-001": 1,
+        "SC-WEB-001": 4
+      }
+    },
+    {
+      "repo": "vintasoftware/nextjs-fastapi-template",
+      "commit": "62b67456e8f01760970455282282ecaa393fbd38",
+      "group": "py",
+      "lines": 7727,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Gingiris-1031/Competitor-analysis-tool",
+      "commit": "4470242f977bf888690857e8821f4d20e1a375b7",
+      "group": "py",
+      "lines": 41508,
+      "findings": 76,
+      "notices": 0,
+      "blocking": 72,
+      "per_kloc": 1.83,
+      "by_rule": {
+        "SC-CODE-002": 4,
+        "SC-CODE-008": 70,
+        "SC-SEC-003": 1,
+        "SC-WEB-001": 1
+      }
+    },
+    {
+      "repo": "AyushBinjola1/EveryRupee",
+      "commit": "ac6995cc61c9b8fb01de62538e47faf40f184d84",
+      "group": "py",
+      "lines": 9087,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "miguelgrinberg/react-flask-app",
+      "commit": "9dc3a28dac9cd9a821c0b9718df749fa696addd0",
+      "group": "py",
+      "lines": 232,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "LondheShubham153/two-tier-flask-app",
+      "commit": "6c2ec247f15b327a317337fa3709b7f6baa8c19e",
+      "group": "py",
+      "lines": 137,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "hackersandslackers/flask-wtform-tutorial",
+      "commit": "266dbed6190fe3b40c0204f05f5003083c0811d8",
+      "group": "py",
+      "lines": 153,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "eriktaveras/django-saas-boilerplate",
+      "commit": "4cac15bd4991a013e03d826b197ffaee3ea8a92c",
+      "group": "py",
+      "lines": 1978,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "EvgeniyMalykh/Shipyard",
+      "commit": "390fa03c3255d306576883d7b53cec6c28f1ef2e",
+      "group": "py",
+      "lines": 1731,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.58,
+      "by_rule": {
+        "SC-WEB-001": 1
+      }
+    },
+    {
+      "repo": "zbahati/django_saas_application",
+      "commit": "e0e4c29b09c0d69fc5d78971a11dbe0fdcd31688",
+      "group": "py",
+      "lines": 259,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 3.86,
+      "by_rule": {
+        "SC-WEB-003": 1
+      }
+    }
+  ],
+  "triage": {
+    "precision": {
+      "sampled": 100,
+      "true": 16,
+      "false": 83,
+      "unclear": 1,
+      "precision": 0.16
+    },
+    "blocking_precision": {
+      "sampled": 87,
+      "true": 11,
+      "false": 75,
+      "unclear": 1,
+      "precision": 0.13
+    },
+    "precision_by_rule": {
+      "SC-CODE-002": {
+        "sampled": 6,
+        "true": 1,
+        "false": 5,
+        "unclear": 0,
+        "precision": 0.17
+      },
+      "SC-CODE-007": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-008": {
+        "sampled": 79,
+        "true": 10,
+        "false": 69,
+        "unclear": 0,
+        "precision": 0.13
+      },
+      "SC-FIRE-001": {
+        "sampled": 4,
+        "true": 2,
+        "false": 2,
+        "unclear": 0,
+        "precision": 0.5
+      },
+      "SC-SEC-003": {
+        "sampled": 1,
+        "true": 1,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-SEC-004": {
+        "sampled": 1,
+        "true": 0,
+        "false": 0,
+        "unclear": 1,
+        "precision": null
+      },
+      "SC-TEST-001": {
+        "sampled": 1,
+        "true": 1,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-TEST-002": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-WEB-001": {
+        "sampled": 5,
+        "true": 0,
+        "false": 5,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-WEB-003": {
+        "sampled": 1,
+        "true": 1,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      }
+    }
+  }
+}
