@@ -183,3 +183,20 @@ def test_a_basic_auth_header_value_counts():
         assert build_project([SourceFile("client.py", text)]).ambient_credentials, text
     js = "headers.set('Authorization', `Basic ${btoa(user + ':' + pass)}`);\n"
     assert build_project([SourceFile("api.ts", js)]).ambient_credentials
+
+
+def test_comments_before_code_take_linear_time_to_skip():
+    # Looking for a "use client" directive used to retry every way of splitting comment
+    # lines that contain `//` (URLs) when none was found: exponential, minutes per file.
+    import time
+
+    body = "/**\n * Component.\n */\n" + "// see https://example.com/docs\n" * 30 + "f();\n"
+    files = [
+        SourceFile("package.json", '{"dependencies": {"next": "15"}}'),
+        SourceFile("src/components/Form.js", body + "db.from('shops');\n"),
+        SourceFile("src/components/Chat.js", "/* c */\n// d\n'use client';\ndb.from('chats');\n"),
+    ]
+    start = time.perf_counter()
+    project = build_project(files)
+    assert time.perf_counter() - start < 1
+    assert project.table_references["chats"][0].role is Role.CLIENT

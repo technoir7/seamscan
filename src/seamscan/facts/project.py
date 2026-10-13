@@ -130,8 +130,10 @@ def _line_col(text: str, offset: int) -> tuple[int, int]:
 
 def _first_directive(text: str) -> str | None:
     # Lexical twin of parse.javascript.directive, so unparsed context files get roles too.
+    # Each comment is atomic: otherwise a miss retries every way of splitting comment lines
+    # at a `//` inside them (URLs), exponential in the number of lines.
     m = re.match(
-        r"""\s*(?:(?://[^\n]*|/\*.*?\*/)\s*)*(['"])(use client|use server)\1""", text, re.S
+        r"""\s*(?:(?>//[^\n]*|/\*.*?\*/)\s*)*+(['"])(use client|use server)\1""", text, re.S
     )
     return m.group(2) if m else None
 
