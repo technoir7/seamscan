@@ -1,0 +1,17 @@
+id = "code008-js-regexp-escaper-is-not-html"
+description = "a regular-expression escaper leaves < intact, so the query still reaches innerHTML as HTML"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "public/js/search.js"
+line = 7
+
+[[expected]]
+rule = "SC-CODE-008"
+path = "public/js/search.js"
+line = 9

@@ -821,8 +821,7 @@ def _js_code_eval(ctx: RuleContext) -> Iterator[Finding]:
         )
 
 
-# HTML sanitizers and escapers by resolved name. Local helpers count by their usual names
-# because hand-written `escapeHtml` functions are the norm in vanilla and Vite apps.
+# HTML sanitizers and escapers by resolved name.
 _JS_HTML_SANITIZERS = frozenset(
     {
         "sanitize-html",
@@ -833,11 +832,26 @@ _JS_HTML_SANITIZERS = frozenset(
         "he.escape",
         "lodash.escape",
         "lodash/escape",
-        "escapeHtml",
-        "escapeHTML",
-        "htmlEscape",
     }
 )
+# Local helpers count by what their name says, because hand-written escapers are the norm
+# in vanilla and Vite apps (`esc`, `_pbEsc`, `escapeHtml`, a `sanitizeHTML` wrapping
+# DOMPurify); their bodies aren't checked. `esc` alone means HTML in practice; `escape` and
+# `sanitize` need the format named, and a name about another format never counts.
+_JS_NAME_WORDS = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+")
+_JS_HTML_FORMATS = frozenset({"html", "markup", "xml"})
+_JS_OTHER_FORMATS = frozenset(
+    {"reg", "regex", "regexp", "sql", "shell", "url", "uri", "css", "json", "csv", "selector"}
+)
+
+
+def _js_html_helper_name(name: str) -> bool:
+    words = {w.lower() for w in _JS_NAME_WORDS.findall(re.split(r"[./]", name)[-1])}
+    if words & _JS_OTHER_FORMATS:
+        return False
+    return "esc" in words or bool(words & {"escape", "sanitize"} and words & _JS_HTML_FORMATS)
+
+
 _JS_PURIFY = re.compile(r"purify[^.]*\.sanitize$", re.IGNORECASE)  # DOMPurify, isomorphic-dompurify
 _JS_HTML_PROPERTIES = frozenset({"innerHTML", "outerHTML"})
 
@@ -860,7 +874,7 @@ def _js_html_safe(module: JsModule) -> js.Sanitizer:
     def safe(node: JsNode) -> bool:
         if node.type == "call_expression":
             name = js.call_name(module, node) or ""
-            if name in _JS_HTML_SANITIZERS or _JS_PURIFY.search(name):
+            if name in _JS_HTML_SANITIZERS or _JS_PURIFY.search(name) or _js_html_helper_name(name):
                 return True
             if name == "JSON.stringify":
                 args = js.arguments(node)

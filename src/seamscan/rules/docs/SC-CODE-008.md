@@ -51,8 +51,11 @@ Not matched, because they aren't these globals: `JSON.parse`, `redis.eval(script
 - `DOMPurify.sanitize` from `dompurify` or `isomorphic-dompurify`, or any
   `*purify*.sanitize` (e.g. `createDOMPurify(window).sanitize`)
 - `sanitize-html`'s default export, `xss` and its `filterXSS`
-- escapers: `escape-html`, `he.encode`/`he.escape`, lodash `escape`, and local helpers
-  named `escapeHtml`, `escapeHTML` or `htmlEscape` (their bodies aren't checked)
+- escapers: `escape-html`, `he.encode`/`he.escape`, lodash `escape`
+- the app's own helpers, by what the name says (their bodies aren't checked): a word
+  `esc` (`esc`, `_esc`, `_pbEsc`, `escAttr`), or `escape`/`sanitize` together with
+  `html`, `markup` or `xml` (`escapeHtml`, `htmlEscape`, a `sanitizeHTML` that wraps
+  DOMPurify). A name about another format never counts: `escapeRegExp` leaves `<` alone.
 - `.replace(/</g, …)` or `.replaceAll("<", …)` on the value: no tag can open. It's the fix
   the Next.js docs give for JSON-LD in a `<script>`.
 - `JSON.stringify(x)` when `x` is an object literal (or a constant naming one) whose

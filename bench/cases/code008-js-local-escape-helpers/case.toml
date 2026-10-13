@@ -1,0 +1,10 @@
+id = "code008-js-local-escape-helpers"
+description = "app escapes through its own helpers: esc, a section-prefixed _pbEsc, and a sanitizeHTML wrapping DOMPurify"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[forbidden]]
+rule = "SC-CODE-008"

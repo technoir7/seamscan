@@ -196,7 +196,7 @@ at least 5 cases it must flag and 5 close calls it must not. The cases are split
 rule at the right file and line. CI fails if any rule drops below its precision/recall
 budget.
 
-The corpus has 820 cases, 411 of them with TypeScript/JavaScript. Every rule scores
+The corpus has 890 cases, 453 of them with TypeScript/JavaScript. Every rule scores
 precision 1.00 and recall 1.00 on both splits.
 
 When the Python rules landed, the old v0.2 engine was scored on the 262-case corpus of
