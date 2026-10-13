@@ -47,3 +47,13 @@ declared access rules, not its intent.
 - *Drop the other rules.* Their real findings were some of the worst problems found (a
   failed refund nobody sees, account deletion without login). As hints they still reach
   the developer in every report.
+
+## First measurement (2026-10-14)
+
+The sixth noise study (`repos-sixth.toml`, pinned before seamscan ran on it) is the first
+data this decision didn't see. Under the focus policy, 2 of its 130 findings failed a
+build, and both were real (one starter project's `users` table with row-level security
+off and full grants to the public key). Overall precision was 0.05, but 95 of the 130
+findings were in committed copies of libraries (a virtualenv and Vite's dependency
+cache), which no rule's precision should be judged on; both are now skipped. Two blocking
+findings are too few for a rate. The next study should count blocking findings first.

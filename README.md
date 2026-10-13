@@ -224,23 +224,27 @@ Independent cases (697, written from the rule pages by separate sessions; see [t
 | Web routes and server settings | 34 | 4 | 0 | 1.00 | 0.89 |
 | **All** | 352 | 23 | 14 | **0.96** | **0.94** |
 
-Real code (20 public repositories seamscan had never run on, 186,174 lines): **0.25 findings per 1,000 lines**. Every finding (46) was checked by hand against the code: **12 real, 34 false alarms, 0 unclear (precision 0.26)**; of the ones that fail a build, 3 of 31 were real (0.10).
+Real code (20 public repositories seamscan had never run on, 439,371 lines): **0.3 findings per 1,000 lines**. A random 100 of the 130 findings were checked by hand against the code: **5 real, 95 false alarms, 0 unclear (precision 0.05)**; of the ones that fail a build, 2 of 2 were real (1.00).
 <!-- results:end -->
 
 Four separate sessions wrote the independent cases from the rule pages alone. Where
 seamscan and a label disagreed, another session holding only the rule pages decided: 34
 were seamscan's errors and count against it, 6 were wrong labels and were fixed. The real-code
-repositories were picked by a written rule (`bench/wild/repos-fifth.toml`) and pinned
-before the last change to the rules. Four earlier sets of 20 shaped the rules and no
-longer count as a measurement ([spec §14](docs/SPEC.md)). The rule pages list the
-misfires found so far.
+repositories were picked by a written rule (`bench/wild/repos-sixth.toml`) and pinned
+before seamscan ran on them. Five earlier sets of 20 shaped the rules and no longer count
+as a measurement ([spec §14](docs/SPEC.md)). The rule pages list the misfires found so
+far.
 
-That study ran before blocking was limited to the focus checks. Under the focus policy,
-6 of its 46 findings would have failed a build, and 2 of those were real; three of the
-four false alarms were fallback secrets in test-only settings and a developer script.
-Those files are now skipped, which leaves 3 build failures, 2 of them real. The focus and
-that fix were both chosen with this study's data, so neither is an independent
-measurement.
+Most of that study's false alarms were in other people's code. One repository committed
+its Python virtualenv (85 findings) and another committed Vite's cache of bundled
+libraries (10). Both are skipped now. On the same repositories that leaves 35 findings;
+of the 25 that were in the hand-checked sample, 5 were real. That second number comes
+from the data that prompted the fix, so it isn't independent.
+
+Only the focus checks fail a build. In this study that was 2 findings, and both were
+real: a starter project that turns off row-level security on its `users` table and
+grants the public key full access to it. Two is too few to call a rate; it says the
+loud alarms weren't wrong this time, not that they never will be.
 
 Run it yourself: `uv run python -m bench.run`.
 

@@ -1,0 +1,371 @@
+{
+  "seamscan": "0.7.0",
+  "date": "2026-10-13",
+  "offline": false,
+  "lines": 439371,
+  "findings": 130,
+  "notices": 0,
+  "blocking": 2,
+  "per_kloc": 0.3,
+  "by_rule": {
+    "SC-CODE-001": 8,
+    "SC-CODE-002": 4,
+    "SC-CODE-003": 45,
+    "SC-CODE-007": 2,
+    "SC-CODE-008": 20,
+    "SC-CODE-009": 1,
+    "SC-CODE-011": 8,
+    "SC-SUPA-001": 1,
+    "SC-SUPA-004": 1,
+    "SC-TEST-001": 32,
+    "SC-TEST-002": 3,
+    "SC-WEB-001": 5
+  },
+  "repos": [
+    {
+      "repo": "yuto514/HiyoRi-Ecommerce-Nextjs-Supabase",
+      "commit": "4f5c7081683a8951755c9d11b24b4ad90978e7e7",
+      "group": "js",
+      "lines": 23499,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "ColoomAI/nextjs-supabase",
+      "commit": "94f295c5a258ab79ddb8585d43767c4c2fe59ed4",
+      "group": "js",
+      "lines": 574,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 1.74,
+      "by_rule": {
+        "SC-WEB-001": 1
+      }
+    },
+    {
+      "repo": "RiadMefti/nextjs-supabase-auth-example",
+      "commit": "d48387ec9e6641b8a279be670ee92209e8e6baaa",
+      "group": "js",
+      "lines": 1803,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "demoedu/nextjs-supabase-boilerplate",
+      "commit": "3174193aa4d23dedadb57874244415ce2948ba19",
+      "group": "js",
+      "lines": 1725,
+      "findings": 2,
+      "notices": 0,
+      "blocking": 2,
+      "per_kloc": 1.16,
+      "by_rule": {
+        "SC-SUPA-001": 1,
+        "SC-SUPA-004": 1
+      }
+    },
+    {
+      "repo": "MuhammadNiazAli/nextjs-supabase-starter",
+      "commit": "a640ae76c77ac731a8fdef6b44138b4fb63dec3a",
+      "group": "js",
+      "lines": 4944,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "james4-daf/coding-notes-firebase-app",
+      "commit": "5a2876200bdc2ff80948fba7c2835a5c6de3cc91",
+      "group": "js",
+      "lines": 1344,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "iamjohncaleb/PRAY-NOW",
+      "commit": "325d4f0abae4467377ada7400b6beb57fd1ce2a5",
+      "group": "js",
+      "lines": 706,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Z-243/feelue",
+      "commit": "cc746e9469878b4510813a3730c0bb9307a5d7a3",
+      "group": "js",
+      "lines": 1197,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "dev-rashedin/React-Firebase-Chat-App",
+      "commit": "030eaab72e697798c1e6833ea8a3a550e0a5afd9",
+      "group": "js",
+      "lines": 75212,
+      "findings": 11,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.15,
+      "by_rule": {
+        "SC-CODE-002": 1,
+        "SC-CODE-003": 6,
+        "SC-CODE-008": 4
+      }
+    },
+    {
+      "repo": "itwaasyou/Medisense",
+      "commit": "a076564a9dd8cac85e2d366c866f04589da34490",
+      "group": "js",
+      "lines": 4321,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "IbraheemTuffaha/python-fastapi-template",
+      "commit": "cd86606eb082a83649f519d196ad197699c5c5aa",
+      "group": "python",
+      "lines": 254,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "ydjin0602/fastapi-template",
+      "commit": "fbd08e5a93b570087a602f737562e22e9cf8fb87",
+      "group": "python",
+      "lines": 2735,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.37,
+      "by_rule": {
+        "SC-TEST-001": 1
+      }
+    },
+    {
+      "repo": "AlexisRellon/AGAILA",
+      "commit": "f139687d3a7c6c8437e9b3ec1c5c5cb3ed09aaf1",
+      "group": "python",
+      "lines": 65465,
+      "findings": 25,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.38,
+      "by_rule": {
+        "SC-CODE-002": 2,
+        "SC-TEST-001": 17,
+        "SC-TEST-002": 3,
+        "SC-WEB-001": 3
+      }
+    },
+    {
+      "repo": "Arfatnaik0/GameOn",
+      "commit": "108e05dbb13051a4877bf2931927d2f95ffe547f",
+      "group": "python",
+      "lines": 7916,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "SoumilMalik24/Vehicle-Insurance-MLOps-Project",
+      "commit": "e427afd6510cb4fd18a340cc05fc15bedfda0316",
+      "group": "python",
+      "lines": 2123,
+      "findings": 2,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.94,
+      "by_rule": {
+        "SC-CODE-011": 2
+      }
+    },
+    {
+      "repo": "Gl0deanR/create-flask-app",
+      "commit": "6f5b27e3c3297034fcb59d62dedcf6816981d206",
+      "group": "python",
+      "lines": 423,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "LondheShubham153/flask-app-ecs",
+      "commit": "761a0a1015b20e81c9d8e93132fbe0da75568674",
+      "group": "python",
+      "lines": 14,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "willtejeda/DjangoSaasStarter",
+      "commit": "9e8a1e7f184d00cc63bf5cd727e563aca2c36942",
+      "group": "python",
+      "lines": 13346,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.07,
+      "by_rule": {
+        "SC-CODE-009": 1
+      }
+    },
+    {
+      "repo": "SESHANK29/DJANGO-SAAS",
+      "commit": "2025596ef9b21ce45d3983177fc021a35ee54854",
+      "group": "python",
+      "lines": 230065,
+      "findings": 86,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.37,
+      "by_rule": {
+        "SC-CODE-001": 8,
+        "SC-CODE-003": 39,
+        "SC-CODE-007": 2,
+        "SC-CODE-008": 16,
+        "SC-CODE-011": 6,
+        "SC-TEST-001": 14,
+        "SC-WEB-001": 1
+      }
+    },
+    {
+      "repo": "Ebikemeese/Django-Saas",
+      "commit": "820a9226b0ba716e5466b7cf4feacfa5ba3a4490",
+      "group": "python",
+      "lines": 1705,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.59,
+      "by_rule": {
+        "SC-CODE-002": 1
+      }
+    }
+  ],
+  "triage": {
+    "precision": {
+      "sampled": 100,
+      "true": 5,
+      "false": 95,
+      "unclear": 0,
+      "precision": 0.05
+    },
+    "blocking_precision": {
+      "sampled": 2,
+      "true": 2,
+      "false": 0,
+      "unclear": 0,
+      "precision": 1.0
+    },
+    "precision_by_rule": {
+      "SC-CODE-001": {
+        "sampled": 6,
+        "true": 0,
+        "false": 6,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-002": {
+        "sampled": 4,
+        "true": 1,
+        "false": 3,
+        "unclear": 0,
+        "precision": 0.25
+      },
+      "SC-CODE-003": {
+        "sampled": 35,
+        "true": 0,
+        "false": 35,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-007": {
+        "sampled": 2,
+        "true": 0,
+        "false": 2,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-008": {
+        "sampled": 15,
+        "true": 0,
+        "false": 15,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-009": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-011": {
+        "sampled": 7,
+        "true": 0,
+        "false": 7,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-SUPA-001": {
+        "sampled": 1,
+        "true": 1,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-SUPA-004": {
+        "sampled": 1,
+        "true": 1,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-TEST-001": {
+        "sampled": 23,
+        "true": 1,
+        "false": 22,
+        "unclear": 0,
+        "precision": 0.04
+      },
+      "SC-WEB-001": {
+        "sampled": 5,
+        "true": 1,
+        "false": 4,
+        "unclear": 0,
+        "precision": 0.2
+      }
+    }
+  }
+}
