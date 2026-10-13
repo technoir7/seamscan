@@ -54,6 +54,7 @@ STUDIES = {
     "first": _study("", "repos.toml"),
     "fresh": _study("-fresh", "repos-fresh.toml"),
     "third": _study("-third", "repos-third.toml"),
+    "fourth": _study("-fourth", "repos-fourth.toml"),
 }
 
 # Lines are counted in the files the rules read as code or config, not in docs or assets.

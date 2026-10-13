@@ -1,0 +1,134 @@
+# Fourth noise study (spec §8.4): 20 more repositories, pinned on 2026-10-13 before the
+# vendored-library fix and before seamscan ran on them. Studies one to three are
+# development data now; this set measures the rules as they stand after the third.
+#
+# Same rule as repos.toml, applied to today's results of the same searches. GitHub's
+# ranking has moved since 2026-10-09 (fastapi/full-stack-fastapi-template now leads
+# "fastapi template"), so these are the top qualifying results today that no earlier
+# study used, not the next ones down the old lists.
+# Changes forced by thin lists: "vite supabase" has one repo with 5+ stars left, so its
+# other slot went to the next "nextjs supabase" result.
+# Skipped: mahdibrr/nextjs-supabase-production-incidents and theaiautomators/
+# claude-code-agentic-rag-masterclass (docs, no app code), dpgaspar/Flask-AppBuilder (a
+# framework), prashantgohel321/DevOps-Project-Two-Tier-Flask-App (a copy of
+# LondheShubham153/two-tier-flask-app, which is in).
+
+[[repo]]
+name = "gvago/nextjs-supabase-ai-template"
+commit = "e1f1fb5e6ec48c5fc613ec7665a7fd3e97f0304a"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "jovanni9999/nextjs-supabase-auth"
+commit = "7f585ecf00d11dcb6c68477913bddca10aec446b"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "sidekick0361/nextjs-supabase-saas-platform"
+commit = "3325e89681f346bde3cbb3f48f33eb1ac0b02459"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "MirzaKhalilUlRehman/Slice-Bite-Resturent"
+commit = "fc6f1ededbd7b46ef00c3a597f513121539b9dd4"
+group = "js"
+query = "vite supabase"
+
+[[repo]]
+name = "goktugcy/goktugceyhan.dev"
+commit = "c85546f9deeba8279edb2036ac906daaf8398c45"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "opedro-monteiro/nextjs-firebase-auth"
+commit = "def5d1b5eff8a40565353a8fd7382fabd5d43901"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "fdzlabs/nextjs-firebase-template"
+commit = "e4f2f213d85cc4d1a196a3ed3a64cdb81762efb6"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "ikkiwar/ridenow-nextjs-firebase"
+commit = "fafba88b1b9c0453ab71ab09db4d0b882833ccd6"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "OthmanAdi/BarbersBuddies_Onlineshop_maker"
+commit = "245d06a7d02648ed944565b28254a229a8cdd889"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "manis-sharma/REACT-TO-DO-"
+commit = "b41b403884f64f614eb05c7434262df2bd4352c6"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "fastapi/full-stack-fastapi-template"
+commit = "7257e606cb94eada1dca40173e2b7f99dd549bc6"
+group = "py"
+query = "fastapi template"
+
+[[repo]]
+name = "vintasoftware/nextjs-fastapi-template"
+commit = "62b67456e8f01760970455282282ecaa393fbd38"
+group = "py"
+query = "fastapi template"
+
+[[repo]]
+name = "Gingiris-1031/Competitor-analysis-tool"
+commit = "4470242f977bf888690857e8821f4d20e1a375b7"
+group = "py"
+query = "fastapi supabase"
+
+[[repo]]
+name = "AyushBinjola1/EveryRupee"
+commit = "ac6995cc61c9b8fb01de62538e47faf40f184d84"
+group = "py"
+query = "fastapi supabase"
+
+[[repo]]
+name = "miguelgrinberg/react-flask-app"
+commit = "9dc3a28dac9cd9a821c0b9718df749fa696addd0"
+group = "py"
+query = "flask app"
+
+[[repo]]
+name = "LondheShubham153/two-tier-flask-app"
+commit = "6c2ec247f15b327a317337fa3709b7f6baa8c19e"
+group = "py"
+query = "flask app"
+
+[[repo]]
+name = "hackersandslackers/flask-wtform-tutorial"
+commit = "266dbed6190fe3b40c0204f05f5003083c0811d8"
+group = "py"
+query = "flask app"
+
+[[repo]]
+name = "eriktaveras/django-saas-boilerplate"
+commit = "4cac15bd4991a013e03d826b197ffaee3ea8a92c"
+group = "py"
+query = "django saas"
+
+[[repo]]
+name = "EvgeniyMalykh/Shipyard"
+commit = "390fa03c3255d306576883d7b53cec6c28f1ef2e"
+group = "py"
+query = "django saas"
+
+[[repo]]
+name = "zbahati/django_saas_application"
+commit = "e0e4c29b09c0d69fc5d78971a11dbe0fdcd31688"
+group = "py"
+query = "django saas"
