@@ -1491,6 +1491,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-14: **1.0.0.** M7 closes: write-up at `docs/writeup.md` (cross-post to dev.to by Aaron), demo GIF recorded from `docs/demo/demo.tape` on `docs/demo/app` (a test keeps the app's findings as shown), README leads with the focus checks. Tagged on GitHub; not on PyPI (§15.6).
 - 2026-10-14: Sixth noise study (first measurement of ADR-006): 130 findings, precision 0.05 (5 of 100 sampled); blocking 2 of 2 real. 85 findings were in one repository's committed virtualenv and 10 in another's committed `.vite/` dependency cache. `.vite` joins the skipped folders. With both fixes the same repositories give 35 findings, 5 of the 25 triaged real (in-sample). README results table now reports this study.
 - 2026-10-14: Committed virtualenvs are not read, whatever their name: a directory holding `pyvenv.cfg`, and anything under `site-packages` or `dist-packages`. Each virtualenv is listed once among the skipped files. In the sixth study, one repository's `djangoenv/` gave 85 of 130 findings.
 - 2026-10-14: Python modules named `tests.py` (Django's default), `test.py` and `testing.py` are test files (§5.6), so test-only settings such as `settings/test.py` are skipped like other tests. SC-SEC-003 skips files under `scripts/`: a script run from a shell serves no requests. Removes three of the fifth study's four false build failures (in-sample: 3 blocking, 2 real). One independent label is restored to its author's version (ADJUDICATION.md).
