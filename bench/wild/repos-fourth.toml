@@ -6,8 +6,9 @@
 # ranking has moved since 2026-10-09 (fastapi/full-stack-fastapi-template now leads
 # "fastapi template"), so these are the top qualifying results today that no earlier
 # study used, not the next ones down the old lists.
-# Changes forced by thin lists: "vite supabase" has one repo with 5+ stars left, so its
-# other slot went to the next "nextjs supabase" result.
+# Changes forced by thin lists: "vite supabase" has one repo with 5+ stars left, and it
+# holds only a README (MirzaKhalilUlRehman/Slice-Bite-Resturent), so both its slots went to
+# the next "nextjs supabase" results.
 # Skipped: mahdibrr/nextjs-supabase-production-incidents and theaiautomators/
 # claude-code-agentic-rag-masterclass (docs, no app code), dpgaspar/Flask-AppBuilder (a
 # framework), prashantgohel321/DevOps-Project-Two-Tier-Flask-App (a copy of
@@ -32,10 +33,10 @@ group = "js"
 query = "nextjs supabase"
 
 [[repo]]
-name = "MirzaKhalilUlRehman/Slice-Bite-Resturent"
-commit = "fc6f1ededbd7b46ef00c3a597f513121539b9dd4"
+name = "juanmaramos/nextjs-supabase-template"
+commit = "bc95e001332a4433ace33ee865ecba7022a8db53"
 group = "js"
-query = "vite supabase"
+query = "nextjs supabase"
 
 [[repo]]
 name = "goktugcy/goktugceyhan.dev"
