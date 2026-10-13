@@ -37,7 +37,7 @@ BLOCKING = decide(
             "",
         )
     ],
-    Policy(),
+    Policy(block="all"),
 )
 NOTE_ONLY = decide(
     [
@@ -45,9 +45,9 @@ NOTE_ONLY = decide(
             "SC-CODE-002", Severity.MEDIUM, Confidence.HIGH, Location("a.py", 1, 1, 1, 2), "m", ""
         )
     ],
-    Policy(),
+    Policy(block="all"),
 )
-CLEAN = decide([], Policy())
+CLEAN = decide([], Policy(block="all"))
 CRASHED = decide(
     [
         Finding(
@@ -59,7 +59,7 @@ CRASHED = decide(
             "",
         )
     ],
-    Policy(),
+    Policy(block="all"),
 )
 
 
@@ -148,7 +148,7 @@ def test_edit_without_blocking_findings_says_nothing():
 
 
 def test_edit_context_lists_only_blocking_findings():
-    mixed = decide([*BLOCKING.blocking, *NOTE_ONLY.non_blocking], Policy())
+    mixed = decide([*BLOCKING.blocking, *NOTE_ONLY.non_blocking], Policy(block="all"))
     out = respond(EditCheck("PostToolUse", "/repo", ("/repo/app.py",)), mixed)
     assert out is not None and "SC-CODE-002" not in out
 

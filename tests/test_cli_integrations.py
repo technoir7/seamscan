@@ -13,7 +13,9 @@ from seamscan.cli import app
 
 runner = CliRunner()
 
-BAD = "import requests\nrequests.get(u, verify=False)\n"  # SC-CODE-001, blocking
+FALLBACK_SECRET = (
+    'import os\nSECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")\n'  # SC-SEC-003, blocking
+)
 NOTE = "def f():\n    try:\n        g()\n    except Exception:\n        pass\n"  # non-blocking
 
 
@@ -45,32 +47,32 @@ def rule_paths(stdout: str) -> list[tuple[str, str]]:
 
 
 def test_files_limits_the_scan_to_the_named_files(repo: Path):
-    (repo / "a.py").write_text("x = 1\n" + BAD)
-    (repo / "b.py").write_text("y = 2\n" + BAD)
+    (repo / "a.py").write_text("x = 1\n" + FALLBACK_SECRET)
+    (repo / "b.py").write_text("y = 2\n" + FALLBACK_SECRET)
     result = runner.invoke(app, ["scan", "--files", "a.py", "--format", "json"])
     assert result.exit_code == 1
-    assert rule_paths(result.stdout) == [("SC-CODE-001", "a.py")]
+    assert rule_paths(result.stdout) == [("SC-SEC-003", "a.py")]
 
 
 def test_files_counts_only_added_lines(repo: Path):
-    (repo / "a.py").write_text(BAD)
+    (repo / "a.py").write_text(FALLBACK_SECRET)
     git(repo, "commit", "-qam", "debt")
-    (repo / "a.py").write_text(BAD + "z = 3\n")
+    (repo / "a.py").write_text(FALLBACK_SECRET + "z = 3\n")
     result = runner.invoke(app, ["scan", "--files", "a.py", "--format", "json"])
     assert result.exit_code == 0, result.stdout
     assert rule_paths(result.stdout) == []
 
 
 def test_files_treats_an_untracked_file_as_wholly_new(repo: Path):
-    (repo / "new.py").write_text(BAD)
+    (repo / "new.py").write_text(FALLBACK_SECRET)
     result = runner.invoke(app, ["scan", "--files", "new.py", "b.py", "--format", "json"])
     assert result.exit_code == 1
-    assert rule_paths(result.stdout) == [("SC-CODE-001", "new.py")]
+    assert rule_paths(result.stdout) == [("SC-SEC-003", "new.py")]
 
 
 @pytest.mark.parametrize("path", ["missing.py", "ignored.py", "../elsewhere.py"])
 def test_files_rejects_a_path_git_doesnt_know(repo: Path, path: str):
-    (repo / "ignored.py").write_text(BAD)
+    (repo / "ignored.py").write_text(FALLBACK_SECRET)
     result = runner.invoke(app, ["scan", "--files", path])
     assert result.exit_code == 2
     assert path.removeprefix("../") in result.stderr
@@ -85,13 +87,13 @@ def test_paths_without_files_flag_and_files_flag_without_paths_are_usage_errors(
 
 
 def test_scan_agent_format(repo: Path):
-    (repo / "a.py").write_text("x = 1\n" + BAD)
+    (repo / "a.py").write_text("x = 1\n" + FALLBACK_SECRET)
     result = runner.invoke(app, ["scan", "--format", "agent"])
     assert result.exit_code == 1
     assert result.stdout.splitlines() == [
         "seamscan: 1 blocking finding(s)",
-        "a.py:3 [SC-CODE-001] `requests.get` called with verify=False"
-        " → seamscan explain SC-CODE-001",
+        "a.py:3 [SC-SEC-003] `SECRET_KEY` falls back to a hardcoded value when the variable"
+        " is unset → seamscan explain SC-SEC-003",
     ]
 
 
@@ -124,12 +126,12 @@ def stop(repo: Path, active: bool = False) -> dict[str, object]:
 
 
 def test_hook_post_tool_use_reports_blocking_findings_in_the_edited_file(repo: Path):
-    (repo / "a.py").write_text("x = 1\n" + BAD)
-    (repo / "b.py").write_text("y = 2\n" + BAD)  # dirty too, but not this edit
+    (repo / "a.py").write_text("x = 1\n" + FALLBACK_SECRET)
+    (repo / "b.py").write_text("y = 2\n" + FALLBACK_SECRET)  # dirty too, but not this edit
     result = hook(edit(repo, "a.py"))
     assert result.exit_code == 0
     context = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
-    assert "a.py:3 [SC-CODE-001]" in context
+    assert "a.py:3 [SC-SEC-003]" in context
     assert "b.py" not in context
 
 
@@ -141,30 +143,30 @@ def test_hook_post_tool_use_is_silent_without_blocking_findings(repo: Path):
 
 def test_hook_post_tool_use_on_a_new_file_from_a_subdirectory(repo: Path):
     (repo / "pkg").mkdir()
-    (repo / "pkg" / "new.py").write_text(BAD)
+    (repo / "pkg" / "new.py").write_text(FALLBACK_SECRET)
     result = hook(edit(repo, "pkg/new.py", cwd=repo / "pkg"))
     assert result.exit_code == 0
-    assert "pkg/new.py:2 [SC-CODE-001]" in result.stdout
+    assert "pkg/new.py:2 [SC-SEC-003]" in result.stdout
 
 
 @pytest.mark.parametrize("path", ["ignored.py", "../outside.py"])
 def test_hook_ignores_files_outside_the_repository_or_ignored_by_git(repo: Path, path: str):
-    (repo / path).write_text(BAD)
+    (repo / path).write_text(FALLBACK_SECRET)
     result = hook(edit(repo, path))
     assert (result.exit_code, result.stdout) == (0, "")
 
 
 def test_hook_stop_blocks_on_blocking_findings_in_the_working_tree(repo: Path):
-    (repo / "b.py").write_text("y = 2\n" + BAD)
+    (repo / "b.py").write_text("y = 2\n" + FALLBACK_SECRET)
     result = hook(stop(repo))
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
     assert doc["decision"] == "block"
-    assert "b.py:3 [SC-CODE-001]" in doc["reason"]
+    assert "b.py:3 [SC-SEC-003]" in doc["reason"]
 
 
 def test_hook_stop_when_already_continued_only_tells_the_user(repo: Path):
-    (repo / "b.py").write_text("y = 2\n" + BAD)
+    (repo / "b.py").write_text("y = 2\n" + FALLBACK_SECRET)
     result = hook(stop(repo, active=True))
     assert result.exit_code == 0
     assert set(json.loads(result.stdout)) == {"systemMessage"}

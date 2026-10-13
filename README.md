@@ -64,9 +64,12 @@ uvx --from git+https://github.com/technoir7/seamscan seamscan scan        # only
 | `2` | usage error |
 | `3` | a rule crashed (results incomplete) |
 
-A finding blocks when its severity is HIGH or above **and** its confidence is MEDIUM or
-above. Everything else is reported but doesn't fail the run. The summary line and the
-exit code come from the same decision.
+Only the focus checks block: Supabase, Firebase and secrets (`SC-SUPA-*`, `SC-FIRE-*`,
+`SC-SEC-*`). Among those, a finding blocks when its severity is HIGH or above **and** its
+confidence is MEDIUM or above. Every other rule reports hints: shown in every format, never
+failing the run, because on real code most of them were false alarms ([How well it
+works](#how-well-it-works)). `block = "all"` in `seamscan.toml` makes every rule able to
+block. The summary line and the exit code come from the same decision.
 
 ## Rules
 
@@ -139,6 +142,7 @@ Settings live in `seamscan.toml` at the repository root:
 
 ```toml
 [policy]
+block = "focus"                # "focus" (Supabase, Firebase, secrets) or "all" rules
 fail_on_severity = "HIGH"      # block on HIGH and CRITICAL ...
 fail_on_confidence = "MEDIUM"  # ... when confidence is MEDIUM or HIGH
 
@@ -230,6 +234,12 @@ repositories were picked by a written rule (`bench/wild/repos-fifth.toml`) and p
 before the last change to the rules. Four earlier sets of 20 shaped the rules and no
 longer count as a measurement ([spec §14](docs/SPEC.md)). The rule pages list the
 misfires found so far.
+
+That study ran before blocking was limited to the focus checks. Under the focus policy,
+6 of its 46 findings would have failed a build, and 2 of those were real; three of the
+four false alarms were fallback secrets in test-only settings and a developer script.
+The focus was chosen with this study's data, so it isn't an independent measurement of
+the policy.
 
 Run it yourself: `uv run python -m bench.run`.
 

@@ -31,8 +31,9 @@ the rule's page next to the confidence, and it is redone when the rule's definit
 changes.
 
 Applied now: **SC-CODE-002 becomes LOW** (4 of 14). Its severity stays HIGH, because a
-lost write or a failed refund is serious when it is real; it shows in every report and
-in the Claude hook's context, but it no longer fails CI by itself. No other rule has 10
+lost write or a failed refund is serious when it is real; it shows in every report, but
+it no longer fails CI by itself. (Corrected 2026-10-13: the Claude hook passes only
+blocking findings, so a LOW finding doesn't reach the agent's context.) No other rule has 10
 triaged findings under its current definition yet.
 
 ## Alternatives rejected

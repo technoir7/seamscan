@@ -14,10 +14,10 @@ from functools import cache
 from typing import Any, TypeVar, cast
 
 from seamscan.model import Confidence, Ecosystem, Finding, PackageRef, Severity
-from seamscan.policy.verdict import Policy
+from seamscan.policy.verdict import BLOCK_SCOPES, Policy
 
 _KEYS = {
-    "policy": ("fail_on_severity", "fail_on_confidence"),
+    "policy": ("fail_on_severity", "fail_on_confidence", "block"),
     "rules": ("disable", "severity"),
     "paths": ("exclude",),
     "deps": ("min_age_days", "min_weekly_downloads", "allow"),
@@ -123,6 +123,12 @@ def _level(kind: type[_Level], value: object, key: str) -> _Level:
     return kind[value]
 
 
+def _block_scope(value: object) -> str:
+    if not isinstance(value, str) or value not in BLOCK_SCOPES:
+        raise ConfigError(f"policy.block must be one of {', '.join(BLOCK_SCOPES)}; got {value!r}")
+    return value
+
+
 def _count(value: object, key: str) -> int:
     # bool is an int in Python; `true` is never a meant number.
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
@@ -163,6 +169,7 @@ def parse_config(text: str, known_rules: Collection[str]) -> Config:
             policy.get("fail_on_confidence", default.fail_on_confidence.name),
             "policy.fail_on_confidence",
         ),
+        _block_scope(policy.get("block", default.block)),
     )
 
     disabled = frozenset(

@@ -1004,11 +1004,13 @@ stated with the result.
 
 ### 9.1 Blocking rule
 
-- **What blocks:** by default, a finding blocks when severity ≥ HIGH
-  **and** confidence ≥ MEDIUM **and** it is not suppressed **and** not in the
-  baseline.
-- **Everything else** is reported but doesn't fail the run.
-- **Configuration:** `[policy] fail_on_severity`, `fail_on_confidence`.
+- **What blocks:** by default, a finding blocks when it comes from a focus check
+  (Supabase `SC-SUPA-*`, Firebase `SC-FIRE-*`, secrets `SC-SEC-*`; ADR-006) **and**
+  severity ≥ HIGH **and** confidence ≥ MEDIUM **and** it is not suppressed **and** not
+  in the baseline.
+- **Everything else** is reported, as a hint, but doesn't fail the run.
+- **Configuration:** `[policy] block = "focus" | "all"`, `fail_on_severity`,
+  `fail_on_confidence`.
 
 ### 9.2 Suppressions
 
@@ -1440,7 +1442,8 @@ Order rationale:
   8: table names from a parser that admits only letters, or from the app's own data).
 - **Consequence (2026-10-13):** calibration quieted CODE-008, and the next rule took its
   place: SC-WEB-001 measured 0.62 on studies one to four and 0.00 here, 16 of 41 pooled.
-  Decision on how to proceed is with Aaron.
+  Decided (Aaron, 2026-10-13): 1.0 is a focused tool. Only Supabase, Firebase and secret
+  findings block by default; every other rule reports hints (ADR-006, §9.1).
 - Triage hygiene: the third triager's grep printed one placeholder line from a
   third-party `.env.example`, against the no-.env rule; no verdict used it.
 
@@ -1486,6 +1489,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-13: ADR-006: by default only the focus checks (Supabase, Firebase, secrets) block; every other rule reports hints. `[policy] block = "all"` restores blocking for every rule. Pooled over five studies: Supabase 12 of 15 real, secrets 7 of 12, Firebase 2 of 5, everything else 49 of 167. Corrected ADR-005: the Claude hook passes only blocking findings.
 - 2026-10-13: Fifth noise study: precision 0.26 (12 of 46), blocking 0.10 (3 of 31); SC-WEB-001 0 of 15. README results table now reports it.
 - 2026-10-13: ADR-005 recalibration on all four studies (80 repositories): SC-CODE-008's HTML-sink findings become LOW (12 of 66), code evaluation stays MEDIUM; SC-WEB-001 stays MEDIUM (16 of 26); SC-CODE-002 stays LOW (5 of 20). Findings can carry their own confidence when a rule's kinds are calibrated separately. SC-CODE-008 counts the app's own escape helpers by name (`esc`, `…Esc`, `escape`/`sanitize` + `html`). A fifth set of 20 repositories (`repos-fifth.toml`) was pinned before these changes to measure them.
 - 2026-10-13: Fourth noise study: precision 0.16 (16 of 99 decided), blocking 0.13; one repository gave 72 of 100 sampled findings. Directive-search hang fixed. Triage samples are written as UTF-8 (emoji broke TOML). README results table generated from `bench/results/latest.json` and `wild-fourth.json`.

@@ -14,7 +14,9 @@ from seamscan.rules.base import Rule, meta
 
 runner = CliRunner()
 
-TLS_OFF = "import requests\nrequests.get(u, verify=False)\n"  # SC-CODE-001, blocks
+FALLBACK_SECRET = (
+    'import os\nSECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")\n'  # SC-SEC-003, blocks
+)
 BASELINE = Path(".seamscan") / "baseline.json"
 
 
@@ -39,11 +41,11 @@ def entries(root: Path) -> list[dict[str, str]]:
 
 
 def test_disabled_rule_does_not_run(tmp_path: Path):
-    (tmp_path / "client.py").write_text(TLS_OFF)
-    (tmp_path / "seamscan.toml").write_text('[rules]\ndisable = ["SC-CODE-001"]\n')
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
+    (tmp_path / "seamscan.toml").write_text('[rules]\ndisable = ["SC-SEC-003"]\n')
     result = audit(tmp_path)
     assert result.exit_code == 0
-    assert "SC-CODE-001" not in result.stdout
+    assert "SC-SEC-003" not in result.stdout
 
 
 def test_meta_rules_cannot_be_disabled(tmp_path: Path):
@@ -56,23 +58,23 @@ def test_meta_rules_cannot_be_disabled(tmp_path: Path):
 
 
 def test_severity_override_applies_to_findings_and_the_gate(tmp_path: Path):
-    (tmp_path / "client.py").write_text(TLS_OFF)
-    (tmp_path / "seamscan.toml").write_text('[rules]\nseverity = { "SC-CODE-001" = "LOW" }\n')
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
+    (tmp_path / "seamscan.toml").write_text('[rules]\nseverity = { "SC-SEC-003" = "LOW" }\n')
     result = audit(tmp_path)
     assert result.exit_code == 0
-    assert "SC-CODE-001  LOW/" in result.stdout
+    assert "SC-SEC-003  LOW/" in result.stdout
 
 
 def test_policy_thresholds_feed_the_verdict(tmp_path: Path):
-    (tmp_path / "client.py").write_text(TLS_OFF)
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
     (tmp_path / "seamscan.toml").write_text('[policy]\nfail_on_severity = "CRITICAL"\n')
     assert audit(tmp_path).exit_code == 0
 
 
 def test_excluded_paths_are_not_analyzed(tmp_path: Path):
     (tmp_path / "legacy").mkdir()
-    (tmp_path / "legacy" / "old.py").write_text(TLS_OFF)
-    (tmp_path / "client.py").write_text(TLS_OFF)
+    (tmp_path / "legacy" / "old.py").write_text(FALLBACK_SECRET)
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
     (tmp_path / "seamscan.toml").write_text('[paths]\nexclude = ["legacy/**"]\n')
     result = audit(tmp_path)
     assert "client.py" in result.stdout
@@ -89,10 +91,10 @@ def test_bad_config_is_exit_2_naming_the_file_and_key(tmp_path: Path):
 
 
 def test_explicit_config_replaces_the_repository_file(tmp_path: Path):
-    (tmp_path / "client.py").write_text(TLS_OFF)
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
     (tmp_path / "seamscan.toml").write_text("[nonsense]\n")  # would be exit 2 if read
     other = tmp_path / "other.toml"
-    other.write_text('[rules]\ndisable = ["SC-CODE-001"]\n')
+    other.write_text('[rules]\ndisable = ["SC-SEC-003"]\n')
     assert audit(tmp_path, "--config", str(other)).exit_code == 0
 
 
@@ -107,19 +109,19 @@ def test_missing_explicit_config_is_exit_2(tmp_path: Path):
 
 
 def test_create_writes_the_baseline_and_audit_then_passes(tmp_path: Path):
-    (tmp_path / "client.py").write_text(TLS_OFF)
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
     created = runner.invoke(app, ["baseline", "create", str(tmp_path)])
     assert created.exit_code == 0, created.output
     assert "1 entry" in created.stdout
-    assert [(e["rule_id"], e["path"]) for e in entries(tmp_path)] == [("SC-CODE-001", "client.py")]
+    assert [(e["rule_id"], e["path"]) for e in entries(tmp_path)] == [("SC-SEC-003", "client.py")]
     result = audit(tmp_path)
     assert result.exit_code == 0
     assert "1 in baseline" in result.stdout
 
 
 def test_create_is_deterministic(tmp_path: Path):
-    (tmp_path / "a.py").write_text(TLS_OFF)
-    (tmp_path / "b.py").write_text(TLS_OFF)
+    (tmp_path / "a.py").write_text(FALLBACK_SECRET)
+    (tmp_path / "b.py").write_text(FALLBACK_SECRET)
     runner.invoke(app, ["baseline", "create", str(tmp_path)])
     first = (tmp_path / BASELINE).read_bytes()
     runner.invoke(app, ["baseline", "create", str(tmp_path)])
@@ -127,7 +129,7 @@ def test_create_is_deterministic(tmp_path: Path):
 
 
 def test_create_overwrites_a_corrupt_baseline(tmp_path: Path):
-    (tmp_path / "client.py").write_text(TLS_OFF)
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
     (tmp_path / ".seamscan").mkdir()
     (tmp_path / BASELINE).write_text("{oops")
     assert runner.invoke(app, ["baseline", "create", str(tmp_path)]).exit_code == 0
@@ -150,7 +152,7 @@ def test_create_refuses_when_a_rule_crashed(tmp_path: Path, monkeypatch: pytest.
 
 
 def test_corrupt_baseline_is_exit_2_not_ignored(tmp_path: Path):
-    (tmp_path / "client.py").write_text(TLS_OFF)
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
     (tmp_path / ".seamscan").mkdir()
     (tmp_path / BASELINE).write_text('{"version": 1}')
     result = audit(tmp_path)
@@ -159,8 +161,8 @@ def test_corrupt_baseline_is_exit_2_not_ignored(tmp_path: Path):
 
 
 def test_prune_drops_entries_that_match_nothing(tmp_path: Path):
-    (tmp_path / "a.py").write_text(TLS_OFF)
-    (tmp_path / "b.py").write_text(TLS_OFF)
+    (tmp_path / "a.py").write_text(FALLBACK_SECRET)
+    (tmp_path / "b.py").write_text(FALLBACK_SECRET)
     runner.invoke(app, ["baseline", "create", str(tmp_path)])
     (tmp_path / "a.py").write_text("x = 1\n")
     result = runner.invoke(app, ["baseline", "prune", str(tmp_path)])
@@ -190,7 +192,7 @@ def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_scan_uses_the_baseline_and_config_at_the_working_directory(repo: Path):
-    (repo / "client.py").write_text(TLS_OFF)  # untracked: wholly new to scan
+    (repo / "client.py").write_text(FALLBACK_SECRET)  # untracked: wholly new to scan
     assert runner.invoke(app, ["scan"]).exit_code == 1
     assert runner.invoke(app, ["baseline", "create"]).exit_code == 0
     result = runner.invoke(app, ["scan"])
@@ -202,18 +204,18 @@ def test_scan_uses_the_baseline_and_config_at_the_working_directory(repo: Path):
 
 
 def test_ratchet_fails_when_the_baseline_grows_and_passes_when_it_shrinks(repo: Path):
-    (repo / "a.py").write_text(TLS_OFF)
-    (repo / "b.py").write_text(TLS_OFF)
+    (repo / "a.py").write_text(FALLBACK_SECRET)
+    (repo / "b.py").write_text(FALLBACK_SECRET)
     runner.invoke(app, ["baseline", "create"])
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "accept existing debt")
     assert runner.invoke(app, ["baseline", "check", "--against", "HEAD"]).exit_code == 0
 
-    (repo / "c.py").write_text(TLS_OFF)
+    (repo / "c.py").write_text(FALLBACK_SECRET)
     runner.invoke(app, ["baseline", "create"])
     grew = runner.invoke(app, ["baseline", "check", "--against", "HEAD"])
     assert grew.exit_code == 1
-    assert "c.py" in grew.stdout and "SC-CODE-001" in grew.stdout
+    assert "c.py" in grew.stdout and "SC-SEC-003" in grew.stdout
     assert "a.py" not in grew.stdout
 
     (repo / "c.py").unlink()
@@ -225,7 +227,7 @@ def test_ratchet_fails_when_the_baseline_grows_and_passes_when_it_shrinks(repo: 
 
 
 def test_ratchet_treats_a_baseline_missing_at_the_ref_as_empty(repo: Path):
-    (repo / "a.py").write_text(TLS_OFF)
+    (repo / "a.py").write_text(FALLBACK_SECRET)
     runner.invoke(app, ["baseline", "create"])
     result = runner.invoke(app, ["baseline", "check", "--against", "HEAD"])
     assert result.exit_code == 1
@@ -256,8 +258,8 @@ def test_ratchet_with_a_corrupt_baseline_at_the_ref_is_exit_2(repo: Path):
 def test_global_config_does_not_outlive_its_invocation(tmp_path: Path):
     # `_run` is shared by every command (and the hook); a --config from one run must not
     # leak into the next one in the same process.
-    (tmp_path / "client.py").write_text(TLS_OFF)
+    (tmp_path / "client.py").write_text(FALLBACK_SECRET)
     other = tmp_path / "other.toml"
-    other.write_text('[rules]\ndisable = ["SC-CODE-001"]\n')
+    other.write_text('[rules]\ndisable = ["SC-SEC-003"]\n')
     assert audit(tmp_path, "--config", str(other)).exit_code == 0
     assert audit(tmp_path).exit_code == 1

@@ -18,11 +18,24 @@ def test_version_flag_works_without_a_command():
     assert result.stdout.strip() == __version__
 
 
+FALLBACK_SECRET = 'import os\nSECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")\n'
+
+
 def test_audit_exit_code_reflects_blocking_findings(tmp_path):
-    (tmp_path / "client.py").write_text("import requests\nrequests.get(u, verify=False)\n")
+    (tmp_path / "settings.py").write_text(FALLBACK_SECRET)
     result = runner.invoke(app, ["audit", str(tmp_path)])
     assert result.exit_code == 1
+    assert "SC-SEC-003" in result.stdout
+
+
+def test_a_hint_is_reported_without_failing_the_run(tmp_path):
+    # ADR-006: outside the focus checks (Supabase, Firebase, secrets) findings are hints.
+    (tmp_path / "client.py").write_text("import requests\nrequests.get(u, verify=False)\n")
+    result = runner.invoke(app, ["audit", str(tmp_path)])
+    assert result.exit_code == 0
     assert "SC-CODE-001" in result.stdout
+    (tmp_path / "seamscan.toml").write_text('[policy]\nblock = "all"\n')
+    assert runner.invoke(app, ["audit", str(tmp_path)]).exit_code == 1
 
 
 def test_audit_clean_directory_exits_zero(tmp_path):
@@ -39,6 +52,7 @@ VERIFY_OFF = "import requests\nrequests.get(u, verify=False)\n"
 
 def repo(tmp_path: Path) -> Path:
     (tmp_path / "client.py").write_text(VERIFY_OFF)
+    (tmp_path / "settings.py").write_text(FALLBACK_SECRET)  # blocks: a focus check
     (tmp_path / "broken.py").write_text("def (:\n")
     (tmp_path / "noreason.py").write_text(
         "import requests\nrequests.get(u, verify=False)  # seamscan: ignore[SC-CODE-001]\n"
@@ -105,7 +119,7 @@ def test_scan_supports_sarif_and_stats(tmp_path, monkeypatch):
     (tmp_path / "new.py").write_text(VERIFY_OFF)
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["scan", "--format", "sarif", "--stats"])
-    assert result.exit_code == 1
+    assert result.exit_code == 0  # TLS off is a hint (ADR-006): in the SARIF, not the exit code
     doc = json.loads(result.stdout)
     jsonschema.Draft4Validator(SARIF_SCHEMA).validate(doc)
     uris = [

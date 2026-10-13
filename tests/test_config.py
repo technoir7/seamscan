@@ -23,6 +23,7 @@ def test_full_supported_config():
 [policy]
 fail_on_severity = "CRITICAL"
 fail_on_confidence = "HIGH"
+block = "all"
 
 [rules]
 disable = ["SC-TEST-003"]
@@ -32,7 +33,7 @@ severity = { "SC-CODE-002" = "LOW" }
 exclude = ["scripts/legacy/**"]
 """
     )
-    assert config.policy == Policy(Severity.CRITICAL, Confidence.HIGH)
+    assert config.policy == Policy(Severity.CRITICAL, Confidence.HIGH, block="all")
     assert config.disabled == frozenset({"SC-TEST-003"})
     assert dict(config.severity) == {"SC-CODE-002": Severity.LOW}
     assert config.exclude == ("scripts/legacy/**",)
@@ -49,6 +50,8 @@ exclude = ["scripts/legacy/**"]
         ("[policy]\nfail_on_severity = 'HGH'\n", "policy.fail_on_severity"),
         ("[policy]\nfail_on_severity = 3\n", "policy.fail_on_severity"),
         ("[policy]\nfail_on_confidence = 'CRITICAL'\n", "policy.fail_on_confidence"),
+        ("[policy]\nblock = 'some'\n", "policy.block must be one of focus, all"),
+        ("[policy]\nblock = true\n", "policy.block"),
         ("[rules]\ndisable = 'SC-CODE-001'\n", "rules.disable"),
         ("[rules]\ndisable = ['SC-CODE-999']\n", "rules.disable: unknown rule id 'SC-CODE-999'"),
         ("[rules]\nseverity = 'LOW'\n", "rules.severity"),

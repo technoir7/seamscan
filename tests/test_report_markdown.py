@@ -40,7 +40,7 @@ def report(
     known: frozenset[str] = frozenset(),
     skipped: tuple[tuple[str, str], ...] = SKIPPED,
 ) -> str:
-    verdict = decide(a.findings, Policy(), known)
+    verdict = decide(a.findings, Policy(block="all"), known)
     return render_markdown(
         a.findings, verdict, a.suppressed, ALL_META, "9.9.9", a.files_analyzed, skipped
     )
@@ -157,7 +157,13 @@ def test_markdown_in_messages_and_evidence_cannot_break_the_layout():
     other = [replace_rule(evil, "SC-CODE-002", f"{i:032x}") for i in range(6)]
     findings = [evil, *other]
     text = render_markdown(
-        findings, decide(findings, Policy()), (), ALL_META, "1", 1, (("we|ird`.bin", "binary"),)
+        findings,
+        decide(findings, Policy(block="all")),
+        (),
+        ALL_META,
+        "1",
+        1,
+        (("we|ird`.bin", "binary"),),
     )
     assert "<script>" not in text
     assert "**bold**" not in text and "[x](http://e)" not in text
@@ -186,7 +192,9 @@ def test_every_rule_has_a_named_area():
         )
         for i, m in enumerate(ALL_META)
     ]
-    text = render_markdown(findings, decide(findings, Policy()), (), ALL_META, "1", 1, ())
+    text = render_markdown(
+        findings, decide(findings, Policy(block="all")), (), ALL_META, "1", 1, ()
+    )
     assert "SC-" in text  # rendered without a missing-category error
 
 
@@ -206,7 +214,8 @@ def test_top_findings_cover_every_kind_of_issue_to_fix_first():
         for i, m in enumerate(blocking)
     ]
     top = section(
-        render_markdown(findings, decide(findings, Policy()), (), ALL_META, "1", 1, ()), 3
+        render_markdown(findings, decide(findings, Policy(block="all")), (), ALL_META, "1", 1, ()),
+        3,
     )
     assert len(blocking) > 10
     for m in blocking:

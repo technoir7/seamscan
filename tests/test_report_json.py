@@ -25,7 +25,7 @@ FILES = [
 
 def render(files: list[SourceFile]) -> str:
     findings = analyze(files).findings
-    return render_json(findings, decide(findings, Policy()), tool_version="test")
+    return render_json(findings, decide(findings, Policy(block="all")), tool_version="test")
 
 
 def test_output_is_byte_identical_regardless_of_input_order():
@@ -57,7 +57,9 @@ SUPPRESSED = SourceFile(
 
 def test_suppressed_findings_are_listed_with_their_reason():
     a = analyze([*FILES, SUPPRESSED])
-    doc = json.loads(render_json(a.findings, decide(a.findings, Policy()), "test", a.suppressed))
+    doc = json.loads(
+        render_json(a.findings, decide(a.findings, Policy(block="all")), "test", a.suppressed)
+    )
     jsonschema.validate(doc, SCHEMA)
     [s] = doc["suppressed"]
     assert (s["rule_id"], s["location"]["path"], s["reason"]) == (
@@ -72,7 +74,7 @@ def test_suppressed_findings_are_listed_with_their_reason():
 def test_baselined_findings_are_flagged_and_never_blocking():
     findings = analyze(FILES).findings
     known = frozenset(f.fingerprint for f in findings if f.location.path == "svc/a.py")
-    doc = json.loads(render_json(findings, decide(findings, Policy(), known), "test"))
+    doc = json.loads(render_json(findings, decide(findings, Policy(block="all"), known), "test"))
     jsonschema.validate(doc, SCHEMA)
     flagged = {f["location"]["path"]: (f["baselined"], f["blocking"]) for f in doc["findings"]}
     assert flagged["svc/a.py"] == (True, False)

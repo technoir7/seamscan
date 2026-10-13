@@ -7,7 +7,7 @@ def f(rule: str, severity: Severity, confidence: Confidence) -> Finding:
 
 
 def test_high_severity_medium_confidence_blocks():
-    v = decide([f("SC-CODE-006", Severity.HIGH, Confidence.MEDIUM)], Policy())
+    v = decide([f("SC-SUPA-002", Severity.HIGH, Confidence.MEDIUM)], Policy())
     assert v.exit_code == 1 and len(v.blocking) == 1
 
 
@@ -59,3 +59,21 @@ def test_a_swallowed_write_is_reported_but_does_not_block():
     found = analyze([SourceFile("app/billing.py", src)]).findings
     assert [f.rule_id for f in found] == ["SC-CODE-002"]
     assert decide(found, Policy()).blocking == ()
+
+
+def test_by_default_only_the_focus_checks_block():
+    # ADR-006: Supabase, Firebase and secrets block; every other rule is a hint.
+    for rule in ("SC-SUPA-001", "SC-FIRE-001", "SC-SEC-001"):
+        assert decide([f(rule, Severity.HIGH, Confidence.HIGH)], Policy()).exit_code == 1, rule
+    hint = decide([f("SC-CODE-006", Severity.CRITICAL, Confidence.HIGH)], Policy())
+    assert hint.exit_code == 0 and not hint.blocking and len(hint.non_blocking) == 1
+
+
+def test_block_all_restores_blocking_for_every_rule():
+    v = decide([f("SC-CODE-006", Severity.HIGH, Confidence.MEDIUM)], Policy(block="all"))
+    assert v.exit_code == 1
+
+
+def test_focus_checks_still_need_severity_and_confidence():
+    v = decide([f("SC-SUPA-003", Severity.MEDIUM, Confidence.HIGH)], Policy())
+    assert v.exit_code == 0

@@ -9,11 +9,17 @@ from seamscan.model import Confidence, Finding, Severity
 
 INTERNAL_ERROR_RULES = frozenset({"SC-META-003"})
 
+# ADR-006: the checks whose findings held up on real code. Every other rule reports as a
+# hint unless a project sets `[policy] block = "all"`.
+FOCUS_PREFIXES = ("SC-SUPA-", "SC-FIRE-", "SC-SEC-")
+BLOCK_SCOPES = ("focus", "all")
+
 
 @dataclass(frozen=True)
 class Policy:
     fail_on_severity: Severity = Severity.HIGH
     fail_on_confidence: Confidence = Confidence.MEDIUM
+    block: str = "focus"  # one of BLOCK_SCOPES
 
 
 @dataclass(frozen=True)
@@ -27,7 +33,12 @@ class Verdict:
 
 
 def _blocks(f: Finding, policy: Policy) -> bool:
-    return f.severity >= policy.fail_on_severity and f.confidence >= policy.fail_on_confidence
+    in_scope = policy.block == "all" or f.rule_id.startswith(FOCUS_PREFIXES)
+    return (
+        in_scope
+        and f.severity >= policy.fail_on_severity
+        and f.confidence >= policy.fail_on_confidence
+    )
 
 
 def decide(

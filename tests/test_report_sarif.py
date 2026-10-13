@@ -43,7 +43,7 @@ FILES = [
 
 
 def sarif(a: Analysis, known: frozenset[str] = frozenset()) -> dict:
-    verdict = decide(a.findings, Policy(), known)
+    verdict = decide(a.findings, Policy(block="all"), known)
     return json.loads(render_sarif(a.findings, verdict, a.suppressed, ALL_META, "9.9.9"))
 
 
@@ -116,7 +116,9 @@ def test_suppressed_and_baselined_results_are_marked():
 def test_output_is_byte_identical_regardless_of_input_order():
     def text(files: list[SourceFile]) -> str:
         a = analyze(files)
-        return render_sarif(a.findings, decide(a.findings, Policy()), a.suppressed, ALL_META, "1")
+        return render_sarif(
+            a.findings, decide(a.findings, Policy(block="all")), a.suppressed, ALL_META, "1"
+        )
 
     shuffled = FILES[:]
     random.Random(3).shuffle(shuffled)
@@ -145,7 +147,9 @@ def test_results_are_capped_for_github_and_the_cut_is_stated():
         for f in many(1, Severity.HIGH)
     ]
     findings = [*low, *high]
-    doc = json.loads(render_sarif(findings, decide(findings, Policy()), (), ALL_META, "1"))
+    doc = json.loads(
+        render_sarif(findings, decide(findings, Policy(block="all")), (), ALL_META, "1")
+    )
     jsonschema.Draft4Validator(SCHEMA).validate(doc)
     run = doc["runs"][0]
     assert len(run["results"]) == MAX_RESULTS == 5000
@@ -171,7 +175,7 @@ def test_a_rule_crash_is_a_failed_execution_not_a_result():
         "",
         fingerprint="0" * 32,
     )
-    doc = json.loads(render_sarif([crash], decide([crash], Policy()), (), ALL_META, "1"))
+    doc = json.loads(render_sarif([crash], decide([crash], Policy(block="all")), (), ALL_META, "1"))
     jsonschema.Draft4Validator(SCHEMA).validate(doc)
     run = doc["runs"][0]
     assert run["results"] == []
@@ -185,4 +189,4 @@ def test_a_rule_crash_is_a_failed_execution_not_a_result():
 def test_a_finding_without_rule_metadata_fails_loudly():
     a = analyze(FILES)
     with pytest.raises(ValueError, match="SC-CODE-001"):
-        render_sarif(a.findings, decide(a.findings, Policy()), (), (), "1")
+        render_sarif(a.findings, decide(a.findings, Policy(block="all")), (), (), "1")
