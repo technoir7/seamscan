@@ -40,3 +40,14 @@ def test_installed_packages_are_not_analyzed_without_a_pyvenv_cfg(tmp_path: Path
         },
     )
     assert [f.path for f in collect(tmp_path, use_git=False).files] == ["app/views.py"]
+
+
+def test_vites_prebundled_dependencies_are_not_analyzed(tmp_path: Path):
+    _write(
+        tmp_path,
+        {
+            "src/App.jsx": "export default 1;\n",
+            "Client/.vite/deps_temp_2184bafc/react-dom_client.js": "export default 1;\n",
+        },
+    )
+    assert [f.path for f in collect(tmp_path, use_git=False).files] == ["src/App.jsx"]

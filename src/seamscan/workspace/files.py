@@ -20,6 +20,7 @@ VENDOR_DIRS = frozenset(
         "dist",
         "build",
         ".next",
+        ".vite",  # Vite's pre-bundled copies of dependencies
         "__pycache__",
         ".mypy_cache",
         ".pytest_cache",
