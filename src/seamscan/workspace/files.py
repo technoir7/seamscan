@@ -30,6 +30,17 @@ VENDOR_DIRS = frozenset(
 )
 
 
+# Installed packages, wherever they sit: a virtualenv can have any name (`djangoenv/`) and
+# is committed often enough to matter. Its own pyvenv.cfg marks its root.
+_PACKAGE_DIRS = frozenset({"site-packages", "dist-packages"})
+_VENV_MARKER = "pyvenv.cfg"
+
+
+def _virtualenvs(paths: list[str]) -> tuple[str, ...]:
+    """Root directories ("djangoenv/") of the virtualenvs among paths."""
+    return tuple(sorted(p[: -len(_VENV_MARKER)] for p in paths if p.endswith("/" + _VENV_MARKER)))
+
+
 @dataclass(frozen=True)
 class FileSet:
     files: tuple[SourceFile, ...]
@@ -61,10 +72,14 @@ def _walk_paths(root: Path) -> list[str]:
 def collect(root: Path, use_git: bool = True) -> FileSet:
     """Files under root: git's view (tracked + untracked, not ignored) when available."""
     paths = (_git_paths(root) if use_git else None) or _walk_paths(root)
+    venvs = _virtualenvs(paths)
     files: list[SourceFile] = []
-    skipped: list[tuple[str, str]] = []
+    skipped: list[tuple[str, str]] = [(venv, "virtualenv") for venv in venvs]
     for rel in sorted(paths):
-        if VENDOR_DIRS.intersection(rel.split("/")[:-1]):
+        dirs = rel.split("/")[:-1]
+        if VENDOR_DIRS.intersection(dirs) or _PACKAGE_DIRS.intersection(dirs):
+            continue
+        if rel.startswith(venvs):
             continue
         full = root / rel
         if not full.is_file():

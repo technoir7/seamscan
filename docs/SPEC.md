@@ -1491,6 +1491,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-14: Committed virtualenvs are not read, whatever their name: a directory holding `pyvenv.cfg`, and anything under `site-packages` or `dist-packages`. Each virtualenv is listed once among the skipped files. In the sixth study, one repository's `djangoenv/` gave 85 of 130 findings.
 - 2026-10-14: Python modules named `tests.py` (Django's default), `test.py` and `testing.py` are test files (§5.6), so test-only settings such as `settings/test.py` are skipped like other tests. SC-SEC-003 skips files under `scripts/`: a script run from a shell serves no requests. Removes three of the fifth study's four false build failures (in-sample: 3 blocking, 2 real). One independent label is restored to its author's version (ADJUDICATION.md).
 - 2026-10-13: ADR-006: by default only the focus checks (Supabase, Firebase, secrets) block; every other rule reports hints. `[policy] block = "all"` restores blocking for every rule. Pooled over five studies: Supabase 12 of 15 real, secrets 7 of 12, Firebase 2 of 5, everything else 49 of 167. Corrected ADR-005: the Claude hook passes only blocking findings.
 - 2026-10-13: Fifth noise study: precision 0.26 (12 of 46), blocking 0.10 (3 of 31); SC-WEB-001 0 of 15. README results table now reports it.
