@@ -28,8 +28,8 @@ A test that pytest or unittest would collect, in a test file, that checks nothin
     variable (`payload = json.loads(body)`) it is not a check until something checks the
     variable. This is the Python counterpart of the JS rule's statement-only queries.
 
-Test files are `test_*.py`, `*_test.py`, `conftest.py` and anything under `tests/` or
-`test/`. Fixtures are not tests, even when named `test_db`: a function with any
+Test files are `test_*.py`, `*_test.py`, `conftest.py`, `tests.py` (Django's default),
+`test.py`, `testing.py` and anything under `tests/` or `test/`. Fixtures are not tests, even when named `test_db`: a function with any
 decorator whose last name is `fixture` (`@pytest.fixture`, `@pytest_asyncio.fixture`, or
 an alias of either).
 

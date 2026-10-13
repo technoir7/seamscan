@@ -2,7 +2,7 @@
 
 Verdicts judge the author's label against the rule page in `src/seamscan/rules/docs/` (plus `kit/CONCEPTS.md` for file roles). They do not judge whether seamscan is right in some other sense.
 
-Totals: **seamscan-wrong 34**, **label-wrong 6**, **page-ambiguous 1**.
+Totals: **seamscan-wrong 34**, **label-wrong 6**, **page-ambiguous 1**.  One label-wrong verdict was reverted on 2026-10-14 after a spec change (ind-test003-py-unittest-skiptest-in-setup).
 
 | case id | rule | verdict | reason (page quote) |
 |---|---|---|---|
@@ -41,7 +41,7 @@ Totals: **seamscan-wrong 34**, **label-wrong 6**, **page-ambiguous 1**.
 | ind-test002-ts-known-gap-nan-assert | SC-TEST-002 | seamscan-wrong | Known gap: "`assert(x === x)` used as a "not NaN" check is flagged (false positive)." |
 | ind-test003-py-known-gap-rename-disables | SC-TEST-003 | seamscan-wrong | Known gap: "Disabling by renaming (`def test_x` → `def _test_x` ...) ... is missed." |
 | ind-test003-py-known-gap-string-skipif | SC-TEST-003 | seamscan-wrong | The decision says "platform and version conditions are fine". Known gap: "The old string form `skipif("sys.platform == 'win32'")` is not evaluated, so it is flagged even when the condition is a platform check." So the forbidden label is right. |
-| ind-test003-py-unittest-skiptest-in-setup | SC-TEST-003 | label-wrong | The rule fires only "In a test file". The documented Python test-file patterns are "`test_*.py`, `*_test.py`, `conftest.py` and anything under `tests/` or `test/`" (SC-TEST-001; CONCEPTS §5.6 says the same), and Django's `orders/tests.py` matches none of them. The page also says a skip "in a non-test module ... is not flagged". Correct label: no SC-TEST-003 finding. If Django `tests.py` should count, the docs need to change first. |
+| ind-test003-py-unittest-skiptest-in-setup | SC-TEST-003 | label-wrong | The rule fires only "In a test file". The documented Python test-file patterns are "`test_*.py`, `*_test.py`, `conftest.py` and anything under `tests/` or `test/`" (SC-TEST-001; CONCEPTS §5.6 says the same), and Django's `orders/tests.py` matches none of them. The page also says a skip "in a non-test module ... is not flagged". Correct label: no SC-TEST-003 finding. If Django `tests.py` should count, the docs need to change first. **Reverted 2026-10-14:** spec §5.6 now counts Django's `tests.py` as a test file, so the author's label (expected at `orders/tests.py:8`) is restored. |
 | ind-test003-ts-known-gap-imported-platform-flag | SC-TEST-003 | seamscan-wrong | Known gap: "a skip gated on a value from another module (`skipIf(isWindows)` with `isWindows` imported) is flagged even when that value is a platform check (false positive)." |
 | ind-web001-known-gap-unrelated-getuser | SC-WEB-001 | seamscan-wrong | Known gap (false negatives): "A call named like an auth primitive is trusted, even an unrelated `db.getUser(id)`." The 404 is not a 401/403, and line 10 is the first write. |
 | ind-web001-py-known-gap-intermediate-getuser | SC-WEB-001 | seamscan-wrong | `db.get_user` matches the primitive `getUser` (the page compares names "lowercased without underscores"), which is the admitted gap above. Line 11, `db.session.add`, is the first write, which is where "The finding points". |

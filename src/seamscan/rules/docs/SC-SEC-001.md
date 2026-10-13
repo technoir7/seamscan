@@ -45,7 +45,7 @@ a key ships it all the same. The finding is this rule's, or SC-SEC-002's when th
 sits where browser code lives.
 
 Test files are skipped in both languages: `test_*.py`, `*_test.py`, `conftest.py`,
-`*.test.*`, `*.spec.*`, and anything under `tests/`, `test/`, `__tests__/`, `e2e/` or
+`tests.py`, `test.py`, `testing.py`, `*.test.*`, `*.spec.*`, and anything under `tests/`, `test/`, `__tests__/`, `e2e/` or
 `cypress/`.
 
 The finding never contains the value: message and evidence show only the redacted

@@ -1,5 +1,5 @@
 {
-  "cases": 890,
+  "cases": 892,
   "independent_cases": 697,
   "splits": {
     "dev": {
@@ -101,7 +101,7 @@
       "SC-SEC-003": {
         "fn": 0,
         "fp": 0,
-        "tp": 17
+        "tp": 18
       },
       "SC-SEC-004": {
         "fn": 0,
@@ -445,7 +445,7 @@
       "SC-TEST-003": {
         "fn": 1,
         "fp": 2,
-        "tp": 18
+        "tp": 19
       },
       "SC-WEB-001": {
         "fn": 2,

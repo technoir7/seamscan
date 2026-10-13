@@ -31,6 +31,9 @@ class PackageKind(StrEnum):
 
 _TEST_DIRS = frozenset({"tests", "test", "__tests__", "e2e", "cypress"})
 _JS_TEST_NAME = re.compile(r"\.(?:test|spec)\.[cm]?[jt]sx?$")
+# Django's default test module is tests.py; settings/test.py and settings/testing.py are
+# settings only the test run loads.
+_PY_TEST_MODULES = frozenset({"tests.py", "test.py", "testing.py"})
 _SERVER_DIRS = frozenset({"server", "api", "functions"})
 
 
@@ -40,6 +43,7 @@ def _is_test(parts: list[str]) -> bool:
         _TEST_DIRS.intersection(parts[:-1])
         or (name.endswith(".py") and (name.startswith("test_") or name.endswith("_test.py")))
         or name == "conftest.py"
+        or name in _PY_TEST_MODULES
         or _JS_TEST_NAME.search(name)
     )
 

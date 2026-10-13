@@ -281,10 +281,16 @@ def _fallback_finding(loc: Location, name: str, shown: str) -> Finding:
     )
 
 
+def _run_by_hand(path: str) -> bool:
+    """A script someone runs from a shell serves no requests, so nothing trusts its
+    fallback: a token it signs with one is rejected by a server holding the real key."""
+    return "scripts" in path.split("/")[:-1]
+
+
 def _secret_fallbacks(ctx: RuleContext) -> Iterator[Finding]:
     for module in ctx.python:
         # Test setup planting a dummy secret (conftest's os.environ.setdefault) is fine.
-        if role_of(module.path) is Role.TEST:
+        if role_of(module.path) is Role.TEST or _run_by_hand(module.path):
             continue
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Call):
@@ -301,7 +307,7 @@ def _secret_fallbacks(ctx: RuleContext) -> Iterator[Finding]:
                     loc = location(module, node)
                     yield _fallback_finding(loc, name, f'{func}("{name}") or …')
     for module in ctx.js:
-        if ctx.project.js_role(module) is not Role.TEST:
+        if ctx.project.js_role(module) is not Role.TEST and not _run_by_hand(module.path):
             yield from _js_secret_fallbacks(module)
 
 

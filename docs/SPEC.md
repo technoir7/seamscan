@@ -320,8 +320,10 @@ records its reason (shown in `--explain`).
 4. Supabase Edge Functions (`supabase/functions/**`) → server (Deno).
 5. Vite/CRA: `src/**` → client unless under `server/`, `api/`, `functions/`.
 6. Python files → server.
-7. Test files (`test_*.py`, `*_test.py`, `*.test.*`, `*.spec.*`, `tests/**`,
-   `__tests__/**`) → test (most rules skip these; the SC-TEST rules target
+7. Test files (`test_*.py`, `*_test.py`, `conftest.py`, `tests.py`, `test.py`,
+   `testing.py`, `*.test.*`, `*.spec.*`, `tests/**`, `__tests__/**`) → test. The
+   bare names cover Django's default test module and test-only settings
+   (`settings/test.py`) (most rules skip these; the SC-TEST rules target
    them).
 8. Otherwise → unknown. Rules that need a role skip unknown files and
    count them in `--stats`.
@@ -1489,6 +1491,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-14: Python modules named `tests.py` (Django's default), `test.py` and `testing.py` are test files (§5.6), so test-only settings such as `settings/test.py` are skipped like other tests. SC-SEC-003 skips files under `scripts/`: a script run from a shell serves no requests. Removes three of the fifth study's four false build failures (in-sample: 3 blocking, 2 real). One independent label is restored to its author's version (ADJUDICATION.md).
 - 2026-10-13: ADR-006: by default only the focus checks (Supabase, Firebase, secrets) block; every other rule reports hints. `[policy] block = "all"` restores blocking for every rule. Pooled over five studies: Supabase 12 of 15 real, secrets 7 of 12, Firebase 2 of 5, everything else 49 of 167. Corrected ADR-005: the Claude hook passes only blocking findings.
 - 2026-10-13: Fifth noise study: precision 0.26 (12 of 46), blocking 0.10 (3 of 31); SC-WEB-001 0 of 15. README results table now reports it.
 - 2026-10-13: ADR-005 recalibration on all four studies (80 repositories): SC-CODE-008's HTML-sink findings become LOW (12 of 66), code evaluation stays MEDIUM; SC-WEB-001 stays MEDIUM (16 of 26); SC-CODE-002 stays LOW (5 of 20). Findings can carry their own confidence when a rule's kinds are calibrated separately. SC-CODE-008 counts the app's own escape helpers by name (`esc`, `…Esc`, `escape`/`sanitize` + `html`). A fifth set of 20 repositories (`repos-fifth.toml`) was pinned before these changes to measure them.

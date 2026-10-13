@@ -18,6 +18,9 @@ def test_roles():
     assert role_of("app/test_utils.py") is Role.TEST
     assert role_of("pkg/foo_test.py") is Role.TEST
     assert role_of("conftest.py") is Role.TEST
+    assert role_of("polls/tests.py") is Role.TEST  # Django's default test module
+    assert role_of("mysite/settings/test.py") is Role.TEST  # settings only tests load
+    assert role_of("config/settings/testing.py") is Role.TEST
     assert role_of("app/views.py") is Role.SERVER
     assert role_of("README.md") is Role.UNKNOWN
 

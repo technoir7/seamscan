@@ -200,7 +200,7 @@ at least 5 cases it must flag and 5 close calls it must not. The cases are split
 rule at the right file and line. CI fails if any rule drops below its precision/recall
 budget.
 
-The corpus has 890 cases, 453 of them with TypeScript/JavaScript. Every rule scores
+The corpus has 892 cases, 454 of them with TypeScript/JavaScript. Every rule scores
 precision 1.00 and recall 1.00 on both splits.
 
 When the Python rules landed, the old v0.2 engine was scored on the 262-case corpus of
@@ -220,9 +220,9 @@ Independent cases (697, written from the rule pages by separate sessions; see [t
 | Risky code patterns | 144 | 9 | 2 | 0.99 | 0.94 |
 | Secrets and keys | 38 | 5 | 1 | 0.97 | 0.88 |
 | Supabase | 31 | 0 | 0 | 1.00 | 1.00 |
-| Test integrity | 49 | 3 | 7 | 0.88 | 0.94 |
+| Test integrity | 50 | 3 | 7 | 0.88 | 0.94 |
 | Web routes and server settings | 34 | 4 | 0 | 1.00 | 0.89 |
-| **All** | 351 | 23 | 14 | **0.96** | **0.94** |
+| **All** | 352 | 23 | 14 | **0.96** | **0.94** |
 
 Real code (20 public repositories seamscan had never run on, 186,174 lines): **0.25 findings per 1,000 lines**. Every finding (46) was checked by hand against the code: **12 real, 34 false alarms, 0 unclear (precision 0.26)**; of the ones that fail a build, 3 of 31 were real (0.10).
 <!-- results:end -->
@@ -238,8 +238,9 @@ misfires found so far.
 That study ran before blocking was limited to the focus checks. Under the focus policy,
 6 of its 46 findings would have failed a build, and 2 of those were real; three of the
 four false alarms were fallback secrets in test-only settings and a developer script.
-The focus was chosen with this study's data, so it isn't an independent measurement of
-the policy.
+Those files are now skipped, which leaves 3 build failures, 2 of them real. The focus and
+that fix were both chosen with this study's data, so neither is an independent
+measurement.
 
 Run it yourself: `uv run python -m bench.run`.
 

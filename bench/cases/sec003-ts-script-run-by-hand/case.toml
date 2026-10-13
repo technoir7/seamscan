@@ -1,0 +1,13 @@
+id = "sec003-ts-script-run-by-hand"
+description = "a script run by hand serves no requests, so its fallback password is not reported; the route's JWT fallback still is"
+mode = "audit"
+split = "dev"
+
+[provenance]
+source = "original"
+
+[[expected]]
+rule = "SC-SEC-003"
+path = "app/api/login/route.ts"
+line = 3
+

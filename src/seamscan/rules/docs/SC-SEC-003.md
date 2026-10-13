@@ -71,7 +71,11 @@ Not reported:
   `SUPABASE_SERVICE_ROLE_KEY` and the like: a hosted project rejects them, so a missing
   variable fails closed instead of running with a secret anyone can read. A `changeme`
   default is still reported: the app itself would trust it.
-- test files, where planting a dummy secret is normal (`*.test.ts`, `__tests__/`, …)
+- test files, where planting a dummy secret is normal (`*.test.ts`, `__tests__/`,
+  test-only settings such as `settings/test.py`, …)
+- files under a `scripts/` directory: a script run from a shell serves no requests, so
+  nothing trusts its fallback. On the fifth noise study, a script resetting the
+  end-to-end test account's password was the one such finding, and it was harmless.
 - in TS/JS, `&&` (not a fallback), and fallbacks on anything that isn't an env read:
   `req.headers.get("x-api-key") ?? "anonymous"`, `config.secret || "x"`
 
