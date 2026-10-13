@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from seamscan.facts.project import build_project
 from seamscan.facts.secrets import find_secrets, redact
 from seamscan.model import ChangeSet, Finding, Location, RegistryView, SourceFile, with_fingerprints
-from seamscan.parse.javascript import JsModule, js_dialect, minified, parse_js
+from seamscan.parse.javascript import JsModule, js_dialect, parse_js, text_only
 from seamscan.parse.python import ParseFailure, PyModule, parse_python
 from seamscan.policy.suppress import Suppressed, apply_suppressions
 from seamscan.rules.base import Rule, RuleContext, finding
@@ -30,10 +30,11 @@ def _parse(files: Sequence[SourceFile]) -> _Parsed:
     failures: list[Finding] = []
     not_parsed: list[tuple[str, str]] = []
     for f in files:
-        if minified(f):
-            # Build output, not the project's code: rules that read code would report the
-            # bundler's patterns. Text-based rules (secrets) still see it.
-            not_parsed.append((f.path, "minified: checked for secrets only"))
+        if reason := text_only(f):
+            # Build output or a copied library, not the project's code: rules that read
+            # code would report the bundler's or the library's patterns. Text-based rules
+            # (secrets) still see it.
+            not_parsed.append((f.path, f"{reason}: checked for secrets only"))
         elif f.path.endswith(".py"):
             parsed = parse_python(f)
             if isinstance(parsed, ParseFailure):
