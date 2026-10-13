@@ -1,0 +1,400 @@
+{
+  "seamscan": "0.7.0",
+  "date": "2026-10-13",
+  "offline": false,
+  "lines": 186174,
+  "findings": 46,
+  "notices": 5,
+  "blocking": 31,
+  "per_kloc": 0.25,
+  "by_rule": {
+    "SC-CODE-002": 2,
+    "SC-CODE-003": 1,
+    "SC-CODE-006": 8,
+    "SC-CODE-008": 2,
+    "SC-CODE-009": 3,
+    "SC-CODE-011": 1,
+    "SC-META-002": 5,
+    "SC-SEC-002": 1,
+    "SC-SEC-003": 4,
+    "SC-SUPA-001": 1,
+    "SC-SUPA-003": 2,
+    "SC-TEST-001": 4,
+    "SC-WEB-001": 15,
+    "SC-WEB-003": 2
+  },
+  "repos": [
+    {
+      "repo": "malakhov-dmitrii/nextjs-supabase-creem-boilerplate",
+      "commit": "08c88eace61a8a252a8af78213ef025b15ef2f13",
+      "group": "js",
+      "lines": 5971,
+      "findings": 3,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 0.5,
+      "by_rule": {
+        "SC-SUPA-001": 1,
+        "SC-SUPA-003": 2
+      }
+    },
+    {
+      "repo": "Saysenn/tmp-nextjs-supabase-rbac-auth",
+      "commit": "b2feb20b08a9cd7b20d3e22426476b24e55160f1",
+      "group": "js",
+      "lines": 4773,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.21,
+      "by_rule": {
+        "SC-CODE-009": 1
+      }
+    },
+    {
+      "repo": "greeenboi/nextjs-supabase-template",
+      "commit": "25a7d3e90bca0441c3d6d69ca5fb743b8eaaba7a",
+      "group": "js",
+      "lines": 398,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "gymcoding/nextjs-supabase-app",
+      "commit": "5a9c55ad3c52a90d9fc68d19c15b02a4dc74ae49",
+      "group": "js",
+      "lines": 12667,
+      "findings": 3,
+      "notices": 1,
+      "blocking": 2,
+      "per_kloc": 0.24,
+      "by_rule": {
+        "SC-CODE-009": 1,
+        "SC-META-002": 1,
+        "SC-WEB-001": 2
+      }
+    },
+    {
+      "repo": "Gazzel16/nextjs-supabase-starter",
+      "commit": "de8283c7aac7d3b04d1c3ab715a836aba9463af3",
+      "group": "js",
+      "lines": 2477,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "floatrx/nextjs-supabase",
+      "commit": "77e8e79ea7c191e88e73ed23a9fe283152f8c437",
+      "group": "js",
+      "lines": 5853,
+      "findings": 5,
+      "notices": 0,
+      "blocking": 4,
+      "per_kloc": 0.85,
+      "by_rule": {
+        "SC-SEC-003": 1,
+        "SC-TEST-001": 1,
+        "SC-WEB-001": 3
+      }
+    },
+    {
+      "repo": "phuocpham12495/AI-Talk-Show",
+      "commit": "6c40d54928548f9943c22f19bab544b235d27b50",
+      "group": "js",
+      "lines": 1429,
+      "findings": 2,
+      "notices": 0,
+      "blocking": 1,
+      "per_kloc": 1.4,
+      "by_rule": {
+        "SC-CODE-002": 1,
+        "SC-SEC-002": 1
+      }
+    },
+    {
+      "repo": "mmvergara/react-firebase-auth-template",
+      "commit": "5fad1d57f1966495afbf991ebba0d98ee6668fed",
+      "group": "js",
+      "lines": 414,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "manis-sharma/Secure-Online-Exam-System",
+      "commit": "4ada7905e4ed19a37397366dfd4453f8ee6045f5",
+      "group": "js",
+      "lines": 3351,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "Mayankkatheriya/google-drive-clone",
+      "commit": "3b0cfb002ce404f533a3d53ccb35c7c22397c0f1",
+      "group": "js",
+      "lines": 25753,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "jaehyeon-kim/nicegui-fastapi-template",
+      "commit": "2fad9e80bd714dd44acbde2641f32e0ad6eb4612",
+      "group": "py",
+      "lines": 1087,
+      "findings": 0,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.0,
+      "by_rule": {}
+    },
+    {
+      "repo": "eslam5464/Fastapi-Template",
+      "commit": "327cfd42e1b03115db866f206d50b3f5cc98b4c2",
+      "group": "py",
+      "lines": 27773,
+      "findings": 3,
+      "notices": 3,
+      "blocking": 1,
+      "per_kloc": 0.11,
+      "by_rule": {
+        "SC-CODE-011": 1,
+        "SC-META-002": 3,
+        "SC-TEST-001": 2
+      }
+    },
+    {
+      "repo": "Vedant-Panchal/MindSync",
+      "commit": "7ca23fd8fbfaaea09fa927226131acba7177f9b4",
+      "group": "py",
+      "lines": 19894,
+      "findings": 2,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 0.1,
+      "by_rule": {
+        "SC-CODE-008": 2
+      }
+    },
+    {
+      "repo": "Suyash728/MediSync",
+      "commit": "68640538fd8c3e7d6dc4ca01d1c135744da5d2a6",
+      "group": "py",
+      "lines": 15377,
+      "findings": 4,
+      "notices": 1,
+      "blocking": 3,
+      "per_kloc": 0.26,
+      "by_rule": {
+        "SC-CODE-003": 1,
+        "SC-META-002": 1,
+        "SC-TEST-001": 1,
+        "SC-WEB-001": 2
+      }
+    },
+    {
+      "repo": "Nikolay-Lysenko/readingbricks",
+      "commit": "48b3ad7df68de1356b67eeeae13c4a0b82b7c99c",
+      "group": "py",
+      "lines": 1859,
+      "findings": 8,
+      "notices": 0,
+      "blocking": 8,
+      "per_kloc": 4.3,
+      "by_rule": {
+        "SC-CODE-006": 8
+      }
+    },
+    {
+      "repo": "prashant-shahi/ToDo-List-using-Flask-and-MongoDB",
+      "commit": "f055d21e42c6db1ab0b4a62fa63ed72c77d54b20",
+      "group": "py",
+      "lines": 728,
+      "findings": 3,
+      "notices": 0,
+      "blocking": 2,
+      "per_kloc": 4.12,
+      "by_rule": {
+        "SC-WEB-001": 2,
+        "SC-WEB-003": 1
+      }
+    },
+    {
+      "repo": "ericmjl/minimal-flask-example",
+      "commit": "a450cc6c1b901fc8f3cdeb449bd1cd6cba8b225c",
+      "group": "py",
+      "lines": 69,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 14.49,
+      "by_rule": {
+        "SC-WEB-003": 1
+      }
+    },
+    {
+      "repo": "srivatsan0611/django-saas-launchpad",
+      "commit": "793dd8895b8c474719de6e9fcc225a048d894ee8",
+      "group": "py",
+      "lines": 18931,
+      "findings": 4,
+      "notices": 0,
+      "blocking": 4,
+      "per_kloc": 0.21,
+      "by_rule": {
+        "SC-SEC-003": 1,
+        "SC-WEB-001": 3
+      }
+    },
+    {
+      "repo": "thurlow-research/CondoParkShare",
+      "commit": "fe37b35f4e17b723130a34eefc9e455dae5fbc86",
+      "group": "py",
+      "lines": 36536,
+      "findings": 6,
+      "notices": 0,
+      "blocking": 5,
+      "per_kloc": 0.16,
+      "by_rule": {
+        "SC-CODE-002": 1,
+        "SC-SEC-003": 2,
+        "SC-WEB-001": 3
+      }
+    },
+    {
+      "repo": "masrooramir/Django_SAAS_Project",
+      "commit": "d3321037960d0718836c84e1a1acd26e22a65249",
+      "group": "py",
+      "lines": 834,
+      "findings": 1,
+      "notices": 0,
+      "blocking": 0,
+      "per_kloc": 1.2,
+      "by_rule": {
+        "SC-CODE-009": 1
+      }
+    }
+  ],
+  "triage": {
+    "precision": {
+      "sampled": 46,
+      "true": 12,
+      "false": 34,
+      "unclear": 0,
+      "precision": 0.26
+    },
+    "blocking_precision": {
+      "sampled": 31,
+      "true": 3,
+      "false": 28,
+      "unclear": 0,
+      "precision": 0.1
+    },
+    "precision_by_rule": {
+      "SC-CODE-002": {
+        "sampled": 2,
+        "true": 0,
+        "false": 2,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-003": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-CODE-006": {
+        "sampled": 8,
+        "true": 1,
+        "false": 7,
+        "unclear": 0,
+        "precision": 0.12
+      },
+      "SC-CODE-008": {
+        "sampled": 2,
+        "true": 1,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.5
+      },
+      "SC-CODE-009": {
+        "sampled": 3,
+        "true": 2,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.67
+      },
+      "SC-CODE-011": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-SEC-002": {
+        "sampled": 1,
+        "true": 1,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-SEC-003": {
+        "sampled": 4,
+        "true": 1,
+        "false": 3,
+        "unclear": 0,
+        "precision": 0.25
+      },
+      "SC-SUPA-001": {
+        "sampled": 1,
+        "true": 0,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-SUPA-003": {
+        "sampled": 2,
+        "true": 2,
+        "false": 0,
+        "unclear": 0,
+        "precision": 1.0
+      },
+      "SC-TEST-001": {
+        "sampled": 4,
+        "true": 3,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.75
+      },
+      "SC-WEB-001": {
+        "sampled": 15,
+        "true": 0,
+        "false": 15,
+        "unclear": 0,
+        "precision": 0.0
+      },
+      "SC-WEB-003": {
+        "sampled": 2,
+        "true": 1,
+        "false": 1,
+        "unclear": 0,
+        "precision": 0.5
+      }
+    }
+  }
+}

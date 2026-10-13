@@ -1,8 +1,8 @@
 """Regenerate the README results table: `uv run python scripts/results_table.py`.
 
 Reads the recorded benchmark (`bench/results/latest.json`, written by
-`bench.run --record`) and the latest noise study (`bench/results/wild-fourth.json`, with
-its triage recorded by `bench.wild fourth report --record`). The table sits between the
+`bench.run --record`) and the latest noise study (`bench/results/wild-fifth.json`, with
+its triage recorded by `bench.wild fifth report --record`). The table sits between the
 `<!-- results:start -->` and `<!-- results:end -->` markers; a test fails when the README
 is out of date, and `bench.run --check` fails when latest.json is.
 """
@@ -17,7 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 README = ROOT / "README.md"
 LATEST = ROOT / "bench" / "results" / "latest.json"
-WILD = ROOT / "bench" / "results" / "wild-fourth.json"
+WILD = ROOT / "bench" / "results" / "wild-fifth.json"
 START, END = "<!-- results:start -->", "<!-- results:end -->"
 CATEGORIES = {
     "SEC": "Secrets and keys",

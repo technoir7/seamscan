@@ -1430,6 +1430,17 @@ Order rationale:
   by rule, the noise passes removed the false alarms they were aimed at and new
   repositories brought new ones; CODE-008's sanitizer list is the next instance of the
   long tail §14 already named. 1.0 waits on a decision about how to close it (Aaron).
+- *Fifth study* (`bench/wild/repos-fifth.toml`, pinned before the CODE-008 helper names
+  and the ADR-005 recalibration; no crash or hang): 186k lines, 46 findings (0.25 per
+  1,000 lines), all triaged by a fresh session, same rubric as the fourth: **12 true, 34
+  false: precision 0.26; blocking 3 of 31 (0.10).** CODE-008 fell to 2 findings (1 true).
+  The blocking false alarms are now SC-WEB-001 (0 of 15: auth through the app's own
+  wrappers such as `adminProcedure`, `verifyAdminAccess()` and `Depends(require_active_
+  access)`, and recovery or reset flows that are public by design) and SC-CODE-006 (1 of
+  8: table names from a parser that admits only letters, or from the app's own data).
+- **Consequence (2026-10-13):** calibration quieted CODE-008, and the next rule took its
+  place: SC-WEB-001 measured 0.62 on studies one to four and 0.00 here, 16 of 41 pooled.
+  Decision on how to proceed is with Aaron.
 - Triage hygiene: the third triager's grep printed one placeholder line from a
   third-party `.env.example`, against the no-.env rule; no verdict used it.
 
@@ -1475,6 +1486,7 @@ Order rationale:
 
 ## Changelog
 
+- 2026-10-13: Fifth noise study: precision 0.26 (12 of 46), blocking 0.10 (3 of 31); SC-WEB-001 0 of 15. README results table now reports it.
 - 2026-10-13: ADR-005 recalibration on all four studies (80 repositories): SC-CODE-008's HTML-sink findings become LOW (12 of 66), code evaluation stays MEDIUM; SC-WEB-001 stays MEDIUM (16 of 26); SC-CODE-002 stays LOW (5 of 20). Findings can carry their own confidence when a rule's kinds are calibrated separately. SC-CODE-008 counts the app's own escape helpers by name (`esc`, `…Esc`, `escape`/`sanitize` + `html`). A fifth set of 20 repositories (`repos-fifth.toml`) was pinned before these changes to measure them.
 - 2026-10-13: Fourth noise study: precision 0.16 (16 of 99 decided), blocking 0.13; one repository gave 72 of 100 sampled findings. Directive-search hang fixed. Triage samples are written as UTF-8 (emoji broke TOML). README results table generated from `bench/results/latest.json` and `wild-fourth.json`.
 - 2026-10-13: Vendored libraries are read for secrets only, like minified files: a JS/TS file under `vendor`, `vendors`, `third_party`, `third-party` or `staticfiles` (Django's collectstatic output), or one opening with a license banner that names a version. On 2,660 JS/TS files from the 60 studied repositories, every banner was a copied library. Removes the third study's five vendored-library false alarms (in-sample). A fourth set of 20 repositories (`repos-fourth.toml`) was pinned before this change to measure it.

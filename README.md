@@ -220,14 +220,14 @@ Independent cases (697, written from the rule pages by separate sessions; see [t
 | Web routes and server settings | 34 | 4 | 0 | 1.00 | 0.89 |
 | **All** | 351 | 23 | 14 | **0.96** | **0.94** |
 
-Real code (20 public repositories seamscan had never run on, 200,158 lines): **0.52 findings per 1,000 lines**. A random 100 of the 105 findings were checked by hand against the code: **16 real, 83 false alarms, 1 unclear (precision 0.16)**; of the ones that fail a build, 11 of 86 were real (0.13).
+Real code (20 public repositories seamscan had never run on, 186,174 lines): **0.25 findings per 1,000 lines**. Every finding (46) was checked by hand against the code: **12 real, 34 false alarms, 0 unclear (precision 0.26)**; of the ones that fail a build, 3 of 31 were real (0.10).
 <!-- results:end -->
 
 Four separate sessions wrote the independent cases from the rule pages alone. Where
 seamscan and a label disagreed, another session holding only the rule pages decided: 34
 were seamscan's errors and count against it, 6 were wrong labels and were fixed. The real-code
-repositories were picked by a written rule (`bench/wild/repos-fourth.toml`) and pinned
-before the last change to the rules. Three earlier sets of 20 shaped the rules and no
+repositories were picked by a written rule (`bench/wild/repos-fifth.toml`) and pinned
+before the last change to the rules. Four earlier sets of 20 shaped the rules and no
 longer count as a measurement ([spec §14](docs/SPEC.md)). The rule pages list the
 misfires found so far.
 
