@@ -852,6 +852,9 @@ def _js_html_helper_name(name: str) -> bool:
     return "esc" in words or bool(words & {"escape", "sanitize"} and words & _JS_HTML_FORMATS)
 
 
+# ADR-005: on the noise studies' development repositories, 12 of 66 HTML-sink findings
+# were real, so they report without blocking; eval findings keep the rule's confidence.
+_HTML_SINK_CONFIDENCE = Confidence.LOW
 _JS_PURIFY = re.compile(r"purify[^.]*\.sanitize$", re.IGNORECASE)  # DOMPurify, isomorphic-dompurify
 _JS_HTML_PROPERTIES = frozenset({"innerHTML", "outerHTML"})
 
@@ -944,6 +947,7 @@ def _js_html_injected(ctx: RuleContext) -> Iterator[Finding]:
                     "`dangerouslySetInnerHTML` renders HTML that isn't a literal or sanitized: "
                     f"`{js.snippet(module, value, 60)}`; wrap it in DOMPurify.sanitize",
                     js.snippet(module, attr),
+                    confidence=_HTML_SINK_CONFIDENCE,
                 )
         # DOM sinks only exist in the browser; on the server they're jsdom or test setup.
         if role is Role.SERVER:
@@ -956,6 +960,7 @@ def _js_html_injected(ctx: RuleContext) -> Iterator[Finding]:
                     f"`{sink}` is given HTML that isn't a literal or escaped: "
                     f"`{js.snippet(module, value, 60)}`; use textContent or DOMPurify.sanitize",
                     js.snippet(module, site),
+                    confidence=_HTML_SINK_CONFIDENCE,
                 )
 
 

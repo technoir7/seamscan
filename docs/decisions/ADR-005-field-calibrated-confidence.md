@@ -44,3 +44,22 @@ triaged findings under its current definition yet.
   tool that blocks builds on 3 false alarms in 4 gets switched off.
 - *Calibrate on the corpus.* Corpus precision is 1.00 by construction; it can't tell
   rules apart.
+
+## Recalibration, 2026-10-13
+
+Rerun on all four studies' 80 repositories with the code of 2026-10-13, matching findings
+to their hand verdicts by repository, rule, file and line (4 findings had moved and were
+left out; none could change a band). Rules with 10 or more triaged findings:
+
+| Rule | Real / triaged | Precision | Confidence |
+|---|---|---|---|
+| SC-CODE-002 | 5 / 20 | 0.25 | LOW (unchanged) |
+| SC-CODE-008, HTML sinks | 12 / 66 | 0.18 | LOW (was MEDIUM) |
+| SC-WEB-001 | 16 / 26 | 0.62 | MEDIUM (confirmed) |
+
+**A rule whose findings are of clearly different kinds can be calibrated per kind** when
+only one kind has the data. SC-CODE-008 reports both code evaluation (`eval`, `exec`,
+`new Function`) and HTML sinks; 66 of its 68 triaged findings are HTML sinks, so those
+become LOW and code evaluation keeps its judged MEDIUM until it has 10 triaged findings.
+60 of the 66 come from one repository, so the measurement mostly describes one style of
+vanilla-JS app; the fifth study (pinned before this change) checks whether it holds.

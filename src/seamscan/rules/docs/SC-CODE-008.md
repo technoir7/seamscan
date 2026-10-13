@@ -1,6 +1,6 @@
 # SC-CODE-008 — Code or HTML evaluated from non-literals
 
-**Severity:** HIGH · **Confidence:** MEDIUM · **CWE:** [CWE-95](https://cwe.mitre.org/data/definitions/95.html), [CWE-79](https://cwe.mitre.org/data/definitions/79.html) · **Languages:** Python, TypeScript/JavaScript
+**Severity:** HIGH · **Confidence:** MEDIUM for code evaluation; LOW for HTML sinks (measured: 12 of 66 real on the noise studies' 80 repositories; reported, never blocks on its own — [ADR-005](../../../../docs/decisions/ADR-005-field-calibrated-confidence.md)) · **CWE:** [CWE-95](https://cwe.mitre.org/data/definitions/95.html), [CWE-79](https://cwe.mitre.org/data/definitions/79.html) · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
 

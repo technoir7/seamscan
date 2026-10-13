@@ -227,3 +227,19 @@ def test_purify_instances_and_constant_json_count_as_safe():
         "}\n"
     )
     assert lines(run(CODE_EVAL.id, src, "components/A.tsx")) == [9]
+
+
+def test_html_sinks_carry_their_measured_confidence_and_eval_keeps_the_rules():
+    # ADR-005: the HTML-sink findings were measured on real code (12 of 66 real), so they
+    # are LOW and never block alone; eval has too few triaged findings to recalibrate.
+    from seamscan.model import Confidence
+
+    src = (
+        "export function f(el: HTMLElement, s: string) {\n"
+        "  el.innerHTML = `<li>${s}</li>`;\n"
+        "  eval(s);\n"
+        "}\n"
+    )
+    by_line = {f.location.start_line: f for f in run(CODE_EVAL.id, src, "src/view.ts")}
+    assert by_line[2].confidence is Confidence.LOW
+    assert by_line[3].confidence is CODE_EVAL.confidence is Confidence.MEDIUM

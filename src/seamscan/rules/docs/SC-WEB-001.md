@@ -1,6 +1,6 @@
 # SC-WEB-001 — Server write without an auth check
 
-**Severity:** HIGH · **Confidence:** MEDIUM · **CWE:** [CWE-862](https://cwe.mitre.org/data/definitions/862.html) · **Languages:** Python, TypeScript/JavaScript
+**Severity:** HIGH · **Confidence:** MEDIUM (measured: 16 of 26 real on the noise studies' 80 repositories — [ADR-005](../../../../docs/decisions/ADR-005-field-calibrated-confidence.md)) · **CWE:** [CWE-862](https://cwe.mitre.org/data/definitions/862.html) · **Languages:** Python, TypeScript/JavaScript
 
 ## What it finds
 

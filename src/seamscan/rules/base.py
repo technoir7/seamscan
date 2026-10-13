@@ -63,12 +63,13 @@ def finding(
     evidence: str,
     *,
     severity: Severity | None = None,
+    confidence: Confidence | None = None,
     related: tuple[Location, ...] = (),
 ) -> Finding:
     return Finding(
         rule_id=m.id,
         severity=severity or m.severity,
-        confidence=m.confidence,
+        confidence=confidence or m.confidence,
         location=loc,
         message=message,
         evidence=evidence,
