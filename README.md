@@ -220,7 +220,7 @@ Independent cases (697, written from the rule pages by separate sessions; see [t
 | Web routes and server settings | 34 | 4 | 0 | 1.00 | 0.89 |
 | **All** | 351 | 23 | 14 | **0.96** | **0.94** |
 
-Real code (20 public repositories seamscan had never run on, 200,158 lines): **0.52 findings per 1,000 lines**. Every finding (100) was checked by hand against the code: **16 real, 83 false alarms, 1 unclear (precision 0.16)**; of the ones that fail a build, 11 of 86 were real (0.13).
+Real code (20 public repositories seamscan had never run on, 200,158 lines): **0.52 findings per 1,000 lines**. A random 100 of the 105 findings were checked by hand against the code: **16 real, 83 false alarms, 1 unclear (precision 0.16)**; of the ones that fail a build, 11 of 86 were real (0.13).
 <!-- results:end -->
 
 Four separate sessions wrote the independent cases from the rule pages alone. Where

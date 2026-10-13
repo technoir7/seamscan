@@ -34,6 +34,7 @@ LATEST = {
     },
 }
 WILD = {
+    "findings": 5,
     "lines": 12345,
     "per_kloc": 0.41,
     "repos": [{}, {}],
@@ -53,6 +54,9 @@ def test_rows_add_up_rules_by_category_and_skip_the_notices():
     assert "2 public repositories" in table and "12,345 lines" in table
     assert "3 real, 1 false alarms, 1 unclear (precision 0.75)" in table
     assert "1 of 2 were real (0.50)" in table
+    assert "Every finding (5) was checked" in table
+    sampled = _script().table(LATEST, {**WILD, "findings": 9})
+    assert "A random 5 of the 9 findings were checked" in sampled
 
 
 def test_render_replaces_only_the_text_between_the_markers():

@@ -73,8 +73,13 @@ def table(latest: dict[str, Any], wild: dict[str, Any]) -> str:
         "",
         f"Real code ({repos} public repositories seamscan had never run on, "
         f"{wild['lines']:,} lines): **{wild['per_kloc']} findings per 1,000 lines**. "
-        f"Every finding ({p['sampled']}) was checked by hand against the code: "
-        f"**{p['true']} real, {p['false']} false alarms, {p['unclear']} unclear "
+        + (
+            f"Every finding ({p['sampled']}) was checked by hand against the code: "
+            if p["sampled"] == wild["findings"]
+            else f"A random {p['sampled']} of the {wild['findings']} findings were checked "
+            "by hand against the code: "
+        )
+        + f"**{p['true']} real, {p['false']} false alarms, {p['unclear']} unclear "
         f"(precision {p['precision']:.2f})**; of the ones that fail a build, "
         f"{b['true']} of {b['true'] + b['false']} were real ({b['precision']:.2f}).",
     ]
