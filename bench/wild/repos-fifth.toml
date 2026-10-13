@@ -1,0 +1,134 @@
+# Fifth noise study (spec §8.4): 20 more repositories, pinned on 2026-10-13 before
+# confidence was calibrated on studies one to four (ADR-005) and before CODE-008 learned
+# local escape helpers. Studies one to four are development data for those changes.
+#
+# Same rule as repos.toml, on the same search results as repos-fourth.toml, skipping all
+# 80 repositories studied so far.
+# Changes forced by thin lists: "vite supabase" has no repo left with 5+ stars, so its two
+# slots went to the next "nextjs supabase" results. "nextjs firebase" had one qualifying
+# repository with code, so its other two slots went to "react firebase", which had one
+# more, so the last went to the next "nextjs supabase" result.
+# Skipped: phuocpham12495/AI-Money-Manager (only a README), Saysenn/tmp-nextjs-supabase-auth
+# (the same template as Saysenn/tmp-nextjs-supabase-rbac-auth, which is in),
+# goldenlight9331/nextbase-nextjs-supabase-starter (a copy of a repository already
+# studied), theaiautomators/claude-code-agentic-rag-masterclass (docs, as before).
+
+[[repo]]
+name = "malakhov-dmitrii/nextjs-supabase-creem-boilerplate"
+commit = "08c88eace61a8a252a8af78213ef025b15ef2f13"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "Saysenn/tmp-nextjs-supabase-rbac-auth"
+commit = "b2feb20b08a9cd7b20d3e22426476b24e55160f1"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "greeenboi/nextjs-supabase-template"
+commit = "25a7d3e90bca0441c3d6d69ca5fb743b8eaaba7a"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "gymcoding/nextjs-supabase-app"
+commit = "5a9c55ad3c52a90d9fc68d19c15b02a4dc74ae49"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "Gazzel16/nextjs-supabase-starter"
+commit = "de8283c7aac7d3b04d1c3ab715a836aba9463af3"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "floatrx/nextjs-supabase"
+commit = "77e8e79ea7c191e88e73ed23a9fe283152f8c437"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "phuocpham12495/AI-Talk-Show"
+commit = "6c40d54928548f9943c22f19bab544b235d27b50"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "mmvergara/react-firebase-auth-template"
+commit = "5fad1d57f1966495afbf991ebba0d98ee6668fed"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "manis-sharma/Secure-Online-Exam-System"
+commit = "4ada7905e4ed19a37397366dfd4453f8ee6045f5"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "Mayankkatheriya/google-drive-clone"
+commit = "3b0cfb002ce404f533a3d53ccb35c7c22397c0f1"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "jaehyeon-kim/nicegui-fastapi-template"
+commit = "2fad9e80bd714dd44acbde2641f32e0ad6eb4612"
+group = "py"
+query = "fastapi template"
+
+[[repo]]
+name = "eslam5464/Fastapi-Template"
+commit = "327cfd42e1b03115db866f206d50b3f5cc98b4c2"
+group = "py"
+query = "fastapi template"
+
+[[repo]]
+name = "Vedant-Panchal/MindSync"
+commit = "7ca23fd8fbfaaea09fa927226131acba7177f9b4"
+group = "py"
+query = "fastapi supabase"
+
+[[repo]]
+name = "Suyash728/MediSync"
+commit = "68640538fd8c3e7d6dc4ca01d1c135744da5d2a6"
+group = "py"
+query = "fastapi supabase"
+
+[[repo]]
+name = "Nikolay-Lysenko/readingbricks"
+commit = "48b3ad7df68de1356b67eeeae13c4a0b82b7c99c"
+group = "py"
+query = "flask app"
+
+[[repo]]
+name = "prashant-shahi/ToDo-List-using-Flask-and-MongoDB"
+commit = "f055d21e42c6db1ab0b4a62fa63ed72c77d54b20"
+group = "py"
+query = "flask app"
+
+[[repo]]
+name = "ericmjl/minimal-flask-example"
+commit = "a450cc6c1b901fc8f3cdeb449bd1cd6cba8b225c"
+group = "py"
+query = "flask app"
+
+[[repo]]
+name = "srivatsan0611/django-saas-launchpad"
+commit = "793dd8895b8c474719de6e9fcc225a048d894ee8"
+group = "py"
+query = "django saas"
+
+[[repo]]
+name = "thurlow-research/CondoParkShare"
+commit = "fe37b35f4e17b723130a34eefc9e455dae5fbc86"
+group = "py"
+query = "django saas"
+
+[[repo]]
+name = "masrooramir/Django_SAAS_Project"
+commit = "d3321037960d0718836c84e1a1acd26e22a65249"
+group = "py"
+query = "django saas"
