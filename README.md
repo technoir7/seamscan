@@ -1,28 +1,39 @@
 # seamscan
 
-Static checks for the security and correctness failures AI coding tools most often
-ship. Deterministic and offline: fixed rules decide, no LLM in the detection path.
+Catches the security holes AI-built apps ship most often, before they ship: Supabase
+tables anyone can read, Firebase rules left open, and secrets that end up in source code
+or the browser. Deterministic and offline: fixed rules decide, no LLM in the detection
+path.
 
-AI assistants make the same mistakes again and again:
-- live keys pasted into source
+Those three are the **focus checks**, and only they fail a build. They read what a project
+declares (its migrations, its security rules, its keys), so when they fire they are
+usually right: on 20 public repositories seamscan had never seen, both of the findings
+that failed a build were real ([How well it works](#how-well-it-works)).
+
+seamscan also reports **hints** about other mistakes AI assistants make again and again:
 - `verify=False` added to silence an SSL error
 - `except Exception: pass`
 - SQL built with f-strings
 - a `verify_signature` that returns `True`
+- a server route that writes without checking who's asking
 - a failing test "fixed" by deleting its assertion
 
-seamscan finds them. It reports each finding with an exact file and line, a severity
-and a confidence.
+Hints never fail a build. On real code most of them were false alarms, so they're worth a
+look, not a stop. Every finding comes with an exact file and line, a severity and a
+confidence.
 
-**Status: alpha (0.7.0).** It covers Python and TypeScript/JavaScript (Next.js, React,
-Vite, Expo, Express, Hono, Supabase Edge Functions, FastAPI, Flask, Django), plus
-Supabase migrations and Firebase security rules, plus the npm and PyPI packages a
-project declares or imports.
+**Status: 1.0.** It covers Python and TypeScript/JavaScript (Next.js, React, Vite, Expo,
+Express, Hono, Supabase Edge Functions, FastAPI, Flask, Django), plus Supabase migrations
+and Firebase security rules, plus the npm and PyPI packages a project declares or
+imports.
 
 The cross-file checks link a table without row-level security to the browser code
 that reads it. That's the CVE-2025-48757 pattern, which exposed 170 Lovable apps.
 It plugs into GitHub code scanning, pre-commit and Claude Code, and a baseline lets a
-team adopt it on an existing codebase. The design is in [`docs/SPEC.md`](docs/SPEC.md).
+team adopt it on an existing codebase. The design is in [`docs/SPEC.md`](docs/SPEC.md);
+the story of how it got here is in [the write-up](docs/writeup.md).
+
+![seamscan finding an open Supabase table and a hardcoded secret](docs/demo/demo.gif)
 
 ## Install and run
 
