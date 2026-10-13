@@ -1,0 +1,134 @@
+# Sixth noise study (spec §8.4): 20 more repositories, pinned on 2026-10-14 before
+# seamscan ran on them. It measures the focus policy (ADR-006) and the test-settings fix,
+# both chosen with the fifth study's data. Studies one to five are development data.
+#
+# Same rule as repos.toml, applied to today's results of the same searches, skipping all
+# 100 repositories studied so far and the ones earlier studies skipped.
+# Changes forced by thin lists: "vite supabase" has one repo with 5+ stars left, and it
+# holds only CLAUDE.md files for AI assistants (wilwaldon/claudemd), so both its slots
+# went to the next "nextjs supabase" results.
+# Skipped: ydaniels/django-saas-billing (a reusable Django package), saaspegasus/
+# pegasus-skills (docs), Experto-AI/quickscale (a framework published on PyPI),
+# UWUplus/flask-cloudflared (a library), and the "flask app" libraries and copy skipped
+# before. Gl0deanR/create-flask-app is a starter app despite its name, so it is in.
+# SESHANK29/DJANGO-SAAS commits a virtualenv (djangoenv/); it is scanned as found.
+
+[[repo]]
+name = "yuto514/HiyoRi-Ecommerce-Nextjs-Supabase"
+commit = "4f5c7081683a8951755c9d11b24b4ad90978e7e7"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "ColoomAI/nextjs-supabase"
+commit = "94f295c5a258ab79ddb8585d43767c4c2fe59ed4"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "RiadMefti/nextjs-supabase-auth-example"
+commit = "d48387ec9e6641b8a279be670ee92209e8e6baaa"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "demoedu/nextjs-supabase-boilerplate"
+commit = "3174193aa4d23dedadb57874244415ce2948ba19"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "MuhammadNiazAli/nextjs-supabase-starter"
+commit = "a640ae76c77ac731a8fdef6b44138b4fb63dec3a"
+group = "js"
+query = "nextjs supabase"
+
+[[repo]]
+name = "james4-daf/coding-notes-firebase-app"
+commit = "5a2876200bdc2ff80948fba7c2835a5c6de3cc91"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "iamjohncaleb/PRAY-NOW"
+commit = "325d4f0abae4467377ada7400b6beb57fd1ce2a5"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "Z-243/feelue"
+commit = "cc746e9469878b4510813a3730c0bb9307a5d7a3"
+group = "js"
+query = "nextjs firebase"
+
+[[repo]]
+name = "dev-rashedin/React-Firebase-Chat-App"
+commit = "030eaab72e697798c1e6833ea8a3a550e0a5afd9"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "itwaasyou/Medisense"
+commit = "a076564a9dd8cac85e2d366c866f04589da34490"
+group = "js"
+query = "react firebase"
+
+[[repo]]
+name = "IbraheemTuffaha/python-fastapi-template"
+commit = "cd86606eb082a83649f519d196ad197699c5c5aa"
+group = "python"
+query = "fastapi template"
+
+[[repo]]
+name = "ydjin0602/fastapi-template"
+commit = "fbd08e5a93b570087a602f737562e22e9cf8fb87"
+group = "python"
+query = "fastapi template"
+
+[[repo]]
+name = "AlexisRellon/AGAILA"
+commit = "f139687d3a7c6c8437e9b3ec1c5c5cb3ed09aaf1"
+group = "python"
+query = "fastapi supabase"
+
+[[repo]]
+name = "Arfatnaik0/GameOn"
+commit = "108e05dbb13051a4877bf2931927d2f95ffe547f"
+group = "python"
+query = "fastapi supabase"
+
+[[repo]]
+name = "SoumilMalik24/Vehicle-Insurance-MLOps-Project"
+commit = "e427afd6510cb4fd18a340cc05fc15bedfda0316"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "Gl0deanR/create-flask-app"
+commit = "6f5b27e3c3297034fcb59d62dedcf6816981d206"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "LondheShubham153/flask-app-ecs"
+commit = "761a0a1015b20e81c9d8e93132fbe0da75568674"
+group = "python"
+query = "flask app"
+
+[[repo]]
+name = "willtejeda/DjangoSaasStarter"
+commit = "9e8a1e7f184d00cc63bf5cd727e563aca2c36942"
+group = "python"
+query = "django saas"
+
+[[repo]]
+name = "SESHANK29/DJANGO-SAAS"
+commit = "2025596ef9b21ce45d3983177fc021a35ee54854"
+group = "python"
+query = "django saas"
+
+[[repo]]
+name = "Ebikemeese/Django-Saas"
+commit = "820a9226b0ba716e5466b7cf4feacfa5ba3a4490"
+group = "python"
+query = "django saas"
