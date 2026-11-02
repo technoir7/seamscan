@@ -142,3 +142,27 @@ def test_readme_rule_table_is_generated_from_the_registry():
     assert rules_table.render(readme) == readme, (
         "README rule table is stale: run `uv run python scripts/rules_table.py`"
     )
+
+
+def test_a_finding_can_be_allowed_only_on_older_pythons(tmp_path):
+    """A file only newer Pythons can parse is honestly "not parsed" on older ones
+    (code010-zwj-identifier: Python 3.13 accepts a zero-width joiner in a name, 3.12 does
+    not). Allowed, it counts neither way, so the recorded scores match on every Python."""
+    from bench.case import load_case
+    from bench.score import Found, drop_allowed
+
+    case = tmp_path / "zwj-case"
+    (case / "repo").mkdir(parents=True)
+    (case / "case.toml").write_text(
+        'id = "zwj-case"\ndescription = "d"\nsplit = "dev"\n[provenance]\nsource = "original"\n'
+        '[[allowed]]\nrule = "SC-META-002"\npath = "a.py"\nline = 5\nbefore_python = "99.0"\n'
+        '[[allowed]]\nrule = "SC-META-002"\npath = "b.py"\nline = 5\nbefore_python = "3.0"\n'
+    )
+    allowed = load_case(case).allowed
+    assert [a.path for a in allowed] == ["a.py"]
+    found = [
+        Found("SC-META-002", "a.py", 6),
+        Found("SC-META-002", "b.py", 5),
+        Found("SC-CODE-010", "a.py", 5),
+    ]
+    assert drop_allowed(found, allowed) == found[1:]

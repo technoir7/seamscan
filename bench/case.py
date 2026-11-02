@@ -7,6 +7,7 @@ import hashlib
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import tomllib
 from collections.abc import Mapping
@@ -50,6 +51,9 @@ class Case:
     # Registry facts and a fixed clock for the dependency rules (ADR-004). None: the case
     # has no [registry] table and runs with dependency checks off, like analyze's default.
     registry: RegistryView | None = None
+    # Findings that may appear and count neither way (`[[allowed]]`), so a result that
+    # depends on the Python running the scan leaves the recorded scores the same.
+    allowed: tuple[Expected, ...] = ()
 
 
 class CaseError(ValueError):
@@ -60,6 +64,16 @@ def expected_split(case_id: str) -> str:
     return (
         "holdout" if int(hashlib.sha256(case_id.encode()).hexdigest()[:8], 16) % 10 < 3 else "dev"
     )
+
+
+def _holds_on_this_python(entry: Mapping[str, object]) -> bool:
+    """`before_python = "3.13"`: only when the scanning Python is older. seamscan parses
+    Python with the interpreter it runs on, so a file only newer Pythons accept is,
+    truthfully, not parsed on older ones."""
+    if "before_python" not in entry:
+        return True
+    limit = tuple(int(part) for part in str(entry["before_python"]).split("."))
+    return sys.version_info[: len(limit)] < limit
 
 
 def load_case(directory: Path) -> Case:
@@ -80,6 +94,11 @@ def load_case(directory: Path) -> Case:
         expected=tuple(
             Expected(e["rule"], e["path"], e["line"], e.get("tolerance", 2))
             for e in data.get("expected", [])
+        ),
+        allowed=tuple(
+            Expected(a["rule"], a["path"], a["line"], a.get("tolerance", 2))
+            for a in data.get("allowed", [])
+            if _holds_on_this_python(a)
         ),
         forbidden=tuple(f["rule"] for f in data.get("forbidden", [])),
         provenance_source=data["provenance"]["source"],

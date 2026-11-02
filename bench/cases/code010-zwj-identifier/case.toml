@@ -15,3 +15,11 @@ line = 5
 rule = "SC-CODE-010"
 path = "app/roles.py"
 line = 10
+
+# Python 3.13 accepts a zero-width joiner in a name; 3.11 and 3.12 cannot parse this file at
+# all, and saying so is right; the hidden-character rule finds the look-alike either way.
+[[allowed]]
+rule = "SC-META-002"
+path = "app/roles.py"
+line = 5
+before_python = "3.13"

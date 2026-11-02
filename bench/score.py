@@ -44,6 +44,19 @@ class RuleScore:
         return self.tp / (self.tp + self.fn) if self.tp + self.fn else None
 
 
+def drop_allowed(found: Sequence[Found], allowed: Sequence[Expected]) -> list[Found]:
+    """The findings left once those a case allows (same rule and path, line within
+    tolerance) are set aside."""
+    return [
+        f
+        for f in found
+        if not any(
+            a.rule == f.rule and a.path == f.path and abs(a.line - f.line) <= a.tolerance
+            for a in allowed
+        )
+    ]
+
+
 def score_case(
     expected: Sequence[Expected],
     forbidden: Sequence[str],
